@@ -1,0 +1,118 @@
+{
+  "clients": [
+    {
+      "client": {
+        "name": "Company Sample 1",
+        "cnpj": "12.345.678/0001-90",
+        "address": "123 Sample Street, Sample City, SC, 12345-678",
+        "phone": "+55 (11) 1234-5678",
+        "email": "company_sample_1@email.com",
+        "unity": [
+          {
+            "name": "Unity 1",
+            "address": "123 Sample Street, Sample City, SC, 12345-678",
+            "phone": "+55 (11) 1234-5679",
+            "email": "company_sample_1_unity_1@email.com",
+            "admin": [
+              {
+                "name": "Admin Sample 1",
+                "phone": "+55 (11) 91234-5678",
+                "email": "unity_1_admin_1_@email.com"
+              }
+            ],
+            "queue": [
+              {
+                "type": "GENERAL",
+                "name": "General Queue",
+                "isActive": true
+              },
+              {
+                "type": "APPOINTMENT",
+                "name": "Appointment Queue",
+                "isActive": true
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "client": {
+        "name": "Company Sample 2",
+        "cnpj": "23.456.789/0001-10",
+        "address": "234 Sample Street, Sample City, PR, 23456-789",
+        "phone": "+55 (41) 2345-6789",
+        "email": "company_sample_2@email.com",
+        "unity": [
+          {
+            "name": "Main Unity",
+            "address": "2345 Sample Street, Sample City, PR, 2345-123",
+            "phone": "+55 (41) 2345-6791",
+            "email": "company_sample_2_unity_main@email.com",
+            "admin": [
+              {
+                "name": "Admin Sample 2",
+                "phone": "+55 (41) 92345-6789",
+                "email": "main_unity_admin_1_@email.com"
+              }
+            ],
+            "queue": [
+              {
+                "type": "GENERAL",
+                "name": "General Queue",
+                "isActive": true
+              }
+            ]
+          },
+          {
+            "name": "Sample Street Unity",
+            "address": "2345 Sample Street, Sample City, PR, 2345-123",
+            "phone": "+55 (41) 2345-6792",
+            "email": "company_sample_2_unity_sample_street@email.com",
+            "admin": [
+              {
+                "name": "Admin Sample 3",
+                "phone": "+55 (41) 92345-6790",
+                "email": "street_unity_admin_1_@email.com"
+              }
+            ],
+            "queue": [
+              {
+                "type": "GENERAL",
+                "name": "General Queue",
+                "isActive": true
+              },
+              {
+                "type": "EVENT",
+                "name": "Open Bar",
+                "isActive": false,
+                "admin": {
+                  "name": "Admin Sample 4",
+                  "phone": "+55 (41) 92345-6791",
+                  "email": "open_bar_admin@email.com"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ],
+  "queue_users": [
+    {
+      "name": "User Sample 1",
+      "phone": "+55 (11) 9876-5432",
+      "email": "user_sample_1@gmail.com"
+    },
+    {
+      "name": "User Sample 2",
+      "phone": "+55 (21) 8765-4321",
+      "email": "user_sample_2@gmail.com"
+    },
+    {
+      "name": "User Sample 3",
+      "phone": "+55 (31) 7654-3210",
+      "email": "user_sample_3@gmail.com"
+    }
+  ]
+}
