@@ -1,0 +1,136 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+// Future Implementation
+// enum Plan {
+//   FREE
+//   BASIC
+//   PRO
+//   BUSINESS
+//   CUSTOM
+// }
+
+model Client {
+  id           String   @id @default(cuid())
+  name         String
+  cnpj         String?  @unique
+  address      String?
+  phone        String?
+  email        String   @unique
+  passwordHash String
+  // plan      Plan      @default(FREE)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Unity        Unity[]
+  Admin        Admin[]
+  // Payment   Payment[]
+  enabled      Boolean? @default(true)
+}
+
+enum AdminRole {
+  CLIENT_ADMIN
+  UNITY_ADMIN
+  QUEUE_ADMIN
+}
+
+model Admin {
+  id           String    @id @default(cuid())
+  role         AdminRole
+  name         String
+  email        String    @unique
+  passwordHash String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  Client       Client?   @relation(fields: [clientId], references: [id])
+  clientId     String?
+  Unity        Unity?    @relation(fields: [unityId], references: [id])
+  unityId      String?
+  Queue        Queue[]
+  enabled      Boolean?  @default(true)
+}
+
+model Unity {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  phone     String?  @unique
+  email     String?  @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Client    Client?  @relation(fields: [clientId], references: [id])
+  clientId  String?
+  Queue     Queue[]
+  Admin     Admin[]
+  enabled   Boolean? @default(true)
+}
+
+model UserQueued {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  Queue        Queue?   @relation(fields: [queueId], references: [id])
+  queueId      String?
+  enabled      Boolean? @default(true)
+}
+
+enum QueueType {
+  GENERAL
+  APPOINTMENT
+  SERVICE
+  EVENT
+  PRIORITY
+  OTHER
+}
+
+model Queue {
+  id                 String    @id @default(cuid())
+  type               QueueType @default(GENERAL)
+  name               String?
+  minWaitingTime     Int?
+  maxWaitingTime     Int?
+  currentWaitingTime Int?
+  isActive           Boolean   @default(true)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  enabled            Boolean?  @default(true)
+
+  Unity   Unity?  @relation(fields: [unityId], references: [id])
+  unityId String?
+
+  UserQueue UserQueued[]
+  Admin     Admin?       @relation(fields: [adminId], references: [id])
+  adminId   String?
+}
+
+// Future Implementation
+// enum PaymentStatus {
+//   PENDING
+//   COMPLETED
+//   FAILED
+// }
+
+// Future Implementation
+// model Payment {
+//   id        String   @id @default(cuid())
+//   type      String
+//   amount    Float
+//   status    String
+//   createdAt DateTime @default(now())
+//   updatedAt DateTime @updatedAt
+
+//   Client   Client? @relation(fields: [clientId], references: [id])
+//   clientId String?
+// }
