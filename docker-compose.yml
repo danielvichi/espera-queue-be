@@ -1,0 +1,26 @@
+version: '3'
+services:
+  db_local:
+    image: postgres:16-alpine
+    restart: always
+    container_name: espera_queue_local_db
+    ports:
+      - '5432:5432'
+    environment:
+      - POSTGRES_DB=espera_queue_local_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ./init:/docker-entrypoint-initdb.d
+    command: ['postgres', '-c', 'log_statement=all']
+
+  db_test:
+    image: postgres:16-alpine
+    restart: always
+    container_name: espera_queue_local_test_db
+    ports:
+      - '5433:5432'
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: espera_queue_local_test_db
