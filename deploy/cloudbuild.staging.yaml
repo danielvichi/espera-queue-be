@@ -34,7 +34,7 @@ steps:
   # Running unit tests
   # needs to allocate enough memory starting with node 18 (NODE_OPTIONS=--max-old-space-size=3000 in test:ci script)
   - id: integration-tests
-    name: 'us-west1-docker.pkg.dev/anime-foundation-staging/backend-pr/$COMMIT_SHA'
+    name: 'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
     args: ['run', 'test:ci']
     env:
       - 'DATABASE_URL=postgresql://postgres:postgres@espera_queue_local_test_db_ci:5432/espera_queue_local_test_db_ci?connect_timeout=300'
