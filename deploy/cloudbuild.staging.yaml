@@ -6,7 +6,7 @@ steps:
       [
         'build',
         '-t',
-        'us-west1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA',
+        'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA',
         '.',
       ]
   # Push the container image to Container Registry
@@ -15,7 +15,7 @@ steps:
     args:
       [
         'push',
-        'us-west1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA',
+        'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA',
       ]
   # spinning up the test database
   - id: start-test-db
@@ -49,4 +49,4 @@ steps:
         'espera_queue_local_test_db_ci',
       ]
 images:
-  - us-west1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA
+  - southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA
