@@ -1,6 +1,6 @@
 version: '3'
 services:
-  espera_queue_local_test_db_ci:
+  db_local:
     image: postgres:16-alpine
     restart: always
     container_name: espera_queue_local_db
