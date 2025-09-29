@@ -1,3 +1,7 @@
+options:
+  logging: CLOUD_LOGGING_ONLY
+  logsBucket: 'gs://espera-queue-be-logs'
+
 steps:
   # Build the container image
   - id: docker-build
