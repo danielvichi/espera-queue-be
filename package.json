@@ -21,7 +21,8 @@
     "docker:test:down": "docker compose down db_test",
     "migrate:dev": "dotenv -e .env.dev npx prisma migrate dev",
     "migrate:test": "dotenv -e .env.test npx prisma migrate dev",
-    "prisma:generate": "npx prisma generate --schema=./prisma/schema.prisma"
+    "prisma:generate": "npx prisma generate --schema=./prisma/schema.prisma",
+    "prepare": "husky"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
@@ -49,7 +50,9 @@
     "eslint-config-prettier": "^10.0.1",
     "eslint-plugin-prettier": "^5.2.2",
     "globals": "^16.0.0",
+    "husky": "^9.1.7",
     "jest": "^30.0.0",
+    "lint-staged": "^16.2.1",
     "prettier": "^3.4.2",
     "prisma": "^6.16.2",
     "source-map-support": "^0.5.21",
@@ -85,5 +88,10 @@
     "coverageDirectory": "../coverage",
     "testEnvironment": "node",
     "prettierPath": null
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "npx lint-staged"
+    }
   }
 }
