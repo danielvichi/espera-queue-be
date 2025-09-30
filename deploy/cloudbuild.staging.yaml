@@ -52,7 +52,7 @@ steps:
         'espera_queue_local_test_db_ci',
       ]
   # Run database migrations
-  - name: '- southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
+  - name: 'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
     args: ['run', 'migrate:staging:ci']
     secretEnv: ['DATABASE_URL']
   # Deploy container image to Cloud Run, and start api server
