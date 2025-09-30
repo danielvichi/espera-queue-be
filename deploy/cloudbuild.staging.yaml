@@ -64,9 +64,6 @@ steps:
       - --region
       - southamerica-east1
       - --port=3000
-      - --service-account
-      - espera-queue-run@espera-queue-be.iam.gserviceaccount.com
-
       - --allow-unauthenticated
       - >-
         --set-secrets=
