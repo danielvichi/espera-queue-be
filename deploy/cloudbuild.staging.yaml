@@ -51,6 +51,10 @@ steps:
         '-d',
         'espera_queue_local_test_db_ci',
       ]
+  # Run database migrations
+  - name: '- southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
+    args: ['run', 'migrate:staging:ci']
+    secretEnv: ['DATABASE_URL']
   # Deploy container image to Cloud Run, and start api server
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
@@ -75,13 +79,9 @@ steps:
         NODE_ENV=production|||
         PROJECT_ENV=staging
 
-# availableSecrets:
-#   secretManager:
-#     - versionName: projects/965636593689/secrets/DATABASE_URL/versions/latest
-#       env: 'DATABASE_URL'
+availableSecrets:
+  secretManager:
+    - versionName: projects/965636593689/secrets/DATABASE_URL/versions/latest
+      env: 'DATABASE_URL'
 images:
   - southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA
-
-
-
-
