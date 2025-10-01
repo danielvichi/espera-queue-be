@@ -72,6 +72,10 @@ steps:
       - >-
         --set-secrets=
         DATABASE_URL=DATABASE_URL:latest
+        INSTANCE_CONNECTION_NAME=INSTANCE_CONNECTION_NAME:latest
+        DB_USER=DB_USER:latest
+        DB_PASS=DB_PASS:latest
+        DB_NAME=DB_NAME:latest
       - --set-cloudsql-instances=espera-queue-be:southamerica-east1:espera-queue-staging-db
       # The funny syntax below (^|||^) is to set a different separator. Note: it must be used in the end of the line
       - >-
