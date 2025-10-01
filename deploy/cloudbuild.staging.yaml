@@ -54,7 +54,10 @@ steps:
   # Run database migrations
   - name: 'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
     args: ['run', 'migrate:staging:ci']
-    secretEnv: ['DATABASE_URL']
+    secretEnv:
+      [
+        'DATABASE_URL, DATABASE_HOST, DATABASE_NAME, DATABASE_USER, DATABASE_PASSWORD',
+      ]
   # Deploy container image to Cloud Run, and start api server
   - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
     entrypoint: gcloud
