@@ -72,6 +72,10 @@ steps:
       - >-
         --set-secrets=
         DATABASE_URL=DATABASE_URL:latest
+        DATABASE_HOST=DATABASE_HOST:latest
+        DATABASE_NAME=DATABASE_NAME:latest
+        DATABASE_USER=DATABASE_USER:latest
+        DATABASE_PASSWORD=DATABASE_PASSWORD:latest
       - --set-cloudsql-instances=espera-queue-be:southamerica-east1:espera-queue-staging-db
       # The funny syntax below (^|||^) is to set a different separator. Note: it must be used in the end of the line
       - >-
@@ -83,5 +87,13 @@ availableSecrets:
   secretManager:
     - versionName: projects/965636593689/secrets/DATABASE_URL/versions/latest
       env: 'DATABASE_URL'
+    - versionName: projects/965636593689/secrets/DATABASE_HOST/versions/latest
+      env: 'DATABASE_HOST'
+    - versionName: projects/965636593689/secrets/DATABASE_NAME/versions/latest
+      env: 'DATABASE_NAME'
+    - versionName: projects/965636593689/secrets/DATABASE_USER/versions/latest
+      env: 'DATABASE_USER'
+    - versionName: projects/965636593689/secrets/DATABASE_PASSWORD/versions/latest
+      env: 'DATABASE_PASSWORD'
 images:
   - southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA
