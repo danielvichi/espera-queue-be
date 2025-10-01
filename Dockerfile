@@ -11,13 +11,13 @@ COPY package*.json ./
 # Note the --production tag allows us to ignore devDependencies
 RUN npm audit --production --audit-level critical
 
-# TODO this is not good, but @nanogiants/nestjs-swagger-api-exception-decorator forces us too, until they fix their peer dependencies
-RUN npm ci --force
+RUN npm ci 
 
 # Bundle app source
 COPY . .
 
 # Copying the cloud sql proxy script
+RUN ECHO "Downloading cloud sql proxy..."
 COPY --from=gcr.io/cloudsql-docker/gce-proxy /cloud_sql_proxy /cloudsql/cloud_sql_proxy
 
 # Build
