@@ -17,7 +17,7 @@ RUN npm ci
 COPY . .
 
 # Copying the cloud sql proxy script
-RUN ECHO "Downloading cloud sql proxy..."
+RUN echo "Downloading cloud sql proxy..."
 COPY --from=gcr.io/cloudsql-docker/gce-proxy /cloud_sql_proxy /cloudsql/cloud_sql_proxy
 
 # Build
