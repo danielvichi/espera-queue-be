@@ -79,7 +79,7 @@ steps:
         DATABASE_NAME=DATABASE_NAME:latest
         DATABASE_USER=DATABASE_USER:latest
         DATABASE_PASSWORD=DATABASE_PASSWORD:latest
-      - --set-cloudsql-instances=espera-queue-be:southamerica-east1:espera-queue-staging-db
+      # - --set-cloudsql-instances=espera-queue-be:southamerica-east1:espera-queue-staging-db
       # The funny syntax below (^|||^) is to set a different separator. Note: it must be used in the end of the line
       - >-
         --update-env-vars=^|||^

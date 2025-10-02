@@ -21,7 +21,7 @@
     "docker:test:down": "docker compose down db_test",
     "migrate:dev": "dotenv -e .env.dev npx prisma migrate dev",
     "migrate:test": "dotenv -e .env.test npx prisma migrate dev",
-    "migrate:staging:ci": "/cloudsql/cloud_sql_proxy -instances=espera-queue-be:southamerica-east1:espera-queue-staging-db=tcp:5544 & sleep 2 && npx prisma migrate deploy",
+    "migrate:staging:ci": "npx prisma migrate deploy",
     "prisma:generate": "npx prisma generate --schema=./prisma/schema.prisma",
     "prepare": "husky"
   },
