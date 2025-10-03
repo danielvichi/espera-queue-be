@@ -13,19 +13,19 @@ const CLIENTS_MOCK_DATA = [
     name: 'Client Serv A',
     address: 'Client address in the client format.',
     phone: '+1-234-567-8900',
-    email: 'valid_email_serv_a@email.com',
+    ownerId: 'owner_123e4567',
   },
   {
     name: 'Client Serv B',
     address: 'Client address in the client format.',
     phone: '+1-234-567-8900',
-    email: 'valid_emai_serv_bl@email.com',
+    ownerId: 'owner_123e45678',
   },
   {
     name: 'Client Serv C',
     address: 'Client address in the client format.',
     phone: '+1-234-567-8900',
-    email: 'valid_emai_serv_cl@email.com',
+    ownerId: 'owner_123e45679',
   },
 ];
 
@@ -46,12 +46,10 @@ describe('ClientService', () => {
   });
 
   it('should not be able to create a client with missing name', async () => {
-    const passwordHash = 'a_secure_password_hash_123';
     await expect(
       clientService.createClient({
         name: '',
-        email: 'some_valid@email.com',
-        passwordHash,
+        ownerId: 'owner_123e4567',
       }),
     ).rejects.toThrow(
       new CreateClientBadRequestException(
@@ -60,102 +58,56 @@ describe('ClientService', () => {
     );
   });
 
-  it('should not be able to create a client with missing email', async () => {
-    const passwordHash = 'a_secure_password_hash_123';
+  it('should not be able to create a client with missing ownerId', async () => {
     await expect(
       clientService.createClient({
         name: 'Valid Name',
-        email: '',
-        passwordHash,
+        ownerId: '',
       }),
     ).rejects.toThrow(
       new CreateClientBadRequestException(
-        createClientBadRequestExceptionMessages.EMAIL_REQUIRED,
+        createClientBadRequestExceptionMessages.OWNER_ID_REQUIRED,
       ),
-    );
-  });
-
-  it('should not be able to create a client with missing passwordHash', async () => {
-    await expect(
-      clientService.createClient({
-        name: 'Valid Name',
-        email: 'some_valid@email.com',
-        passwordHash: '',
-      }),
-    ).rejects.toThrow(
-      new CreateClientBadRequestException(
-        createClientBadRequestExceptionMessages.PASSWORD_HASH_REQUIRED,
-      ),
-    );
-  });
-
-  it('should not be able to create a client with invalid email', async () => {
-    const passwordHash = 'a_secure_password_hash_123';
-    const clientMockData = CLIENTS_MOCK_DATA[0];
-
-    await expect(
-      clientService.createClient({
-        ...clientMockData,
-        email: 'invalid_email_format',
-        passwordHash,
-      }),
-    ).rejects.toThrow('Invalid email format.');
-  });
-
-  it('should not be able to create a client with short password hash', async () => {
-    const passwordHash = 'short';
-    const clientMockData = CLIENTS_MOCK_DATA[0];
-
-    await expect(
-      clientService.createClient({
-        ...clientMockData,
-        passwordHash,
-      }),
-    ).rejects.toThrow(
-      'Password hash is too short, must be at least 16 characters long.',
     );
   });
 
   it('should be able to create and retrieve clients', async () => {
-    const passwordHash = 'a_secure_password_hash_123';
     const clientMockData = CLIENTS_MOCK_DATA[0];
 
     // Create 1 client
-    const newClient_1 = await clientService.createClient({
-      ...clientMockData,
-      passwordHash,
-    });
+    const newClient_1 = await clientService.createClient(clientMockData);
 
     expect(newClient_1.id).toBeDefined();
-    expect(newClient_1.email).toMatch(clientMockData.email);
-    expect(newClient_1.passwordHash).toMatch(passwordHash);
+    expect(newClient_1.ownerId).toBeDefined();
     expect(newClient_1.name).toMatch(clientMockData.name);
     expect(newClient_1.phone).toMatch(clientMockData.phone);
 
     const clients = await clientService.getAllClients();
     const matchedClient = clients.filter(
-      (client) => client.email === clientMockData.email,
+      (client) => client.name === clientMockData.name,
     );
 
     expect(Array.isArray(clients)).toBe(true);
     expect(matchedClient.length).toBe(1);
-    expect(matchedClient[0].email).toMatch(clientMockData.email);
     expect(matchedClient[0].name).toMatch(clientMockData.name);
     expect(matchedClient[0].phone).toMatch(clientMockData.phone);
   });
 
-  it('should not be able to create a client with the same email', async () => {
-    const passwordHash = 'a_secure_password_hash_123';
+  it('should not be able to create a client with the same ownerId', async () => {
     const clientMockData = CLIENTS_MOCK_DATA[1];
-    clientMockData.email = CLIENTS_MOCK_DATA[0].email; // same email as the first client
+
+    await clientService.createClient({
+      ...clientMockData,
+    });
 
     await expect(
       clientService.createClient({
         ...clientMockData,
-        passwordHash,
       }),
     ).rejects.toThrow(
-      `Client with ${clientMockData.email} email already exists.`,
+      new CreateClientBadRequestException(
+        createClientBadRequestExceptionMessages.CLIENT_WITH_SAME_OWNER_ID_EXISTS,
+      ),
     );
   });
 
@@ -163,7 +115,7 @@ describe('ClientService', () => {
     const clients = await clientService.getAllClients();
 
     const matchClient = clients.filter((client) => {
-      if (client.email === CLIENTS_MOCK_DATA[0].email) {
+      if (client.name === CLIENTS_MOCK_DATA[0].name) {
         return client;
       }
     });
@@ -188,7 +140,6 @@ describe('ClientService', () => {
       data: {
         id: validId,
         ...clientMockData,
-        passwordHash: 'a_secure_password_hash_123',
       },
     });
 
@@ -196,21 +147,19 @@ describe('ClientService', () => {
 
     expect(clientResponse).toBeDefined();
     expect(clientResponse?.id).toBe(validId);
-    expect(clientResponse?.email).toBe(clientMockData.email);
   });
 
   it('should disable an existing enabled client', async () => {
     const clientMockData = CLIENTS_MOCK_DATA[1];
 
     let existingClient = await prismaService.client.findFirst({
-      where: { email: clientMockData.email },
+      where: { name: clientMockData.name },
     });
 
     if (!existingClient) {
       existingClient = await prismaService.client.create({
         data: {
           ...clientMockData,
-          passwordHash: 'a_secure_password_hash_123',
         },
       });
     }
