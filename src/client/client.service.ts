@@ -2,10 +2,9 @@ import { Injectable } from '@nestjs/common';
 import {
   ClientDto,
   InputClientDto,
-  InputClientResponseDto,
+  InputResponseClientDto,
 } from './client.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { isValidEmail } from 'src/utils/emailParser';
 import {
   ClientNotFoundException,
   CreateClientBadRequestException,
@@ -21,51 +20,31 @@ export class ClientService {
    * @param {InputClientDto} data - The data required to create a new client.
    * @returns {Promise<ClientDto>} The created ClientDto object.
    **/
-  async createClient(data: InputClientDto): Promise<InputClientResponseDto> {
+  async createClient(data: InputClientDto): Promise<InputResponseClientDto> {
     if (!data.name) {
       throw new CreateClientBadRequestException(
         createClientBadRequestExceptionMessages.NAME_REQUIRED,
       );
     }
-    if (!data.email) {
+
+    if (!data.ownerId) {
       throw new CreateClientBadRequestException(
-        createClientBadRequestExceptionMessages.EMAIL_REQUIRED,
-      );
-    }
-    if (!data.passwordHash) {
-      throw new CreateClientBadRequestException(
-        createClientBadRequestExceptionMessages.PASSWORD_HASH_REQUIRED,
+        createClientBadRequestExceptionMessages.OWNER_ID_REQUIRED,
       );
     }
 
-    // Normalize and validate email
-    data.email = data.email.toLowerCase().trim();
-    if (!isValidEmail(data.email)) {
-      throw new Error('Invalid email format.');
-    }
-
-    const emailExists = await this.prisma.client.findUnique({
-      where: { email: data.email },
+    const existingClientWithSameOwnerId = await this.prisma.client.findFirst({
+      where: { ownerId: data.ownerId },
     });
 
-    if (emailExists) {
-      throw new Error(`Client with ${emailExists.email} email already exists.`);
-    }
-
-    if (data.passwordHash.length < 16) {
-      throw new Error(
-        'Password hash is too short, must be at least 16 characters long.',
+    if (existingClientWithSameOwnerId) {
+      throw new CreateClientBadRequestException(
+        createClientBadRequestExceptionMessages.CLIENT_WITH_SAME_OWNER_ID_EXISTS,
       );
     }
 
     const newClient = await this.prisma.client.create({
-      data: {
-        name: data.name,
-        address: data.address ?? null,
-        phone: data.phone ?? null,
-        email: data.email,
-        passwordHash: data.passwordHash,
-      },
+      data,
     });
 
     return {
@@ -90,7 +69,6 @@ export class ClientService {
       updatedAt: client.updatedAt,
       address: client.address ?? undefined,
       phone: client.phone ?? undefined,
-      email: client.email ?? undefined,
     }));
 
     return formattedClients;
@@ -112,11 +90,8 @@ export class ClientService {
 
     return {
       ...client,
-      createdAt: client.createdAt,
-      updatedAt: client.updatedAt,
       address: client.address ?? undefined,
       phone: client.phone ?? undefined,
-      email: client.email ?? undefined,
     };
   }
 
@@ -127,10 +102,6 @@ export class ClientService {
    * @returns {Promise<ClientDto>} The updated ClientDto object.
    * **/
   async updateClient(id: string, data: Partial<InputClientDto>) {
-    if (data.email) {
-      throw new Error('Email cannot be updated.');
-    }
-
     const client = await this.prisma.client.findUnique({
       where: { id },
     });
