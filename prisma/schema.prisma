@@ -21,23 +21,23 @@ generator client {
 // }
 
 model Client {
-  id           String   @id @default(cuid())
-  name         String
-  cnpj         String?  @unique
-  address      String?
-  phone        String?
-  email        String   @unique
-  passwordHash String
+  id        String   @id @default(cuid())
+  name      String
+  cnpj      String?  @unique
+  address   String?
+  phone     String?
   // plan      Plan      @default(FREE)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  Unity        Unity[]
-  Admin        Admin[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  Unity     Unity[]
+  ownerId   String
   // Payment   Payment[]
-  enabled      Boolean? @default(true)
+  enabled   Boolean? @default(true)
+  Admin     Admin[]
 }
 
 enum AdminRole {
+  CLIENT_OWNER
   CLIENT_ADMIN
   UNITY_ADMIN
   QUEUE_ADMIN

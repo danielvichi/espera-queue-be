@@ -30,13 +30,6 @@ export class ClientDto {
   phone?: string;
 
   @ApiProperty({
-    description: 'Client Email Address',
-    example: 'client@email.com',
-    required: false,
-  })
-  email?: string;
-
-  @ApiProperty({
     description: 'Timestamp when the client was created',
     example: '2023-10-01T12:34:56.789Z',
     required: true,
@@ -49,25 +42,15 @@ export class ClientDto {
     required: true,
   })
   updatedAt: Date;
-
-  // TODO: Define UnityDto and QueueDto for better typing
-  // For now, using any[] as a placeholder
-  @ApiProperty({})
-  Unity?: any[];
-
-  // TODO: Define QueueDto for better typing
-  // For now, using any[] as a placeholder
-  @ApiProperty({})
-  Queue?: any[];
 }
 
-export class InputClientResponseDto extends ClientDto {
+export class InputResponseClientDto extends ClientDto {
   @ApiProperty({
-    description: 'Client password Hash',
-    example: 'SomeHashedPassword',
+    description: 'Client ownerId account',
+    example: 'user1234567890abcdef',
     required: true,
   })
-  passwordHash: string;
+  ownerId: string;
 }
 
 export class InputClientDto {
@@ -100,16 +83,9 @@ export class InputClientDto {
   phone?: string;
 
   @ApiProperty({
-    description: 'Client Email Address',
-    example: 'client@email.com',
+    description: 'Client ownerId account',
+    example: 'user1234567890abcdef',
     required: true,
   })
-  email: string;
-
-  @ApiProperty({
-    description: 'Client password Hash',
-    example: 'SomeHashedPassword',
-    required: true,
-  })
-  passwordHash: string;
+  ownerId: string;
 }

@@ -7,19 +7,19 @@ const CLIENTS_MOCK_DATA = [
     name: 'Client Controller A',
     address: 'Client address in the client format.',
     phone: '+1-234-567-8900',
-    email: 'valid_email_controller_a@email.com',
+    ownerId: 'owner_123e4567',
   },
   {
     name: 'Client Controller B',
     address: 'Client address in the client format.',
     phone: '+1-234-567-8900',
-    email: 'valid_email_controller_b@email.com',
+    ownerId: 'owner_123e45678',
   },
   {
     name: 'Client Controller C',
     address: 'Client address in the client format.',
     phone: '+1-234-567-8900',
-    email: 'valid_email_controller_c@email.com',
+    ownerId: 'owner_123e456789',
   },
 ];
 
@@ -39,7 +39,6 @@ describe('ClientController', () => {
     await prismaService.client.create({
       data: {
         ...clientMock1,
-        passwordHash: 'a_secure_password_hash_123',
       },
     });
   });
@@ -52,7 +51,7 @@ describe('ClientController', () => {
     const clients = await controller.getAllClients();
 
     const matchClient = clients.filter((client) => {
-      if (client.email === CLIENTS_MOCK_DATA[0].email) {
+      if (client.name === CLIENTS_MOCK_DATA[0].name) {
         return client;
       }
     });
@@ -68,7 +67,6 @@ describe('ClientController', () => {
       data: {
         id: customId,
         ...clientMockData,
-        passwordHash: 'a_secure_password_hash_123',
       },
     });
 
@@ -76,6 +74,5 @@ describe('ClientController', () => {
 
     expect(clientResponse).toBeDefined();
     expect(clientResponse?.id).toBe(customId);
-    expect(clientResponse?.email).toBe(clientMockData.email);
   });
 });
