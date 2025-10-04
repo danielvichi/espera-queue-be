@@ -53,9 +53,11 @@ model Admin {
   updatedAt    DateTime  @updatedAt
   Client       Client?   @relation(fields: [clientId], references: [id])
   clientId     String?
-  Unity        Unity?    @relation(fields: [unityId], references: [id])
-  unityId      String?
+  unityIds     String[]
+  queueIds     String[]
   Queue        Queue[]
+  unityId      String?
+  Unity        Unity?    @relation(fields: [unityId], references: [id])
   enabled      Boolean?  @default(true)
 }
 
