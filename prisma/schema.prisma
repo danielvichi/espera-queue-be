@@ -32,7 +32,7 @@ model Client {
   Unity     Unity[]
   ownerId   String
   // Payment   Payment[]
-  enabled   Boolean? @default(true)
+  enabled   Boolean @default(true)
   Admin     Admin[]
 }
 
@@ -58,7 +58,7 @@ model Admin {
   Queue        Queue[]
   unityId      String?
   Unity        Unity?    @relation(fields: [unityId], references: [id])
-  enabled      Boolean?  @default(true)
+  enabled      Boolean  @default(true)
 }
 
 model Unity {
@@ -73,7 +73,7 @@ model Unity {
   clientId  String?
   Queue     Queue[]
   Admin     Admin[]
-  enabled   Boolean? @default(true)
+  enabled   Boolean @default(true)
 }
 
 model UserQueued {
@@ -85,7 +85,7 @@ model UserQueued {
   updatedAt    DateTime @updatedAt
   Queue        Queue?   @relation(fields: [queueId], references: [id])
   queueId      String?
-  enabled      Boolean? @default(true)
+  enabled      Boolean @default(true)
 }
 
 enum QueueType {
@@ -107,7 +107,7 @@ model Queue {
   isActive           Boolean   @default(true)
   createdAt          DateTime  @default(now())
   updatedAt          DateTime  @updatedAt
-  enabled            Boolean?  @default(true)
+  enabled            Boolean  @default(true)
 
   Unity   Unity?  @relation(fields: [unityId], references: [id])
   unityId String?
