@@ -15,6 +15,18 @@ import {
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
+  async findAdminByEmail(email: string): Promise<AdminDto | null> {
+    const admin = await this.prisma.admin.findUnique({
+      where: { email },
+    });
+
+    if (!admin) {
+      return null;
+    }
+
+    return admin;
+  }
+
   async createAdmin(data: CreatedAdminDto): Promise<AdminDto> {
     // Role-based validations
     checkCreateAdminRequirementsOrThrowError(data);

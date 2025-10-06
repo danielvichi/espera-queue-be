@@ -1,5 +1,10 @@
 import { BadRequestException } from '@nestjs/common';
 
+export const defaultAdminExceptionMessage = {
+  EMAIL_NOT_FOUND: 'Admin with the provided email does not exist.',
+  INVALID_CREDENTIALS: 'Invalid credentials provided.',
+};
+
 export const createAdminBadRequestExceptionMessages = {
   NAME_REQUIRED: 'Name is required to create a client.',
   EMAIL_REQUIRED: 'Valid Email is required to create a admin.',
@@ -21,5 +26,12 @@ export class CreateAdminBadRequestException extends BadRequestException {
   constructor(message: string) {
     super(message);
     this.name = 'CreateAdminBadRequestException';
+  }
+}
+
+export class GetAdminBadRequestException extends BadRequestException {
+  constructor(message: string) {
+    super(message);
+    this.name = 'GetAdminBadRequestException';
   }
 }
