@@ -4,6 +4,10 @@ import { ApiBody, ApiHeader, ApiOkResponse } from '@nestjs/swagger';
 import { SignInDto } from 'src/admin/admin.dto';
 import { validateEmailOrThrow } from 'src/utils/email.utils';
 import { JwtService } from '@nestjs/jwt';
+import {
+  defaultAuthExceptionMessage,
+  InvalidCredentialsException,
+} from './auth.exceptions';
 
 @Controller('auth')
 export class AuthController {
@@ -24,9 +28,20 @@ export class AuthController {
   ): Promise<{ access_token: string }> {
     const { email, passwordHash } = signInData;
 
-    validateEmailOrThrow(email);
+    try {
+      validateEmailOrThrow(email);
+    } catch (err) {
+      if (err instanceof Error) {
+        throw new InvalidCredentialsException(
+          defaultAuthExceptionMessage.INVALID_CREDENTIALS,
+        );
+      }
+    }
+
     if (!passwordHash) {
-      throw new Error('Password is required');
+      throw new InvalidCredentialsException(
+        defaultAuthExceptionMessage.PASSWORD_REQUIRED,
+      );
     }
 
     const user = await this.authService.adminSignIn({

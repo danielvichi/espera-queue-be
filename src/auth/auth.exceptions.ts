@@ -1,6 +1,6 @@
 export const defaultAuthExceptionMessage = {
-  EMAIL_NOT_FOUND: 'User with the provided email does not exist.',
   INVALID_CREDENTIALS: 'Invalid credentials provided.',
+  PASSWORD_REQUIRED: 'Password is required',
 };
 
 export class AdminSignIn extends Error {
