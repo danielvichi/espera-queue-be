@@ -5,8 +5,7 @@ import {
   createAdminBadRequestExceptionMessages,
 } from './admin.exceptions';
 import { AdminRole } from '@prisma/client';
-
-const MIN_PASSWORD_LENGTH = 6;
+import { MIN_PASSWORD_LENGTH } from 'src/constants/config';
 
 export const checkCreateAdminRequirementsOrThrowError = (
   data: CreatedAdminDto,

@@ -1,23 +1,36 @@
-import { Body, Controller, Get } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Req,
+  Request,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBody, ApiHeader, ApiOkResponse } from '@nestjs/swagger';
 import { SignInDto } from 'src/admin/admin.dto';
 import { validateEmailOrThrow } from 'src/utils/email.utils';
-import { JwtService } from '@nestjs/jwt';
 import {
   defaultAuthExceptionMessage,
   InvalidCredentialsException,
+  UserNotFoundException,
 } from './auth.exceptions';
+import { type Response } from 'express';
+import { type AuthenticatedRequestDto } from './auth.dto';
+import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {
-  constructor(
-    private authService: AuthService,
-    private jwtService: JwtService,
-  ) {}
+  constructor(private authService: AuthService) {}
 
-  @Get('admin/signin')
-  @ApiOkResponse()
+  @Post('login/admin')
+  @ApiOkResponse({
+    description:
+      'Set an authenticated wrapped in a JWT cookie with the user_token.',
+  })
   @ApiHeader({
     name: 'Authorization',
     description: 'Basic auth header with email and password',
@@ -25,7 +38,15 @@ export class AuthController {
   @ApiBody({ description: 'Admin sign-in', type: SignInDto, required: true })
   async adminSignIn(
     @Body() signInData: SignInDto,
-  ): Promise<{ access_token: string }> {
+    @Req() req: AuthenticatedRequestDto,
+    @Res() res: Response,
+  ): Promise<unknown> {
+    if (!signInData || !signInData.email || !signInData.passwordHash) {
+      throw new InvalidCredentialsException(
+        defaultAuthExceptionMessage.INVALID_CREDENTIALS,
+      );
+    }
+
     const { email, passwordHash } = signInData;
 
     try {
@@ -49,9 +70,35 @@ export class AuthController {
       passwordHash,
     });
 
-    const payload = { sub: user?.clientId, user: user };
-    return {
-      access_token: await this.jwtService.signAsync(payload),
-    };
+    if (!user) {
+      throw new UserNotFoundException(
+        defaultAuthExceptionMessage.USER_NOT_FOUNDED,
+      );
+    }
+
+    const signedJwt = await this.authService.generateJwtForUser(user);
+    const cookie = this.authService.generateJwtCookie(req, signedJwt);
+
+    res.setHeader('Set-Cookie', cookie);
+    return res.send();
+  }
+
+  @Post('logout')
+  @HttpCode(204)
+  @ApiOkResponse({
+    description: 'Remove the authenticated user JWT and adds an expired cookie',
+  })
+  logout(@Req() req, @Res() res: Response) {
+    const cookie = this.authService.generateExpiredCookie(req);
+
+    // Tells the client to expire the cookie
+    res.setHeader('Set-Cookie', cookie);
+    res.send();
+  }
+
+  @Get('profile')
+  @UseGuards(AuthGuard)
+  getProfile(@Request() req: AuthenticatedRequestDto) {
+    return req.user;
   }
 }

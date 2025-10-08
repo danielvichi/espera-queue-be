@@ -3,11 +3,8 @@ import { AuthController } from './auth.controller';
 import { AdminResponseDto, CreatedAdminDto } from 'src/admin/admin.dto';
 import { AdminService } from 'src/admin/admin.service';
 import { AdminRole } from 'generated/prisma';
-import {
-  defaultAuthExceptionMessage,
-  InvalidCredentialsException,
-} from './auth.exceptions';
 import { JwtService } from '@nestjs/jwt';
+import { AuthService } from './auth.service';
 
 const ADMIN_MOCK_DATA: CreatedAdminDto = {
   name: 'Admin Name',
@@ -19,6 +16,7 @@ const ADMIN_MOCK_DATA: CreatedAdminDto = {
 
 describe('AuthController', () => {
   let authController: AuthController;
+  let authService: AuthService;
   let adminService: AdminService;
   let jwtService: JwtService;
   let adminUser: AdminResponseDto;
@@ -27,6 +25,7 @@ describe('AuthController', () => {
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
     authController = module.get<AuthController>(AuthController);
+    authService = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
     adminService = module.get<AdminService>(AdminService);
 
@@ -39,44 +38,96 @@ describe('AuthController', () => {
     expect(authController).toBeDefined();
   });
 
-  it('should NOT be able to signin with missing email', async () => {
-    await expect(
-      authController.adminSignIn({
-        email: '',
-        passwordHash: loginData.passwordHash,
-      }),
-    ).rejects.toThrow(
-      new InvalidCredentialsException(
-        defaultAuthExceptionMessage.INVALID_CREDENTIALS,
-      ),
-    );
-  });
-
-  it('should NOT be able to signin with missing hashed password', async () => {
-    await expect(
-      authController.adminSignIn({
-        email: loginData.email,
-        passwordHash: '',
-      }),
-    ).rejects.toThrow(
-      new InvalidCredentialsException(
-        defaultAuthExceptionMessage.PASSWORD_REQUIRED,
-      ),
-    );
-  });
-
-  it('should be get a JWT on signin with proper credentials', async () => {
-    const userToken = await authController.adminSignIn({
-      email: loginData.email,
-      passwordHash: loginData.passwordHash,
+  describe('/auth/login/admin', () => {
+    it('should get Bad Request 400 Error if no credentials is provided', async () => {
+      const url = '/auth/login/admin';
+      await TestModuleSingleton.callEndpoint().post(url).expect(400);
     });
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const decodedUserToken = jwtService.decode(userToken.access_token);
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access
-    const decodedUserData: AdminResponseDto = decodedUserToken.user;
+    it('should get Bad Request 400 Error if email is not provided', async () => {
+      const url = '/auth/login/admin';
+      await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: '',
+          passwordHash: loginData.passwordHash,
+        })
+        .expect(400);
+    });
 
-    expect(decodedUserData.id).toBe(adminUser.id);
-    expect(decodedUserData.email).toBe(adminUser.email);
+    it('should get Bad Request 400 Error if password_hash is not provided', async () => {
+      const url = '/auth/login/admin';
+      await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: loginData.email,
+          passwordHash: '',
+        })
+        .expect(400);
+    });
+
+    it('should return credentials cookies if correct credentials is provided', async () => {
+      const url = '/auth/login/admin';
+      const response = await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: loginData.email,
+          passwordHash: loginData.passwordHash,
+        })
+        .expect(201);
+      expect(response.headers['set-cookie']).toBeDefined();
+
+      const userTokenCookie = response.headers['set-cookie'][0];
+      const userTokenFromCookie = userTokenCookie
+        .split('user_token=')[1]
+        .split(';')[0];
+
+      const decodedUserToken: AdminResponseDto =
+        jwtService.decode(userTokenFromCookie);
+
+      expect(decodedUserToken.email).toMatch(loginData.email);
+      expect(decodedUserToken.id).toMatch(adminUser.id);
+    });
+  });
+
+  describe('/auth/logout', () => {
+    it('should replace a valid cookie session by and empty expired one', async () => {
+      const userToken = await authService.generateJwtForUser(adminUser);
+
+      const logoutResponse = await TestModuleSingleton.callEndpoint()
+        .post('/auth/logout')
+        .set('Cookie', [`user_token=${userToken}`])
+        .expect(204);
+
+      expect(logoutResponse.headers['set-cookie']).toBeDefined();
+
+      const userTokenCookie = logoutResponse.headers['set-cookie'][0];
+      expect(userTokenCookie.includes('user_token=;')).toBe(true);
+      expect(userTokenCookie.includes(`max-age=0`)).toBe(true);
+    });
+  });
+
+  describe('/auth/profile', () => {
+    it('should throw UnauthorizedException for not authenticated sessions', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .get('/auth/profile')
+        .set('Cookie', [`user_token=`])
+        .expect(401);
+    });
+
+    it('should get profile data for authenticated sessions', async () => {
+      const userToken = await authService.generateJwtForUser(adminUser);
+
+      const profileResponse = await TestModuleSingleton.callEndpoint()
+        .get('/auth/profile')
+        .set('Cookie', [`user_token=${userToken}`])
+        .expect(200);
+
+      const userDataFromResponse = profileResponse.body as AdminResponseDto;
+
+      expect(userDataFromResponse).toBeDefined();
+      expect(userDataFromResponse['id']).toBe(adminUser.id);
+      expect(userDataFromResponse['email']).toBe(adminUser.email);
+    });
   });
 });

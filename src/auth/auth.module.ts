@@ -4,13 +4,13 @@ import { AuthService } from './auth.service';
 import { AdminModule } from 'src/admin/admin.module';
 import { JwtModule } from '@nestjs/jwt';
 
-const JWT_SECRET = process.env.JWT_PUBLIC_KEY;
-
 const jwtModule = JwtModule.register({
   global: true,
-  secret: JWT_SECRET,
+  privateKey: process.env.JWT_PRIVATE_KEY,
+  publicKey: process.env.JWT_PUBLIC_KEY,
   signOptions: {
     expiresIn: '15m',
+    algorithm: 'ES256',
   },
 });
 
