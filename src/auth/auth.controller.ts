@@ -1,14 +1,4 @@
-import {
-  Body,
-  Controller,
-  Get,
-  HttpCode,
-  Post,
-  Req,
-  Request,
-  Res,
-  UseGuards,
-} from '@nestjs/common';
+import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBody, ApiHeader, ApiOkResponse } from '@nestjs/swagger';
 import { SignInDto } from 'src/admin/admin.dto';
@@ -20,7 +10,6 @@ import {
 } from './auth.exceptions';
 import { type Response } from 'express';
 import { type AuthenticatedRequestDto } from './auth.dto';
-import { AuthGuard } from './auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -94,11 +83,5 @@ export class AuthController {
     // Tells the client to expire the cookie
     res.setHeader('Set-Cookie', cookie);
     res.send();
-  }
-
-  @Get('profile')
-  @UseGuards(AuthGuard)
-  getProfile(@Request() req: AuthenticatedRequestDto) {
-    return req.user;
   }
 }

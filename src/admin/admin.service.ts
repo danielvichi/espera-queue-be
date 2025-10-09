@@ -3,8 +3,8 @@ import { AdminDto, CreatedAdminDto } from './admin.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { AdminRole } from '@prisma/client';
 import {
-  CreateAdminBadRequestException,
   createAdminBadRequestExceptionMessages,
+  CreateAdminConflictException,
 } from './admin.exceptions';
 import {
   checkCreateAdminRequirementsOrThrowError,
@@ -44,8 +44,23 @@ export class AdminService {
       });
 
       if (alreadyHasOwner) {
-        throw new CreateAdminBadRequestException(
+        throw new CreateAdminConflictException(
           createAdminBadRequestExceptionMessages.OWNER_ALREADY_EXISTS,
+        );
+      }
+    }
+
+    // Check if admin with email already exists
+    if (data.role !== AdminRole.CLIENT_OWNER) {
+      const accountWithEmail = await this.prisma.admin.findFirst({
+        where: {
+          email: data.email,
+        },
+      });
+
+      if (accountWithEmail) {
+        throw new CreateAdminConflictException(
+          createAdminBadRequestExceptionMessages.EMAIL_ALREADY_TAKEN,
         );
       }
     }

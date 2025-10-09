@@ -106,28 +106,4 @@ describe('AuthController', () => {
       expect(userTokenCookie.includes(`max-age=0`)).toBe(true);
     });
   });
-
-  describe('/auth/profile', () => {
-    it('should throw UnauthorizedException for not authenticated sessions', async () => {
-      await TestModuleSingleton.callEndpoint()
-        .get('/auth/profile')
-        .set('Cookie', [`user_token=`])
-        .expect(401);
-    });
-
-    it('should get profile data for authenticated sessions', async () => {
-      const userToken = await authService.generateJwtForUser(adminUser);
-
-      const profileResponse = await TestModuleSingleton.callEndpoint()
-        .get('/auth/profile')
-        .set('Cookie', [`user_token=${userToken}`])
-        .expect(200);
-
-      const userDataFromResponse = profileResponse.body as AdminResponseDto;
-
-      expect(userDataFromResponse).toBeDefined();
-      expect(userDataFromResponse['id']).toBe(adminUser.id);
-      expect(userDataFromResponse['email']).toBe(adminUser.email);
-    });
-  });
 });

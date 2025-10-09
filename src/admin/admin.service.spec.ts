@@ -5,6 +5,7 @@ import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import {
   CreateAdminBadRequestException,
   createAdminBadRequestExceptionMessages,
+  CreateAdminConflictException,
 } from './admin.exceptions';
 import { ClientDto } from 'src/client/client.dto';
 
@@ -185,7 +186,7 @@ describe('AdminService', () => {
         clientId: clientData.id,
       }),
     ).rejects.toThrow(
-      new CreateAdminBadRequestException(
+      new CreateAdminConflictException(
         createAdminBadRequestExceptionMessages.OWNER_ALREADY_EXISTS,
       ),
     );
