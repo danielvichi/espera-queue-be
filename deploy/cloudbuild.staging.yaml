@@ -36,9 +36,6 @@ steps:
   - id: integration-tests
     name: 'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
     args: ['run', 'test:ci']
-    env:
-      - 'DATABASE_URL=postgresql://postgres:postgres@espera_queue_local_test_db_ci:5432/espera_queue_local_test_db_ci?connect_timeout=300'
-      - 'NODE_ENV_IS_CI=true'
     waitFor: [docker-build, docker-push, start-test-db]
   # spinning down the test database
   - id: stop-test-db
@@ -81,6 +78,10 @@ steps:
 
 # availableSecrets:
 #   secretManager:
+#     - versionName: projects/965636593689/secrets/JWT_PRIVATE_KEY/versions/latest
+#       env: 'JWT_PRIVATE_KEY'
+#     - versionName: projects/965636593689/secrets/JWT_PUBLIC_KEY/versions/latest
+#       env: 'JWT_PUBLIC_KEY'
 #     - versionName: projects/965636593689/secrets/DATABASE_URL/versions/latest
 #       env: 'DATABASE_URL'
 images:

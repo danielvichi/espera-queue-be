@@ -11,7 +11,7 @@ COPY package*.json ./
 # Note the --production tag allows us to ignore devDependencies
 RUN npm audit --production --audit-level critical
 
-RUN npm ci 
+RUN npm ci --force
 
 # Bundle app source
 COPY . .

@@ -1,10 +1,11 @@
 import { INestApplication, ModuleMetadata } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-// import { PrismaClient } from 'generated/prisma';
 import { PrismaClient } from '@prisma/client';
 import { AppModule } from 'src/app.module';
 import { PrismaModule } from 'src/prisma/prisma.module';
 import { PrismaService } from 'src/prisma/prisma.service';
+import TestAgent from 'supertest/lib/agent';
+import * as request from 'supertest';
 
 type TestModuleParams = {
   moduleMetadata?: ModuleMetadata;
@@ -49,5 +50,9 @@ export class TestModuleSingleton {
     await this.prismaClient.queue.deleteMany();
     await this.prismaClient.unity.deleteMany();
     await this.prismaClient.userQueued.deleteMany();
+  }
+
+  static callEndpoint(): TestAgent {
+    return request.agent(this.app.getHttpServer());
   }
 }
