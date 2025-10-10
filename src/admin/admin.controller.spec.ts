@@ -3,7 +3,7 @@ import { AuthService } from 'src/auth/auth.service';
 import { AdminService } from './admin.service';
 import { AdminResponseDto, CreatedAdminDto } from './admin.dto';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
-import { AdminRole } from 'generated/prisma';
+import { AdminRole } from '@prisma/client';
 
 const CREATE_ADMIN_MOCK_DATA: Array<CreatedAdminDto> = [
   {
