@@ -35,14 +35,7 @@ steps:
   # needs to allocate enough memory starting with node 18 (NODE_OPTIONS=--max-old-space-size=3000 in test:ci script)
   - id: integration-tests
     name: 'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
-    args:
-      - run
-      - test:ci
-      - >-
-        --set-secrets
-          DATABASE_URL=postgresql://postgres:postgres@espera_queue_local_test_db_ci:5432/espera_queue_local_test_db_ci?connect_timeout=300, 
-          NODE_ENV_IS_CI=true
-
+    args: ['run', 'test:ci']
     waitFor: [docker-build, docker-push, start-test-db]
   # spinning down the test database
   - id: stop-test-db

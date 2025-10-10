@@ -49,12 +49,5 @@ steps:
         'espera_queue_local_test_db_ci',
       ]
 
-# availableSecrets:
-#   secretManager:
-#     - versionName: projects/965636593689/secrets/JWT_PRIVATE_KEY/versions/latest
-#       env: 'JWT_PRIVATE_KEY'
-#     - versionName: projects/965636593689/secrets/JWT_PUBLIC_KEY/versions/latest
-#       env: 'JWT_PUBLIC_KEY'
-
 images:
   - southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA
