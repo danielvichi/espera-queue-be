@@ -2,7 +2,7 @@ import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { AuthController } from './auth.controller';
 import { AdminResponseDto, CreatedAdminDto } from 'src/admin/admin.dto';
 import { AdminService } from 'src/admin/admin.service';
-import { AdminRole } from 'generated/prisma';
+import { AdminRole } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 
