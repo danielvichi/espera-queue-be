@@ -23,6 +23,10 @@ describe('AuthController', () => {
   const loginData = ADMIN_MOCK_DATA;
 
   beforeAll(async () => {
+    console.log('JWT_PRIVATE_KEY');
+    console.log(process.env.JWT_PRIVATE_KEY);
+    console.log('JWT_PUBLIC_KEY');
+    console.log(process.env.JWT_PUBLIC_KEY);
     const module = await TestModuleSingleton.createTestModule();
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
