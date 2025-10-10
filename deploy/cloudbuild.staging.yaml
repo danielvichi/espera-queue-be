@@ -35,13 +35,14 @@ steps:
   # needs to allocate enough memory starting with node 18 (NODE_OPTIONS=--max-old-space-size=3000 in test:ci script)
   - id: integration-tests
     name: 'southamerica-east1-docker.pkg.dev/espera-queue-be/espera-queue-be-stg/$COMMIT_SHA'
-    args: ['run', 'test:ci']
-    secretEnv: ['JWT_PRIVATE_KEY', 'JWT_PUBLIC_KEY']
-    env:
-      - 'DATABASE_URL=postgresql://postgres:postgres@espera_queue_local_test_db_ci:5432/espera_queue_local_test_db_ci?connect_timeout=300'
-      - 'NODE_ENV_IS_CI=true'
-      - 'JWT_PRIVATE_KEY:JWT_PRIVATE_KEY:latest'
-      - 'JWT_PUBLIC_KEY:JWT_PUBLIC_KEY:latest'
+    args:
+      - run
+      - test:ci
+      - >-
+        --set-secrets
+          DATABASE_URL=postgresql://postgres:postgres@espera_queue_local_test_db_ci:5432/espera_queue_local_test_db_ci?connect_timeout=300, 
+          NODE_ENV_IS_CI=true
+
     waitFor: [docker-build, docker-push, start-test-db]
   # spinning down the test database
   - id: stop-test-db
@@ -82,12 +83,12 @@ steps:
         NODE_ENV=production|||
         PROJECT_ENV=staging
 
-availableSecrets:
-  secretManager:
-    - versionName: projects/965636593689/secrets/JWT_PRIVATE_KEY/versions/latest
-      env: 'JWT_PRIVATE_KEY'
-    - versionName: projects/965636593689/secrets/JWT_PUBLIC_KEY/versions/latest
-      env: 'JWT_PUBLIC_KEY'
+# availableSecrets:
+#   secretManager:
+#     - versionName: projects/965636593689/secrets/JWT_PRIVATE_KEY/versions/latest
+#       env: 'JWT_PRIVATE_KEY'
+#     - versionName: projects/965636593689/secrets/JWT_PUBLIC_KEY/versions/latest
+#       env: 'JWT_PUBLIC_KEY'
 #     - versionName: projects/965636593689/secrets/DATABASE_URL/versions/latest
 #       env: 'DATABASE_URL'
 images:
