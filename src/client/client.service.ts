@@ -86,7 +86,7 @@ export class ClientService {
     });
 
     if (!client) {
-      throw new ClientNotFoundException(id);
+      return null;
     }
 
     return {
@@ -151,5 +151,29 @@ export class ClientService {
       where: { id },
       data: { enabled: true },
     });
+  }
+
+  async deleteClient(id: string): Promise<Partial<ClientDto>> {
+    const client = await this.prisma.client.findFirst({
+      where: {
+        id: id,
+      },
+    });
+
+    if (!client) {
+      throw new ClientNotFoundException(id);
+    }
+
+    const deleteResponse = await this.prisma.client.delete({
+      where: {
+        id: client.id,
+      },
+    });
+
+    return {
+      ...deleteResponse,
+      address: deleteResponse.address ?? undefined,
+      phone: deleteResponse.phone ?? undefined,
+    };
   }
 }

@@ -27,6 +27,12 @@ const CLIENTS_MOCK_DATA = [
     phone: '+1-234-567-8900',
     ownerId: 'owner_123e45679',
   },
+  {
+    name: 'Client Serv D',
+    address: 'Client address in the client format.',
+    phone: '+1-234-567-8900',
+    ownerId: 'owner_123e456710',
+  },
 ];
 
 describe('ClientService', () => {
@@ -124,12 +130,11 @@ describe('ClientService', () => {
     expect(matchClient.length).toBe(1);
   });
 
-  it('should throw a known error if client id does not exist', async () => {
+  it('should return null if client id does not exist', async () => {
     const invalidId = 'non_existing_id_123';
 
-    await expect(clientService.getClientById(invalidId)).rejects.toThrow(
-      new ClientNotFoundException(invalidId),
-    );
+    const client = await clientService.getClientById(invalidId);
+    expect(client).toBeNull();
   });
 
   it('should return a client by ID', async () => {
@@ -209,5 +214,32 @@ describe('ClientService', () => {
     });
 
     expect((await updatedClient).address).toBe(newAddress);
+  });
+
+  describe('deleteClient', () => {
+    it('should NOT be able to DELETE a client without an existing id', async () => {
+      const invalidClientId = 'nomExistingId';
+
+      await expect(clientService.deleteClient(invalidClientId)).rejects.toThrow(
+        new ClientNotFoundException(invalidClientId),
+      );
+    });
+
+    it('should be able to DELETE a client with an existing id', async () => {
+      const validClientInputData = CLIENTS_MOCK_DATA[3];
+
+      const existingClient =
+        await clientService.createClient(validClientInputData);
+
+      const deleteResponse = await clientService.deleteClient(
+        existingClient.id,
+      );
+
+      expect(deleteResponse.id).toBe(existingClient.id);
+
+      const client = await clientService.getClientById(existingClient.id);
+
+      expect(client).toBeNull();
+    });
   });
 });
