@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AdminResponseDto } from 'src/admin/admin.dto';
+import { AdminResponseDto, AdminWithClientDto } from 'src/admin/admin.dto';
 import { AdminService } from 'src/admin/admin.service';
 import {
   defaultAuthExceptionMessage,
@@ -58,7 +58,7 @@ export class AuthService {
     return token;
   }
 
-  async generateJwtForUser(user: AdminResponseDto) {
+  async generateJwtForUser(user: AdminWithClientDto) {
     return this.generateJwtToken(
       {
         ...user,

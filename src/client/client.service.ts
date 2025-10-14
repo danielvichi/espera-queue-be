@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import {
   ClientDto,
   CreateClientDto,
-  InputClientDto,
   InputResponseClientDto,
 } from './client.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -102,7 +101,7 @@ export class ClientService {
    * @param {Partial<InputClientDto>} data - The data to update the client with.
    * @returns {Promise<ClientDto>} The updated ClientDto object.
    * **/
-  async updateClient(id: string, data: Partial<InputClientDto>) {
+  async updateClient(id: string, data: Partial<CreateClientDto>) {
     const client = await this.prisma.client.findUnique({
       where: { id },
     });
@@ -113,7 +112,10 @@ export class ClientService {
 
     return this.prisma.client.update({
       where: { id },
-      data,
+      data: {
+        ...client,
+        ...data,
+      },
     });
   }
 

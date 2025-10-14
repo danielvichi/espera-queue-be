@@ -1,5 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { AdminRole } from '@prisma/client';
+import { ClientDto } from 'src/client/client.dto';
 
 export class AdminDto {
   @ApiProperty({
@@ -88,6 +89,9 @@ export class AdminDto {
 }
 
 export class AdminResponseDto extends OmitType(AdminDto, ['passwordHash']) {}
+export class AdminWithClientDto extends AdminResponseDto {
+  client: ClientDto;
+}
 
 export class CreatedAdminDto {
   @ApiProperty({
