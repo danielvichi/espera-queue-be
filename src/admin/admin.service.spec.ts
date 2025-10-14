@@ -50,6 +50,13 @@ const ADMIN_MOCK_DATA = [
     role: AdminRole.QUEUE_ADMIN,
     queueIds: ['queue_123e4567', 'queue_123e4568'],
   },
+  {
+    name: ' Admin to Delete',
+    email: 'admin_to_delete@email.com',
+    passwordHash: 'hashed_password',
+    role: AdminRole.QUEUE_ADMIN,
+    queueIds: ['queue_123e4567', 'queue_123e4568'],
+  },
 ];
 
 describe('AdminService', () => {
@@ -320,13 +327,15 @@ describe('AdminService', () => {
     });
 
     it('should be able to DELETE a Admin with a valid email ', async () => {
-      const validEmail: string = ADMIN_MOCK_DATA[0].email;
+      const validAdmin = await adminService.createAdmin(ADMIN_MOCK_DATA[5]);
 
-      const deleteResponse = await adminService.deleteAdmin(validEmail);
+      const deleteResponse = await adminService.deleteAdmin(validAdmin.email);
 
-      expect(deleteResponse.email).toBe(validEmail);
+      expect(deleteResponse.email).toBe(validAdmin.email);
 
-      const adminDeleted = await adminService.findAdminByEmail(validEmail);
+      const adminDeleted = await adminService.findAdminByEmail(
+        validAdmin.email,
+      );
 
       expect(adminDeleted).toBeNull();
     });

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   ClientDto,
+  CreateClientDto,
   InputClientDto,
   InputResponseClientDto,
 } from './client.dto';
@@ -20,7 +21,7 @@ export class ClientService {
    * @param {InputClientDto} data - The data required to create a new client.
    * @returns {Promise<ClientDto>} The created ClientDto object.
    **/
-  async createClient(data: InputClientDto): Promise<InputResponseClientDto> {
+  async createClient(data: CreateClientDto): Promise<InputResponseClientDto> {
     if (!data.name) {
       throw new CreateClientBadRequestException(
         createClientBadRequestExceptionMessages.NAME_REQUIRED,

@@ -110,13 +110,13 @@ export class AdminService {
       throw new AdminNotFoundException(email);
     }
 
-    const response = await this.prisma.admin.delete({
+    const deleteResponse = await this.prisma.admin.delete({
       where: {
         email: admin.email,
       },
     });
 
-    return response;
+    return deleteResponse;
   }
 
   // TODO: TESTS FOR:
