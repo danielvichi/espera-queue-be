@@ -147,6 +147,30 @@ export class CreatedAdminDto {
   queueIds?: string[];
 }
 
+export class CreateOwnerAdminDto {
+  @ApiProperty({
+    description: 'Name of the admin',
+    example: 'Admin User',
+    required: true,
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Email of the admin',
+    example: 'admin@email.com',
+    uniqueItems: true,
+    required: true,
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'Hashed password of the admin',
+    example: '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
+    required: true,
+  })
+  passwordHash: string;
+}
+
 export class SignInDto {
   @ApiProperty({
     description: 'Email of the admin',

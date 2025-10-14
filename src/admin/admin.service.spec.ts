@@ -3,6 +3,7 @@ import { AdminService } from './admin.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import {
+  AdminNotFoundException,
   CreateAdminBadRequestException,
   createAdminBadRequestExceptionMessages,
   CreateAdminConflictException,
@@ -78,188 +79,256 @@ describe('AdminService', () => {
     expect(adminService).toBeDefined();
   });
 
-  it('should NOT be able to create an admin with missing name', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { name, ...ownerAdminDataWithoutEmail } = ADMIN_MOCK_DATA[0];
+  describe('createAdmin', () => {
+    it('should NOT be able to create an admin with missing name', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { name, ...ownerAdminDataWithoutEmail } = ADMIN_MOCK_DATA[0];
 
-    await expect(
-      adminService.createAdmin({
-        ...ownerAdminDataWithoutEmail,
-        name: '',
-        clientId: clientData.id,
-      }),
-    ).rejects.toThrow(
-      new CreateAdminBadRequestException(
-        createAdminBadRequestExceptionMessages.NAME_REQUIRED,
-      ),
-    );
-  });
-
-  it('should NOT be able to create an admin with missing email', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { email, ...ownerAdminDataWithoutEmail } = ADMIN_MOCK_DATA[0];
-
-    await expect(
-      adminService.createAdmin({
-        ...ownerAdminDataWithoutEmail,
-        email: '',
-        clientId: clientData.id,
-      }),
-    ).rejects.toThrow(
-      new CreateAdminBadRequestException(
-        createAdminBadRequestExceptionMessages.EMAIL_REQUIRED,
-      ),
-    );
-  });
-
-  it('should NOT be able to create an admin with missing password', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { passwordHash, ...ownerAdminDataWithoutPassword } =
-      ADMIN_MOCK_DATA[0];
-
-    await expect(
-      adminService.createAdmin({
-        ...ownerAdminDataWithoutPassword,
-        passwordHash: '',
-        clientId: clientData.id,
-      }),
-    ).rejects.toThrow(
-      new CreateAdminBadRequestException(
-        createAdminBadRequestExceptionMessages.PASSWORD_REQUIRED,
-      ),
-    );
-  });
-
-  it('should NOT be able to create an admin with missing role', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { role, ...ownerAdminDataWithoutRole } = ADMIN_MOCK_DATA[0];
-
-    await expect(
-      adminService.createAdmin({
-        ...ownerAdminDataWithoutRole,
-        role: undefined as unknown as AdminRole, // Force to be undefined
-        clientId: clientData.id,
-      }),
-    ).rejects.toThrow(
-      new CreateAdminBadRequestException(
-        createAdminBadRequestExceptionMessages.ROLE_REQUIRED,
-      ),
-    );
-  });
-
-  it('should NOT be able to create a Client Owner admin with missing clientId', async () => {
-    const ownerAdminDataWithoutClientId = ADMIN_MOCK_DATA[0];
-
-    await expect(
-      adminService.createAdmin({
-        ...ownerAdminDataWithoutClientId,
-        clientId: undefined,
-      }),
-    ).rejects.toThrow(
-      new CreateAdminBadRequestException(
-        createAdminBadRequestExceptionMessages.CLIENT_ID_REQUIRED,
-      ),
-    );
-  });
-
-  it('should be able to create a Client Owner admin', async () => {
-    const ownerAdminData = ADMIN_MOCK_DATA[0];
-
-    const newOwnerAdmin = await adminService.createAdmin({
-      ...ownerAdminData,
-      clientId: clientData.id,
+      await expect(
+        adminService.createAdmin({
+          ...ownerAdminDataWithoutEmail,
+          name: '',
+          clientId: clientData.id,
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.NAME_REQUIRED,
+        ),
+      );
     });
 
-    expect(newOwnerAdmin.id).toBeDefined();
-    expect(newOwnerAdmin.name).toMatch(ownerAdminData.name);
-    expect(newOwnerAdmin.email).toMatch(ownerAdminData.email);
-    expect(newOwnerAdmin.role).toBe(AdminRole.CLIENT_OWNER);
-    expect(newOwnerAdmin.clientId).toBe(clientData.id);
+    it('should NOT be able to create an admin with missing email', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { email, ...ownerAdminDataWithoutEmail } = ADMIN_MOCK_DATA[2];
+
+      await expect(
+        adminService.createAdmin({
+          ...ownerAdminDataWithoutEmail,
+          email: '',
+          clientId: clientData.id,
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.EMAIL_REQUIRED,
+        ),
+      );
+    });
+
+    it('should NOT be able to create an admin with missing password', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { passwordHash, ...ownerAdminDataWithoutPassword } =
+        ADMIN_MOCK_DATA[2];
+
+      await expect(
+        adminService.createAdmin({
+          ...ownerAdminDataWithoutPassword,
+          passwordHash: '',
+          clientId: clientData.id,
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.PASSWORD_REQUIRED,
+        ),
+      );
+    });
+
+    it('should NOT be able to create an admin with missing role', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { role, ...ownerAdminDataWithoutRole } = ADMIN_MOCK_DATA[2];
+
+      await expect(
+        adminService.createAdmin({
+          ...ownerAdminDataWithoutRole,
+          role: undefined as unknown as AdminRole, // Force to be undefined
+          clientId: clientData.id,
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.ROLE_REQUIRED,
+        ),
+      );
+    });
+
+    it('should NOT be able to create another Client Owner admin', async () => {
+      const ownerAdminData = ADMIN_MOCK_DATA[0];
+
+      await expect(
+        adminService.createAdmin({
+          ...ownerAdminData,
+          clientId: clientData.id,
+        }),
+      ).rejects.toThrow(
+        new Error(createAdminBadRequestExceptionMessages.ROLE_NOT_ALLOWED),
+      );
+    });
+
+    it('should be able to create a Client Admin', async () => {
+      const clientAdminData = ADMIN_MOCK_DATA[2];
+
+      const newClientAdmin = await adminService.createAdmin({
+        ...clientAdminData,
+        clientId: clientData.id,
+      });
+
+      expect(newClientAdmin.id).toBeDefined();
+      expect(newClientAdmin.name).toMatch(clientAdminData.name);
+      expect(newClientAdmin.email).toMatch(clientAdminData.email);
+      expect(newClientAdmin.role).toBe(AdminRole.CLIENT_ADMIN);
+      expect(newClientAdmin.clientId).toBe(clientData.id);
+    });
+
+    it('should NOT be able to create a Unity Admin with missing unityIds', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { unityIds, ...unityAdminDataWithoutUnityIds } = ADMIN_MOCK_DATA[3];
+
+      await expect(
+        adminService.createAdmin({
+          ...unityAdminDataWithoutUnityIds,
+          unityIds: [],
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.UNITY_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should be able to create a Unity Admin', async () => {
+      const unityAdminData = ADMIN_MOCK_DATA[3];
+
+      const newUnityAdmin = await adminService.createAdmin(unityAdminData);
+
+      expect(newUnityAdmin.id).toBeDefined();
+      expect(newUnityAdmin.name).toMatch(unityAdminData.name);
+      expect(newUnityAdmin.email).toMatch(unityAdminData.email);
+      expect(newUnityAdmin.role).toBe(AdminRole.UNITY_ADMIN);
+      expect(newUnityAdmin.unityIds).toEqual(unityAdminData.unityIds);
+    });
+
+    it('should NOT be able to create a Queue Admin with missing queueIds', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { queueIds, ...queueAdminDataWithoutQueueIds } = ADMIN_MOCK_DATA[4];
+
+      await expect(
+        adminService.createAdmin({
+          ...queueAdminDataWithoutQueueIds,
+          queueIds: [],
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.QUEUE_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should be able to create a Queue Admin', async () => {
+      const queueAdminData = ADMIN_MOCK_DATA[4];
+
+      const newQueueAdmin = await adminService.createAdmin(queueAdminData);
+
+      expect(newQueueAdmin.id).toBeDefined();
+      expect(newQueueAdmin.name).toMatch(queueAdminData.name);
+      expect(newQueueAdmin.email).toMatch(queueAdminData.email);
+      expect(newQueueAdmin.role).toBe(AdminRole.QUEUE_ADMIN);
+      expect(newQueueAdmin.queueIds).toEqual(queueAdminData.queueIds);
+    });
   });
 
-  it('should NOT be able to create another Client Owner admin for the same client', async () => {
-    const ownerAdminData = ADMIN_MOCK_DATA[1];
+  describe('createOwnerAdmin', () => {
+    it('should NOT be able to create a Client Owner admin without Name', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- excluding name on propose
+      const { name, ...ownerAdminDataWithoutName } = ADMIN_MOCK_DATA[0];
 
-    await expect(
-      adminService.createAdmin({
+      await expect(
+        adminService.createOwnerAdmin({
+          ...ownerAdminDataWithoutName,
+          name: '',
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.NAME_REQUIRED,
+        ),
+      );
+    });
+
+    it('should NOT be able to create a Client Owner admin without Email', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- excluding email on propose
+      const { email, ...ownerAdminDataWithoutEmail } = ADMIN_MOCK_DATA[0];
+
+      await expect(
+        adminService.createOwnerAdmin({
+          ...ownerAdminDataWithoutEmail,
+          email: '',
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.EMAIL_REQUIRED,
+        ),
+      );
+    });
+
+    it('should NOT be able to create a Client Owner admin with invalid Email', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- excluding email on propose
+      const { email, ...ownerAdminDataWithoutEmail } = ADMIN_MOCK_DATA[0];
+
+      await expect(
+        adminService.createOwnerAdmin({
+          ...ownerAdminDataWithoutEmail,
+          email: 'invalid_email.com',
+        }),
+      ).rejects.toThrow(
+        new CreateAdminBadRequestException(
+          createAdminBadRequestExceptionMessages.EMAIL_REQUIRED,
+        ),
+      );
+    });
+
+    it('should be able to create a Client Owner admin', async () => {
+      const ownerAdminData = ADMIN_MOCK_DATA[0];
+
+      const newOwnerAdmin = await adminService.createOwnerAdmin({
         ...ownerAdminData,
-        clientId: clientData.id,
-      }),
-    ).rejects.toThrow(
-      new CreateAdminConflictException(
-        createAdminBadRequestExceptionMessages.OWNER_ALREADY_EXISTS,
-      ),
-    );
-  });
+      });
 
-  it('should be able to create a Client Admin', async () => {
-    const clientAdminData = ADMIN_MOCK_DATA[2];
-
-    const newClientAdmin = await adminService.createAdmin({
-      ...clientAdminData,
-      clientId: clientData.id,
+      expect(newOwnerAdmin.id).toBeDefined();
+      expect(newOwnerAdmin.name).toMatch(ownerAdminData.name);
+      expect(newOwnerAdmin.email).toMatch(ownerAdminData.email);
+      expect(newOwnerAdmin.role).toBe(AdminRole.CLIENT_OWNER);
     });
 
-    expect(newClientAdmin.id).toBeDefined();
-    expect(newClientAdmin.name).toMatch(clientAdminData.name);
-    expect(newClientAdmin.email).toMatch(clientAdminData.email);
-    expect(newClientAdmin.role).toBe(AdminRole.CLIENT_ADMIN);
-    expect(newClientAdmin.clientId).toBe(clientData.id);
+    it('should NOT be able to create a Client Owner admin with an existing email', async () => {
+      const ownerAdminData = ADMIN_MOCK_DATA[0];
+      await expect(
+        adminService.createOwnerAdmin({
+          ...ownerAdminData,
+        }),
+      ).rejects.toThrow(
+        new CreateAdminConflictException(
+          createAdminBadRequestExceptionMessages.OWNER_ALREADY_EXISTS,
+        ),
+      );
+    });
   });
 
-  it('should NOT be able to create a Unity Admin with missing unityIds', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { unityIds, ...unityAdminDataWithoutUnityIds } = ADMIN_MOCK_DATA[3];
+  describe('deleteAdmin', () => {
+    it('should NOT be able to DELETE a Admin without valid email', async () => {
+      const invalidAdminEmail: string = 'dont_existing_account@email.com';
 
-    await expect(
-      adminService.createAdmin({
-        ...unityAdminDataWithoutUnityIds,
-        unityIds: [],
-      }),
-    ).rejects.toThrow(
-      new CreateAdminBadRequestException(
-        createAdminBadRequestExceptionMessages.UNITY_ID_REQUIRED,
-      ),
-    );
-  });
+      await expect(adminService.deleteAdmin(invalidAdminEmail)).rejects.toThrow(
+        new AdminNotFoundException(invalidAdminEmail),
+      );
+    });
 
-  it('should be able to create a Unity Admin', async () => {
-    const unityAdminData = ADMIN_MOCK_DATA[3];
+    it('should be able to DELETE a Admin with a valid email ', async () => {
+      const validEmail: string = ADMIN_MOCK_DATA[0].email;
 
-    const newUnityAdmin = await adminService.createAdmin(unityAdminData);
+      const deleteResponse = await adminService.deleteAdmin(validEmail);
 
-    expect(newUnityAdmin.id).toBeDefined();
-    expect(newUnityAdmin.name).toMatch(unityAdminData.name);
-    expect(newUnityAdmin.email).toMatch(unityAdminData.email);
-    expect(newUnityAdmin.role).toBe(AdminRole.UNITY_ADMIN);
-    expect(newUnityAdmin.unityIds).toEqual(unityAdminData.unityIds);
-  });
+      expect(deleteResponse.email).toBe(validEmail);
 
-  it('should NOT be able to create a Queue Admin with missing queueIds', async () => {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { queueIds, ...queueAdminDataWithoutQueueIds } = ADMIN_MOCK_DATA[4];
+      const adminDeleted = await adminService.findAdminByEmail(validEmail);
 
-    await expect(
-      adminService.createAdmin({
-        ...queueAdminDataWithoutQueueIds,
-        queueIds: [],
-      }),
-    ).rejects.toThrow(
-      new CreateAdminBadRequestException(
-        createAdminBadRequestExceptionMessages.QUEUE_ID_REQUIRED,
-      ),
-    );
-  });
-
-  it('should be able to create a Queue Admin', async () => {
-    const queueAdminData = ADMIN_MOCK_DATA[4];
-
-    const newQueueAdmin = await adminService.createAdmin(queueAdminData);
-
-    expect(newQueueAdmin.id).toBeDefined();
-    expect(newQueueAdmin.name).toMatch(queueAdminData.name);
-    expect(newQueueAdmin.email).toMatch(queueAdminData.email);
-    expect(newQueueAdmin.role).toBe(AdminRole.QUEUE_ADMIN);
-    expect(newQueueAdmin.queueIds).toEqual(queueAdminData.queueIds);
+      expect(adminDeleted).toBeNull();
+    });
   });
 });

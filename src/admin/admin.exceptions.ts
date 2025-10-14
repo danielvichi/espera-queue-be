@@ -1,4 +1,8 @@
-import { BadRequestException, ConflictException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  NotFoundException,
+} from '@nestjs/common';
 
 export const defaultAdminExceptionMessage = {
   EMAIL_NOT_FOUND: 'Admin with the provided email does not exist.',
@@ -10,6 +14,7 @@ export const createAdminBadRequestExceptionMessages = {
   EMAIL_REQUIRED: 'Valid Email is required to create a admin.',
   EMAIL_ALREADY_TAKEN: 'Email is already taken by another admin.',
   PASSWORD_REQUIRED: 'Password is required to create an admin.',
+  ROLE_NOT_ALLOWED: 'Role not allowed',
   OWNER_ID_REQUIRED:
     'Owner ID is required to create an Admin with Client Owner role.',
   OWNER_ALREADY_EXISTS: 'This client already has an owner.',
@@ -43,5 +48,14 @@ export class GetAdminBadRequestException extends BadRequestException {
   constructor(message: string) {
     super(message);
     this.name = 'GetAdminBadRequestException';
+  }
+}
+
+export class AdminNotFoundException extends NotFoundException {
+  constructor(adminIdentifier: string) {
+    super({
+      error: 'AdminNotFound',
+      message: `Admin account not found for email: ${adminIdentifier}`,
+    });
   }
 }
