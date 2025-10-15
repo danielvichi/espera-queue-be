@@ -42,7 +42,7 @@ describe('AuthService', () => {
   });
   describe('AuthService', () => {
     it('should be able to signin with a valid email', async () => {
-      const signedUser = await authService.adminSignIn({
+      const signedUser = await authService.checkAdminCredentials({
         email: loginData.email,
         passwordHash: loginData.passwordHash,
       });
@@ -53,7 +53,7 @@ describe('AuthService', () => {
 
     it('should NOT be able to signin with a miss matched password', async () => {
       await expect(
-        authService.adminSignIn({
+        authService.checkAdminCredentials({
           email: loginData.email,
           passwordHash: 'miss_matched_password',
         }),
@@ -65,7 +65,7 @@ describe('AuthService', () => {
     });
 
     it('should return NULL if the valid email does NOT belong to an Admin account', async () => {
-      const signinResult = await authService.adminSignIn({
+      const signinResult = await authService.checkAdminCredentials({
         email: 'never_registered_email@email.com',
         passwordHash: loginData.email,
       });

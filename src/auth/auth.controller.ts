@@ -25,7 +25,7 @@ export class AuthController {
     description: 'Basic auth header with email and password',
   })
   @ApiBody({ description: 'Admin sign-in', type: SignInDto, required: true })
-  async adminSignIn(
+  async checkAdminCredentials(
     @Body() signInData: SignInDto,
     @Req() req: AuthenticatedRequestDto,
     @Res() res: Response,
@@ -54,7 +54,7 @@ export class AuthController {
       );
     }
 
-    const user = await this.authService.adminSignIn({
+    const user = await this.authService.checkAdminCredentials({
       email,
       passwordHash,
     });

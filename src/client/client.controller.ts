@@ -109,7 +109,7 @@ export class ClientController {
     const { email, passwordHash } = createAdminData;
 
     // Login
-    const user = await this.authService.adminSignIn({
+    const user = await this.authService.checkAdminCredentials({
       email,
       passwordHash,
     });
