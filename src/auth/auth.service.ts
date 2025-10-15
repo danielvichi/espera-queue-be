@@ -24,7 +24,15 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
-  async adminSignIn(data: AdminSignIn): Promise<AdminResponseDto | null> {
+  /**
+   * Returns admin data for a Sign In session without password hash
+   *
+   * @param {AdminSignIn} data - Admin credentials for a Sign in session
+   * @returns {Promise<AdminResponseDto>}
+   */
+  async checkAdminCredentials(
+    data: AdminSignIn,
+  ): Promise<AdminResponseDto | null> {
     const adminUser = await this.adminService.findAdminByEmail(data.email);
 
     if (!adminUser) {
@@ -32,6 +40,7 @@ export class AuthService {
     }
 
     const { passwordHash, ...adminDataWithoutPassword } = adminUser;
+    // If the password DOES NOT MATCH throw invalid credentials
     if (data.passwordHash !== passwordHash) {
       throw new InvalidCredentialsException(
         defaultAuthExceptionMessage.INVALID_CREDENTIALS,
@@ -41,6 +50,17 @@ export class AuthService {
     return adminDataWithoutPassword;
   }
 
+  // TODO - IMPROVE
+  /**
+   * Generates a JWT token with the provided payload and signing options
+   *
+   * This method uses the ES256 (ECDSA P-256) signing algorithm to create a secure JWT token.
+   * The private key is automatically handled by the JWT service configuration.
+   *
+   * @param {Record<any, any>} payload - The data to be encoded in the token payload
+   * @param {Omit<JwtSignOptions, 'privateKey'> = {}} options
+   * @returns {Promise<string>} - JWT signing options excluding privateKey.
+   */
   async generateJwtToken(
     payload: Record<any, any>,
     options: Omit<JwtSignOptions, 'privateKey'> = {},
@@ -58,7 +78,13 @@ export class AuthService {
     return token;
   }
 
-  async generateJwtForUser(user: AdminWithClientDto) {
+  /**
+   * Returns a signed JWT token for an admin user data
+   *
+   * @param {AdminWithClientDto} user
+   * @returns {Promise<string>}
+   */
+  async generateJwtForUser(user: AdminWithClientDto): Promise<string> {
     return this.generateJwtToken(
       {
         ...user,
@@ -70,7 +96,14 @@ export class AuthService {
     );
   }
 
-  generateJwtCookie(req: AuthenticatedRequestDto, payload: string) {
+  /**
+   * Generates an HTTP cookie containing a JWT token for authentication
+   *
+   * @param {AuthenticatedRequestDto} req - The authenticated request object containing headers
+   * @param {string} payload - The signed JWT token string to be stored in the cookie.
+   * @returns {string} A formatted HTTP Set-Cookie header value ready to be set in the response
+   */
+  generateJwtCookie(req: AuthenticatedRequestDto, payload: string): string {
     const userTokenCookie = generateUserTokenCookie({
       headers: req.headers,
       signedJwt: payload,
@@ -79,7 +112,13 @@ export class AuthService {
     return userTokenCookie;
   }
 
-  generateExpiredCookie(req: AuthenticatedRequestDto) {
+  /**
+   * Generates an expired authentication cookie to invalidate the user's session
+   *
+   * @param {AuthenticatedRequestDto} req
+   * @returns {string}
+   */
+  generateExpiredCookie(req: AuthenticatedRequestDto): string {
     const userTokenCookie = generateExpiredUserTokenCookie({
       headers: req.headers,
       signedJwt: '',
