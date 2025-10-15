@@ -16,6 +16,12 @@ import {
 export class AdminService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Finds and returns Admin data by its email
+   *
+   * @param {string} email - User email string
+   * @returns {Promise<AdminDto | null>} Returns user object or null if user does not exist
+   */
   async findAdminByEmail(email: string): Promise<AdminDto | null> {
     const admin = await this.prisma.admin.findUnique({
       where: { email },
@@ -28,6 +34,12 @@ export class AdminService {
     return admin;
   }
 
+  /**
+   * Creates and return a Nom OWNER Admin Account
+   *
+   * @param {CreatedAdminDto}data - Admin data
+   * @returns {Promise<AdminDto>} Returns admin data if its succeed to create admin
+   */
   async createAdmin(data: CreatedAdminDto): Promise<AdminDto> {
     // Role-based validations
     checkCreateAdminRequirementsOrThrowError(data);
@@ -70,6 +82,12 @@ export class AdminService {
     return formattedResponse;
   }
 
+  /**
+   * Creates and return a OWNER Admin Account
+   *
+   * @param {CreateOwnerAdminDto}data - Admin data
+   * @returns {Promise<AdminDto>} Returns admin data if its succeed to create admin
+   */
   async createOwnerAdmin(data: CreateOwnerAdminDto): Promise<AdminDto> {
     const createAdminData = {
       ...data,
@@ -99,6 +117,12 @@ export class AdminService {
     return formattedResponse;
   }
 
+  /**
+   * Deletes permanently a Admin - Warning its a irreversible action
+   *
+   * @param {string}email - Admin's email
+   * @returns {Promise<AdminDto>} Returns deleted admin data
+   */
   async deleteAdmin(email: string): Promise<Partial<AdminDto>> {
     const admin = await this.prisma.admin.findFirst({
       where: {
