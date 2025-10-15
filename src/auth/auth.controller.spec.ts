@@ -5,6 +5,7 @@ import { AdminService } from 'src/admin/admin.service';
 import { AdminRole } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
+import { ClientDto } from 'src/client/client.dto';
 
 const ADMIN_MOCK_DATA: CreatedAdminDto = {
   name: 'Admin Name',
@@ -92,7 +93,10 @@ describe('AuthController', () => {
 
   describe('/auth/logout', () => {
     it('should replace a valid cookie session by and empty expired one', async () => {
-      const userToken = await authService.generateJwtForUser(adminUser);
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: {} as ClientDto,
+      });
 
       const logoutResponse = await TestModuleSingleton.callEndpoint()
         .post('/auth/logout')
