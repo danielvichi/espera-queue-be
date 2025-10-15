@@ -17,7 +17,8 @@ export class ClientService {
 
   /**
    * Creates a new client in the database using the provided data.
-   * @param {InputClientDto} data - The data required to create a new client.
+   *
+   * @param {InputClientDto} data The data required to create a new client.
    * @returns {Promise<ClientDto>} The created ClientDto object.
    **/
   async createClient(data: CreateClientDto): Promise<InputResponseClientDto> {
@@ -58,6 +59,7 @@ export class ClientService {
 
   /**
    * Fetches all clients from the database and returns them as an array of ClientDto objects.
+   *
    * @returns {Promise<ClientDto[]>} An array of ClientDto objects representing all clients.
    **/
   async getAllClients(): Promise<ClientDto[]> {
@@ -76,6 +78,7 @@ export class ClientService {
 
   /**
    *  Fetches a client by its unique identifier (ID) from the database.
+   *
    *  @param {string} id - The unique identifier of the client to be fetched.
    *  @returns {Promise<ClientDto | null>} A ClientDto object if found, otherwise null.
    * **/
@@ -97,6 +100,7 @@ export class ClientService {
 
   /**
    * Updates a client by its unique identifier (ID) in the database.
+   *
    * @param {string} id - The unique identifier of the client to be updated.
    * @param {Partial<InputClientDto>} data - The data to update the client with.
    * @returns {Promise<ClientDto>} The updated ClientDto object.
@@ -121,6 +125,7 @@ export class ClientService {
 
   /**
    * Disables a client by its unique identifier (ID) from the database.
+   *
    * @param {string} id - The unique identifier of the client to be disabled.
    * @returns {Promise<ClientDto>} The disabled ClientDto object.
    * **/
@@ -145,6 +150,7 @@ export class ClientService {
 
   /**
    * Enables a disabled client by its unique identifier (ID) in the database.
+   *
    * @param {string} id - The unique identifier of the client to be enabled.
    * @returns {Promise<ClientDto>} The enabled ClientDto object.
    * **/
@@ -155,6 +161,12 @@ export class ClientService {
     });
   }
 
+  /**
+   * Deletes permanently an existing Client by its ID - WARNING its an irreversible action
+   *
+   * @param {string} id - The unique identifier of the client to be permanently deleted
+   * @returns {Promise<ClientDTO>} The deleted ClientDto object.
+   * **/
   async deleteClient(id: string): Promise<Partial<ClientDto>> {
     const client = await this.prisma.client.findFirst({
       where: {
