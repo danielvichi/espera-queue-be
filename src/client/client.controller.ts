@@ -11,6 +11,7 @@ import {
 } from 'src/auth/auth.exceptions';
 import { type Response } from 'express';
 import { createClientBadRequestExceptionMessages } from './client.exceptions';
+import { AdminDto } from 'src/admin/admin.dto';
 
 @Controller('client')
 export class ClientController {
@@ -57,35 +58,39 @@ export class ClientController {
     @Req() req,
     @Res() res: Response,
   ) {
+    // 1 - Check Input Data
     checkCreateClientWithAdminRequirementsOrThrowError(createClientData);
     const { admin: createAdminData, ...createClientDataOnly } =
       createClientData;
 
-    const admin = await this.adminService.createOwnerAdmin({
-      ...createAdminData,
-    });
+    // 2- Creates Client
+    const clientResponse =
+      await this.clientService.createClient(createClientDataOnly);
 
-    if (!admin.id) {
-      await this.adminService.deleteAdmin(admin.email);
+    if (!clientResponse.id) {
       throw new Error(
         createClientBadRequestExceptionMessages.SOMETHING_WENT_WRONG,
       );
     }
 
     let formattedClient: ClientDto;
+    let admin: AdminDto | null = null;
 
     try {
-      const clientResponse = await this.clientService.createClient({
-        ...createClientDataOnly,
-        ownerId: admin.id,
+      // 3 - Creates Client Owner Admin attached Client Id
+      admin = await this.adminService.createOwnerAdmin({
+        ...createAdminData,
+        clientId: clientResponse.id,
       });
 
-      if (!clientResponse.id) {
+      if (!admin.id) {
+        await this.adminService.deleteAdmin(admin.email);
         throw new Error(
           createClientBadRequestExceptionMessages.SOMETHING_WENT_WRONG,
         );
       }
 
+      // 4 - Assign Owner Admin to Client ownerId
       const updatedClient = await this.clientService.updateClient(
         clientResponse.id,
         {
@@ -99,7 +104,11 @@ export class ClientController {
         phone: updatedClient.phone ?? undefined,
       };
     } catch (err) {
-      await this.adminService.deleteAdmin(admin.email);
+      // 4.5 - Revert Admin creation in case something fails
+      if (admin) {
+        await this.adminService.deleteAdmin(admin.email);
+      }
+
       throw new Error(
         createClientBadRequestExceptionMessages.SOMETHING_WENT_WRONG,
         err,
@@ -108,7 +117,7 @@ export class ClientController {
 
     const { email, passwordHash } = createAdminData;
 
-    // Login
+    // 5 - Create a auth session
     const user = await this.authService.checkAdminCredentials({
       email,
       passwordHash,

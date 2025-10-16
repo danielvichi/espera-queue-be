@@ -67,7 +67,6 @@ export class AdminService {
     const responseAdmin = await this.prisma.admin.create({
       data: {
         ...data,
-        clientId: data.clientId ?? undefined,
         unityIds: data.unityIds ?? [],
         queueIds: data.queueIds ?? [],
         enabled: true,

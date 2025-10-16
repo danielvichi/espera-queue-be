@@ -51,7 +51,7 @@ export class InputResponseClientDto extends ClientDto {
     example: 'user1234567890abcdef',
     required: true,
   })
-  ownerId: string;
+  ownerId?: string;
 }
 
 export class InputClientDto {
@@ -82,12 +82,15 @@ export class InputClientDto {
     required: false,
   })
   phone?: string;
+
+  @ApiProperty({
+    description: 'Client ownerId account',
+    example: 'user1234567890abcdef',
+    required: true,
+  })
+  ownerId?: string;
 }
 
 export class CreateClientWithAdminDto extends InputClientDto {
   admin: Omit<CreateOwnerAdminDto, 'clientId'>;
-}
-
-export class CreateClientDto extends InputClientDto {
-  ownerId: string;
 }

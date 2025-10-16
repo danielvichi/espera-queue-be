@@ -1,13 +1,18 @@
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { AuthController } from './auth.controller';
-import { AdminResponseDto, CreatedAdminDto } from 'src/admin/admin.dto';
+import {
+  AdminResponseDto,
+  AdminWithClientDto,
+  CreatedAdminDto,
+} from 'src/admin/admin.dto';
 import { AdminService } from 'src/admin/admin.service';
 import { AdminRole } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
-import { ClientDto } from 'src/client/client.dto';
+import { ClientDto, InputClientDto } from 'src/client/client.dto';
+import { ClientService } from 'src/client/client.service';
 
-const ADMIN_MOCK_DATA: CreatedAdminDto = {
+const ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
   name: 'Admin Name',
   email: 'admin@email.com',
   passwordHash: 'password_hash',
@@ -15,12 +20,20 @@ const ADMIN_MOCK_DATA: CreatedAdminDto = {
   queueIds: ['1'],
 };
 
+const CLIENT_MOCK_DATA: InputClientDto = {
+  name: 'Client Serv A',
+  address: 'Client address in the client format.',
+  phone: '+1-234-567-8900',
+};
+
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
   let adminService: AdminService;
   let jwtService: JwtService;
+  let clientService: ClientService;
   let adminUser: AdminResponseDto;
+  let client: ClientDto;
   const loginData = ADMIN_MOCK_DATA;
 
   beforeAll(async () => {
@@ -29,10 +42,18 @@ describe('AuthController', () => {
     authService = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
     adminService = module.get<AdminService>(AdminService);
+    clientService = module.get<ClientService>(ClientService);
 
     await TestModuleSingleton.cleanUpDatabase();
 
-    adminUser = await adminService.createAdmin(ADMIN_MOCK_DATA);
+    client = await clientService.createClient({
+      ...CLIENT_MOCK_DATA,
+    });
+
+    adminUser = await adminService.createAdmin({
+      ...ADMIN_MOCK_DATA,
+      clientId: client.id,
+    });
   });
 
   it('should be defined', () => {
@@ -83,11 +104,12 @@ describe('AuthController', () => {
         .split('user_token=')[1]
         .split(';')[0];
 
-      const decodedUserToken: AdminResponseDto =
+      const decodedUserToken: AdminWithClientDto =
         jwtService.decode(userTokenFromCookie);
 
       expect(decodedUserToken.email).toMatch(loginData.email);
       expect(decodedUserToken.id).toMatch(adminUser.id);
+      expect(decodedUserToken.client).not.toBeNull();
     });
   });
 
@@ -95,7 +117,7 @@ describe('AuthController', () => {
     it('should replace a valid cookie session by and empty expired one', async () => {
       const userToken = await authService.generateJwtForUser({
         ...adminUser,
-        client: {} as ClientDto,
+        client: client,
       });
 
       const logoutResponse = await TestModuleSingleton.callEndpoint()

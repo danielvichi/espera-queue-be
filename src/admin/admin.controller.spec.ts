@@ -4,8 +4,10 @@ import { AdminService } from './admin.service';
 import { AdminResponseDto, CreatedAdminDto } from './admin.dto';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { AdminRole } from '@prisma/client';
+import { InputClientDto, InputResponseClientDto } from 'src/client/client.dto';
+import { ClientService } from 'src/client/client.service';
 
-const CREATE_ADMIN_MOCK_DATA: Array<CreatedAdminDto> = [
+const CREATE_ADMIN_MOCK_DATA: Array<Omit<CreatedAdminDto, 'clientId'>> = [
   {
     name: 'Admin Name',
     passwordHash: 'password_hash',
@@ -22,21 +24,34 @@ const CREATE_ADMIN_MOCK_DATA: Array<CreatedAdminDto> = [
   },
 ];
 
+const CLIENT_MOCK_DATA: InputClientDto = {
+  name: 'Client mock name',
+};
+
 describe('AdminController', () => {
   let adminController: AdminController;
   let authService: AuthService;
   let adminService: AdminService;
+  let clientService: ClientService;
+
   let adminUser: AdminResponseDto;
+  let client: InputResponseClientDto;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
     adminController = module.get<AdminController>(AdminController);
     authService = module.get<AuthService>(AuthService);
+    clientService = module.get<ClientService>(ClientService);
     adminService = module.get<AdminService>(AdminService);
 
     await TestModuleSingleton.cleanUpDatabase();
 
-    adminUser = await adminService.createAdmin(CREATE_ADMIN_MOCK_DATA[0]);
+    client = await clientService.createClient(CLIENT_MOCK_DATA);
+
+    adminUser = await adminService.createAdmin({
+      ...CREATE_ADMIN_MOCK_DATA[0],
+      clientId: client.id,
+    });
   });
 
   it('should be defined', () => {
@@ -55,7 +70,10 @@ describe('AdminController', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { email, ...createAdminMockDataWithoutEmail } =
         CREATE_ADMIN_MOCK_DATA[1];
-      const userToken = await authService.generateJwtForUser(adminUser);
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
 
       await TestModuleSingleton.callEndpoint()
         .post('/admin/create')
@@ -71,7 +89,10 @@ describe('AdminController', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { unityIds, ...createAdminMockDataWithoutAnyId } =
         CREATE_ADMIN_MOCK_DATA[1];
-      const userToken = await authService.generateJwtForUser(adminUser);
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
 
       await TestModuleSingleton.callEndpoint()
         .post('/admin/create')
@@ -87,7 +108,10 @@ describe('AdminController', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { unityIds, ...createAdminMockDataWithoutAnyId } =
         CREATE_ADMIN_MOCK_DATA[1];
-      const userToken = await authService.generateJwtForUser(adminUser);
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
 
       await TestModuleSingleton.callEndpoint()
         .post('/admin/create')
@@ -103,7 +127,10 @@ describe('AdminController', () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { role, ...createAdminMockDataWithoutRole } =
         CREATE_ADMIN_MOCK_DATA[1];
-      const userToken = await authService.generateJwtForUser(adminUser);
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
 
       await TestModuleSingleton.callEndpoint()
         .post('/admin/create')
@@ -117,7 +144,11 @@ describe('AdminController', () => {
 
     it('should create new admin', async () => {
       const completeData = CREATE_ADMIN_MOCK_DATA[1];
-      const userToken = await authService.generateJwtForUser(adminUser);
+
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
 
       await TestModuleSingleton.callEndpoint()
         .post('/admin/create')
@@ -136,7 +167,10 @@ describe('AdminController', () => {
     });
 
     it('should get profile data for authenticated sessions', async () => {
-      const userToken = await authService.generateJwtForUser(adminUser);
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
 
       const profileResponse = await TestModuleSingleton.callEndpoint()
         .get('/admin/profile')

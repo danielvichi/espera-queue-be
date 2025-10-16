@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import {
   ClientDto,
-  CreateClientDto,
+  InputClientDto,
   InputResponseClientDto,
 } from './client.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -21,26 +21,10 @@ export class ClientService {
    * @param {InputClientDto} data The data required to create a new client.
    * @returns {Promise<ClientDto>} The created ClientDto object.
    **/
-  async createClient(data: CreateClientDto): Promise<InputResponseClientDto> {
+  async createClient(data: InputClientDto): Promise<InputResponseClientDto> {
     if (!data.name) {
       throw new CreateClientBadRequestException(
         createClientBadRequestExceptionMessages.NAME_REQUIRED,
-      );
-    }
-
-    if (!data.ownerId) {
-      throw new CreateClientBadRequestException(
-        createClientBadRequestExceptionMessages.OWNER_ID_REQUIRED,
-      );
-    }
-
-    const existingClientWithSameOwnerId = await this.prisma.client.findFirst({
-      where: { ownerId: data.ownerId },
-    });
-
-    if (existingClientWithSameOwnerId) {
-      throw new CreateClientBadRequestException(
-        createClientBadRequestExceptionMessages.CLIENT_WITH_SAME_OWNER_ID_EXISTS,
       );
     }
 
@@ -54,6 +38,7 @@ export class ClientService {
       updatedAt: newClient.updatedAt,
       address: newClient.address ?? undefined,
       phone: newClient.phone ?? undefined,
+      ownerId: newClient.ownerId ?? undefined,
     };
   }
 
@@ -105,7 +90,7 @@ export class ClientService {
    * @param {Partial<InputClientDto>} data - The data to update the client with.
    * @returns {Promise<ClientDto>} The updated ClientDto object.
    * **/
-  async updateClient(id: string, data: Partial<CreateClientDto>) {
+  async updateClient(id: string, data: Partial<InputClientDto>) {
     const client = await this.prisma.client.findUnique({
       where: { id },
     });

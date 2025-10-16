@@ -130,7 +130,7 @@ export class CreatedAdminDto {
     required: false,
     nullable: true,
   })
-  clientId?: string;
+  clientId: string;
 
   @ApiProperty({
     description: 'List of Unity IDs associated with the admin (if applicable)',
@@ -173,6 +173,14 @@ export class CreateOwnerAdminDto {
     required: true,
   })
   passwordHash: string;
+
+  @ApiProperty({
+    description: 'ID of the client associated with the admin (if applicable)',
+    example: 'c1234567-89ab-cdef-0123-456789abcdef',
+    required: false,
+    nullable: true,
+  })
+  clientId: string;
 }
 
 export class SignInDto {

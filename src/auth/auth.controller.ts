@@ -10,10 +10,15 @@ import {
 } from './auth.exceptions';
 import { type Response } from 'express';
 import { type AuthenticatedRequestDto } from './auth.dto';
+import { ClientService } from 'src/client/client.service';
+import { ClientDto } from 'src/client/client.dto';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private clientService: ClientService,
+  ) {}
 
   @Post('login/admin')
   @ApiOkResponse({
@@ -65,7 +70,18 @@ export class AuthController {
       );
     }
 
-    const signedJwt = await this.authService.generateJwtForUser(user);
+    let client: ClientDto | null = null;
+
+    client = await this.clientService.getClientById(user.clientId as string);
+
+    if (client === null) {
+      throw new Error('No Client entity admin found');
+    }
+
+    const signedJwt = await this.authService.generateJwtForUser({
+      ...user,
+      client,
+    });
     const cookie = this.authService.generateJwtCookie(req, signedJwt);
 
     res.setHeader('Set-Cookie', cookie);

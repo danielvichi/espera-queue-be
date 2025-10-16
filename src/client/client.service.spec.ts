@@ -56,24 +56,10 @@ describe('ClientService', () => {
       await expect(
         clientService.createClient({
           name: '',
-          ownerId: 'owner_123e4567',
         }),
       ).rejects.toThrow(
         new CreateClientBadRequestException(
           createClientBadRequestExceptionMessages.NAME_REQUIRED,
-        ),
-      );
-    });
-
-    it('should not be able to create a client with missing ownerId', async () => {
-      await expect(
-        clientService.createClient({
-          name: 'Valid Name',
-          ownerId: '',
-        }),
-      ).rejects.toThrow(
-        new CreateClientBadRequestException(
-          createClientBadRequestExceptionMessages.OWNER_ID_REQUIRED,
         ),
       );
     });
@@ -98,24 +84,6 @@ describe('ClientService', () => {
       expect(matchedClient.length).toBe(1);
       expect(matchedClient[0].name).toMatch(clientMockData.name);
       expect(matchedClient[0].phone).toMatch(clientMockData.phone);
-    });
-
-    it('should not be able to create a client with the same ownerId', async () => {
-      const clientMockData = CLIENTS_MOCK_DATA[1];
-
-      await clientService.createClient({
-        ...clientMockData,
-      });
-
-      await expect(
-        clientService.createClient({
-          ...clientMockData,
-        }),
-      ).rejects.toThrow(
-        new CreateClientBadRequestException(
-          createClientBadRequestExceptionMessages.CLIENT_WITH_SAME_OWNER_ID_EXISTS,
-        ),
-      );
     });
   });
 
