@@ -4,6 +4,11 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { checkDatabaseUrlLooksSafe } from './util/checkDatabaseUrlLooksSafe';
 
+console.log('====== JEST SETUP ======');
+console.log('NODE_ENV_IS_CI:', process.env.NODE_ENV_IS_CI);
+console.log('====== JEST SETUP ======');
+console.log('DATABASE_URL:', process.env.DATABASE_URL);
+
 let envFileName;
 if (process.env.NODE_ENV_IS_CI === 'true') {
   envFileName = '.env.test-ci';

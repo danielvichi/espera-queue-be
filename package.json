@@ -14,7 +14,7 @@
     "start:prod": "node dist/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "cross-env NODE_ENV=test npm run docker:test:up && npm run prisma:generate && dotenv -e .env.test prisma migrate deploy && jest --runInBand --updateSnapshot",
-    "test:ci": "NODE_ENV=test npm ci --force && npm run prisma:generate && dotenv -e .env.test-ci npx prisma migrate deploy && NODE_OPTIONS=--max-old-space-size=3000 jest --runInBand",
+    "test:ci": "NODE_ENV_IS_CI=true NODE_ENV=test npm ci --force && npm run prisma:generate && dotenv -e .env.test-ci npx prisma migrate deploy && NODE_OPTIONS=--max-old-space-size=3000 jest --runInBand",
     "docker:dev:up": "docker compose up db_local -d",
     "docker:dev:down": "docker compose down db_local",
     "docker:test:up": "docker compose up db_test -d --force-recreate --no-deps",
