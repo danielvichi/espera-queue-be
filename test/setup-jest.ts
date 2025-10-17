@@ -36,6 +36,9 @@ for (const envVariable of Object.keys(config)) {
   }
 }
 
+console.log('====== JEST SETUP ======');
+console.log('testPath:', testPath);
+
 // loading .env.test file
 dotenv.config({
   path: testPath,
