@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { AdminModule } from 'src/admin/admin.module';
 import { JwtModule } from '@nestjs/jwt';
 import { PrismaModule } from 'src/prisma/prisma.module';
+import { ClientModule } from 'src/client/client.module';
 
 const jwtModule = JwtModule.register({
   global: true,
@@ -16,7 +17,7 @@ const jwtModule = JwtModule.register({
 });
 
 @Module({
-  imports: [PrismaModule, AdminModule, jwtModule],
+  imports: [PrismaModule, AdminModule, ClientModule, jwtModule],
   controllers: [AuthController],
   providers: [AuthService],
   exports: [AuthService],

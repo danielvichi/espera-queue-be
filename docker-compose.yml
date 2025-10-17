@@ -24,3 +24,13 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: espera_queue_local_test_db
+  espera_queue_local_test_db_ci:
+    image: postgres:16-alpine
+    restart: always
+    container_name: espera_queue_local_test_db_ci
+    ports:
+      - '5434:5432'
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=espera_queue_local_test_db_ci

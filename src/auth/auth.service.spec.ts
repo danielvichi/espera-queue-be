@@ -10,6 +10,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { AuthenticatedRequestDto } from './auth.dto';
 import { COOKIE_MAX_AGE_IN_MS } from 'src/constants/config';
+import { ClientDto } from 'src/client/client.dto';
 
 const ADMIN_MOCK_DATA: CreatedAdminDto = {
   name: 'Admin Name',
@@ -17,6 +18,15 @@ const ADMIN_MOCK_DATA: CreatedAdminDto = {
   passwordHash: 'password_hash',
   role: AdminRole.QUEUE_ADMIN,
   queueIds: ['1'],
+};
+
+const CLIENT_MOCK_DATA: ClientDto = {
+  id: 'some_id',
+  name: 'Client Serv A',
+  address: 'Client address in the client format.',
+  phone: '+1-234-567-8900',
+  createdAt: new Date(),
+  updatedAt: new Date(),
 };
 
 describe('AuthService', () => {
@@ -42,7 +52,7 @@ describe('AuthService', () => {
   });
   describe('AuthService', () => {
     it('should be able to signin with a valid email', async () => {
-      const signedUser = await authService.adminSignIn({
+      const signedUser = await authService.checkAdminCredentials({
         email: loginData.email,
         passwordHash: loginData.passwordHash,
       });
@@ -53,7 +63,7 @@ describe('AuthService', () => {
 
     it('should NOT be able to signin with a miss matched password', async () => {
       await expect(
-        authService.adminSignIn({
+        authService.checkAdminCredentials({
           email: loginData.email,
           passwordHash: 'miss_matched_password',
         }),
@@ -65,7 +75,7 @@ describe('AuthService', () => {
     });
 
     it('should return NULL if the valid email does NOT belong to an Admin account', async () => {
-      const signinResult = await authService.adminSignIn({
+      const signinResult = await authService.checkAdminCredentials({
         email: 'never_registered_email@email.com',
         passwordHash: loginData.email,
       });
@@ -78,9 +88,10 @@ describe('AuthService', () => {
     it('should be able to generate a Jwt with user data', async () => {
       const mock_request_with_user_data = adminUser;
 
-      const signedJwtToken = await authService.generateJwtForUser(
-        mock_request_with_user_data,
-      );
+      const signedJwtToken = await authService.generateJwtForUser({
+        ...mock_request_with_user_data,
+        client: CLIENT_MOCK_DATA,
+      });
 
       expect(signedJwtToken).toBeDefined();
 
@@ -101,7 +112,10 @@ describe('AuthService', () => {
         user: adminUser,
       } as AuthenticatedRequestDto;
 
-      const signedJwtToken = await authService.generateJwtForUser(adminUser);
+      const signedJwtToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: CLIENT_MOCK_DATA,
+      });
 
       const cookie = authService.generateJwtCookie(
         mock_request_with_user_data,
