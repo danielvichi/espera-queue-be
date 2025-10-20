@@ -9,7 +9,7 @@ import { AdminService } from 'src/admin/admin.service';
 import { AdminRole } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
-import { ClientDto, InputClientDto } from 'src/client/client.dto';
+import { ClientDto, CreateClientDto } from 'src/client/client.dto';
 import { ClientService } from 'src/client/client.service';
 
 const ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
@@ -20,7 +20,7 @@ const ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
   queueIds: ['1'],
 };
 
-const CLIENT_MOCK_DATA: InputClientDto = {
+const CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Serv A',
   address: 'Client address in the client format.',
   phone: '+1-234-567-8900',

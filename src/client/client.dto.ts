@@ -45,7 +45,7 @@ export class ClientDto {
   updatedAt: Date;
 }
 
-export class InputResponseClientDto extends ClientDto {
+export class CreateClientResponseDto extends ClientDto {
   @ApiProperty({
     description: 'Client ownerId account',
     example: 'user1234567890abcdef',
@@ -54,7 +54,7 @@ export class InputResponseClientDto extends ClientDto {
   ownerId?: string;
 }
 
-export class InputClientDto {
+export class CreateClientDto {
   @ApiProperty({
     description: 'Name of the client',
     example: 'Client A',
@@ -91,6 +91,6 @@ export class InputClientDto {
   ownerId?: string;
 }
 
-export class CreateClientWithAdminDto extends InputClientDto {
+export class CreateClientWithAdminDto extends CreateClientDto {
   admin: Omit<CreateOwnerAdminDto, 'clientId'>;
 }

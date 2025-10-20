@@ -4,7 +4,10 @@ import { AdminService } from './admin.service';
 import { AdminResponseDto, CreatedAdminDto } from './admin.dto';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { AdminRole } from '@prisma/client';
-import { InputClientDto, InputResponseClientDto } from 'src/client/client.dto';
+import {
+  CreateClientDto,
+  CreateClientResponseDto,
+} from 'src/client/client.dto';
 import { ClientService } from 'src/client/client.service';
 
 const CREATE_ADMIN_MOCK_DATA: Array<Omit<CreatedAdminDto, 'clientId'>> = [
@@ -24,7 +27,7 @@ const CREATE_ADMIN_MOCK_DATA: Array<Omit<CreatedAdminDto, 'clientId'>> = [
   },
 ];
 
-const CLIENT_MOCK_DATA: InputClientDto = {
+const CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client mock name',
 };
 
@@ -35,7 +38,7 @@ describe('AdminController', () => {
   let clientService: ClientService;
 
   let adminUser: AdminResponseDto;
-  let client: InputResponseClientDto;
+  let client: CreateClientResponseDto;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
