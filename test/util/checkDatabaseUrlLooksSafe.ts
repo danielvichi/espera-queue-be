@@ -5,8 +5,12 @@
  * This is based on lived experience (horror stories in the past) of many of us
  */
 
-const DATABASE_URL = process.env.DATABASE_URL ?? undefined;
 export const checkDatabaseUrlLooksSafe = () => {
+  const DATABASE_URL = process.env.DATABASE_URL ?? undefined;
+
+  console.log('====== checkDatabaseUrlLooksSafe ======');
+  console.log('process.env.DATABASE_URL:', process.env.DATABASE_URL);
+
   if (
     !DATABASE_URL ||
     ![
@@ -26,6 +30,3 @@ export const checkDatabaseUrlLooksSafe = () => {
       `);
   }
 };
-
-console.log('====== checkDatabaseUrlLooksSafe ======');
-console.log('process.env.DATABASE_URL:', process.env.DATABASE_URL);
