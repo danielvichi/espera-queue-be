@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { CreateOwnerAdminDto } from 'src/admin/admin.dto';
 
 export class ClientDto {
   @ApiProperty({
@@ -50,7 +51,7 @@ export class InputResponseClientDto extends ClientDto {
     example: 'user1234567890abcdef',
     required: true,
   })
-  ownerId: string;
+  ownerId?: string;
 }
 
 export class InputClientDto {
@@ -87,5 +88,9 @@ export class InputClientDto {
     example: 'user1234567890abcdef',
     required: true,
   })
-  ownerId: string;
+  ownerId?: string;
+}
+
+export class CreateClientWithAdminDto extends InputClientDto {
+  admin: Omit<CreateOwnerAdminDto, 'clientId'>;
 }

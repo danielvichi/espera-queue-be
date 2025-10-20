@@ -28,7 +28,7 @@ export class AdminController {
   })
   async createNewNomOwnerAdmin(@Body() inputData: CreatedAdminDto) {
     // Check is nor creating Client Owner, that should be done through the create client flow
-    if (inputData.clientId || inputData.role === AdminRole.CLIENT_OWNER) {
+    if (inputData.role === AdminRole.CLIENT_OWNER) {
       throw new CreateAdminBadRequestException(
         createAdminBadRequestExceptionMessages.CLIENT_OWNER_CREATION,
       );

@@ -1,5 +1,6 @@
 import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { AdminRole } from '@prisma/client';
+import { ClientDto } from 'src/client/client.dto';
 
 export class AdminDto {
   @ApiProperty({
@@ -88,6 +89,9 @@ export class AdminDto {
 }
 
 export class AdminResponseDto extends OmitType(AdminDto, ['passwordHash']) {}
+export class AdminWithClientDto extends AdminResponseDto {
+  client: ClientDto;
+}
 
 export class CreatedAdminDto {
   @ApiProperty({
@@ -126,7 +130,7 @@ export class CreatedAdminDto {
     required: false,
     nullable: true,
   })
-  clientId?: string;
+  clientId: string;
 
   @ApiProperty({
     description: 'List of Unity IDs associated with the admin (if applicable)',
@@ -145,6 +149,38 @@ export class CreatedAdminDto {
     nullable: true,
   })
   queueIds?: string[];
+}
+
+export class CreateOwnerAdminDto {
+  @ApiProperty({
+    description: 'Name of the admin',
+    example: 'Admin User',
+    required: true,
+  })
+  name: string;
+
+  @ApiProperty({
+    description: 'Email of the admin',
+    example: 'admin@email.com',
+    uniqueItems: true,
+    required: true,
+  })
+  email: string;
+
+  @ApiProperty({
+    description: 'Hashed password of the admin',
+    example: '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
+    required: true,
+  })
+  passwordHash: string;
+
+  @ApiProperty({
+    description: 'ID of the client associated with the admin (if applicable)',
+    example: 'c1234567-89ab-cdef-0123-456789abcdef',
+    required: false,
+    nullable: true,
+  })
+  clientId: string;
 }
 
 export class SignInDto {
