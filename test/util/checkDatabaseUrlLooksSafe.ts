@@ -4,8 +4,11 @@
  *
  * This is based on lived experience (horror stories in the past) of many of us
  */
+
+const DATABASE_URL = process.env.DATABASE_URL ?? undefined;
 export const checkDatabaseUrlLooksSafe = () => {
   if (
+    !DATABASE_URL ||
     ![
       // purge / seed local dev
       'postgresql://postgres:postgres@localhost:5432/espera_queue_local_test_db',
@@ -15,7 +18,7 @@ export const checkDatabaseUrlLooksSafe = () => {
       'postgresql://postgres:postgres@host.docker.internal:5432/espera_queue_local_test_db?connect_timeout=300',
       // when running in CI
       'postgresql://postgres:postgres@espera_queue_local_test_db_ci:5432/espera_queue_local_test_db_ci?connect_timeout=300',
-    ].includes(process.env.DATABASE_URL)
+    ].includes(DATABASE_URL)
   ) {
     throw new Error(`
       It looks like you have an incorrect DATABASE_URL value ${process.env.DATABASE_URL} in your .env file.
