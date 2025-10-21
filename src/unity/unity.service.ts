@@ -12,7 +12,7 @@ interface UnityIdArg {
   unityId: string;
 }
 
-interface UpdateUnityArgs extends UnityIdArg {
+export interface UpdateUnityArgs extends UnityIdArg {
   payload: Partial<Omit<CreateUnityDto, 'clientId'>>;
 }
 
@@ -59,7 +59,7 @@ export class UnityService {
    * @returns {Promise<UnityDto>} The updated Unity object data
    */
   async disableUnity(data: UnityIdArg): Promise<UnityDto> {
-    if (!data.unityId) {
+    if (!data.unityId || data.unityId === '') {
       throw new BadRequestException(
         updateUnityExceptionMessages.UNITY_ID_REQUIRED,
       );
@@ -103,7 +103,7 @@ export class UnityService {
    * @returns {Promise<UnityDto>} The updated Unity object data
    */
   async enableUnity(data: UnityIdArg): Promise<UnityDto> {
-    if (!data.unityId) {
+    if (!data.unityId || data.unityId === '') {
       throw new BadRequestException(
         updateUnityExceptionMessages.UNITY_ID_REQUIRED,
       );

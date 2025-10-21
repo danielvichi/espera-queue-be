@@ -10,6 +10,7 @@ import {
   CreateClientDto,
   CreateClientResponseDto,
 } from 'src/client/client.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 const UNITY_MOCK_DATA: Array<Omit<CreateUnityDto, 'clientId'>> = [
   {
@@ -47,6 +48,7 @@ describe('UnityController', () => {
   let clientService: ClientService;
   let authService: AuthService;
   let adminService: AdminService;
+  let prismaService: PrismaService;
 
   let client: CreateClientResponseDto;
   let queueAdminUser: AdminResponseDto;
@@ -56,6 +58,7 @@ describe('UnityController', () => {
     const module = await TestModuleSingleton.createTestModule();
     unityController = module.get<UnityController>(UnityController);
 
+    prismaService = module.get<PrismaService>(PrismaService);
     clientService = module.get<ClientService>(ClientService);
     authService = module.get<AuthService>(AuthService);
     adminService = module.get<AdminService>(AdminService);
@@ -122,7 +125,7 @@ describe('UnityController', () => {
     });
   });
 
-  it('should throw MethodNotAllowedException a connected admin does NOT has proper Admin Role', async () => {
+  it('should throw MethodNotAllowedException if the connected admin does NOT has proper Admin Role', async () => {
     const userToken = await authService.generateJwtForUser({
       ...queueAdminUser,
       client: client,
@@ -152,5 +155,225 @@ describe('UnityController', () => {
         clientId: client.id,
       })
       .expect(201);
+  });
+
+  describe('/unity/disable', () => {
+    it('should throw a UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/disable')
+        .set('Cookie', [`user_token=`])
+        .send({
+          unityId: '',
+          payload: {},
+        })
+        .expect(401);
+    });
+
+    it('should throw a UnauthorizedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/disable')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: '',
+        })
+        .expect(405);
+    });
+
+    it('should throw a BadRequestException if Unity Id is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/disable')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: '',
+        })
+        .expect(400);
+    });
+
+    it('should disable the Unity Id', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const enabledUnity = await prismaService.unity.findFirst({
+        where: {
+          enabled: true,
+        },
+      });
+
+      if (!enabledUnity || !enabledUnity.id) {
+        throw new Error('No enabled Unity was founded');
+      }
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/disable')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: enabledUnity?.id,
+        })
+        .expect(201);
+    });
+  });
+
+  describe('/unity/enable', () => {
+    it('should throw a UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/enable')
+        .set('Cookie', [`user_token=`])
+        .send({
+          unityId: '',
+          payload: {},
+        })
+        .expect(401);
+    });
+
+    it('should throw a UnauthorizedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/enable')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: '',
+        })
+        .expect(405);
+    });
+
+    it('should throw a BadRequestException if Unity Id is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/enable')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: '',
+        })
+        .expect(400);
+    });
+
+    it('should enable a disabled the Unity Id', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const enabledUnity = await prismaService.unity.findFirst({
+        where: {
+          enabled: false,
+        },
+      });
+
+      if (!enabledUnity || !enabledUnity.id) {
+        throw new Error('No disabled Unity was founded');
+      }
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/enable')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: enabledUnity?.id,
+        })
+        .expect(201);
+    });
+  });
+
+  describe('/unity/enable', () => {
+    it('should throw a UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/update')
+        .set('Cookie', [`user_token=`])
+        .send({
+          unityId: '',
+          payload: {
+            address: 'some_address',
+          },
+        })
+        .expect(401);
+    });
+
+    it('should throw a UnauthorizedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/update')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: '',
+          payload: {
+            address: 'some_address',
+          },
+        })
+        .expect(405);
+    });
+
+    it('should throw a BadRequestException if Unity Id is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/update')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: '',
+          payload: {
+            address: 'some_address',
+          },
+        })
+        .expect(400);
+    });
+
+    it('should update a Unity data', async () => {
+      const newAddress = 'New Address for Controller';
+
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const existingUnity = await prismaService.unity.findFirst({
+        where: {
+          enabled: true,
+        },
+      });
+
+      if (!existingUnity || !existingUnity.id) {
+        throw new Error('No disabled Unity was founded');
+      }
+
+      const updatedUnity = await TestModuleSingleton.callEndpoint()
+        .post('/unity/update')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unityId: existingUnity.id,
+          payload: {
+            address: newAddress,
+          },
+        })
+        .expect(201);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(updatedUnity.body.address).toBe(newAddress);
+    });
   });
 });
