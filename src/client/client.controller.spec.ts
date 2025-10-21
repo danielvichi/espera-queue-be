@@ -37,15 +37,14 @@ const CLIENT_OWNER_ADMIN_MOCK_DATA: Array<
 ];
 
 describe('ClientController', () => {
-  // TODO FIX NAMING
-  let controller: ClientController;
+  let clientController: ClientController;
   let adminService: AdminService;
   let prismaService: PrismaService;
   let jwtService: JwtService;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
-    controller = module.get<ClientController>(ClientController);
+    clientController = module.get<ClientController>(ClientController);
     adminService = module.get<AdminService>(AdminService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
@@ -61,13 +60,13 @@ describe('ClientController', () => {
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(clientController).toBeDefined();
   });
 
   describe('/client/all', () => {
     // TODO FIX TO ENDPOINT CALLS INSTEAD OF methods
     it('should return an Array with Clients', async () => {
-      const clients = await controller.getAllClients();
+      const clients = await clientController.getAllClients();
 
       const matchClient = clients.filter((client) => {
         if (client.name === CLIENTS_MOCK_DATA[0].name) {
@@ -89,7 +88,7 @@ describe('ClientController', () => {
         },
       });
 
-      const clientResponse = await controller.getClientById(customId);
+      const clientResponse = await clientController.getClientById(customId);
 
       expect(clientResponse).toBeDefined();
       expect(clientResponse?.id).toBe(customId);
