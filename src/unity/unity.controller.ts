@@ -1,4 +1,12 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  MethodNotAllowedException,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { UnityService, type UpdateUnityArgs } from './unity.service';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { CreateUnityDto, UnityDto } from './unity.dto';
@@ -32,10 +40,37 @@ export class UnityController {
     return unity;
   }
 
+  @Get('all')
+  @UseGuards(AuthGuard)
+  @ApiOkResponse({
+    description: 'Get all Unities for a Client',
+    type: UnityDto,
+    isArray: true,
+  })
+  async getAllUnities(
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<UnityDto[]> {
+    if (!req.user.clientId) {
+      throw new MethodNotAllowedException();
+    }
+
+    checkAdminRoleHigherOrThrow({
+      userRole: req.user.role,
+      minRequiredRole: AdminRole.CLIENT_ADMIN,
+    });
+
+    const unityList = await this.unityService.getAllUnities({
+      clientId: req.user.clientId,
+    });
+
+    return unityList;
+  }
+
   @Post('disable')
   @UseGuards(AuthGuard)
   @ApiOkResponse({
-    description: 'Create a Unity for the connected user with proper Admin Role',
+    description:
+      'Disable a Enabled Unity for the connected user with proper Admin Role',
     type: UnityDto,
     isArray: true,
   })
@@ -58,7 +93,8 @@ export class UnityController {
   @Post('enable')
   @UseGuards(AuthGuard)
   @ApiOkResponse({
-    description: 'Create a Unity for the connected user with proper Admin Role',
+    description:
+      'Enable a Disabled Unity for the connected user with proper Admin Role',
     type: UnityDto,
     isArray: true,
   })
@@ -81,7 +117,8 @@ export class UnityController {
   @Post('update')
   @UseGuards(AuthGuard)
   @ApiOkResponse({
-    description: 'Create a Unity for the connected user with proper Admin Role',
+    description:
+      'Update a Unity data for the connected user with proper Admin Role',
     type: UnityDto,
     isArray: true,
   })

@@ -376,4 +376,43 @@ describe('UnityController', () => {
       expect(updatedUnity.body.address).toBe(newAddress);
     });
   });
+
+  describe('/unity/all', () => {
+    it('should throw a UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .get('/unity/all')
+        .set('Cookie', [`user_token=`])
+        .send()
+        .expect(401);
+    });
+
+    it('should throw a UnauthorizedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .get('/unity/all')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send()
+        .expect(405);
+    });
+
+    it('should return a list of Unity for the connected user', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const response = await TestModuleSingleton.callEndpoint()
+        .get('/unity/all')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send()
+        .expect(200);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(response.body.length).toBe(1);
+    });
+  });
 });
