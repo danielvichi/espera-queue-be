@@ -1,11 +1,20 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateUnityDto, UnityDto } from './unity.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   createUnityBadRequestExceptionMessages,
+  updateUnityExceptionMessages,
   UnityNotFoundException,
 } from './unity.exceptions';
 import { checkCreateUnityRequirementsOrThrowError } from './unity.utils';
+
+interface UnityIdArg {
+  unityId: string;
+}
+
+interface UpdateUnityArgs extends UnityIdArg {
+  payload: Partial<Omit<CreateUnityDto, 'clientId'>>;
+}
 
 @Injectable()
 export class UnityService {
@@ -40,6 +49,148 @@ export class UnityService {
       phone: newUnity.phone ?? undefined,
       email: newUnity.email ?? undefined,
       createdAt: newUnity.createdAt,
+    };
+  }
+
+  /**
+   * Disabled a Enabled Unity
+   *
+   * @param {UnityIdArg} data The Enabled Unity Id to be disabled
+   * @returns {Promise<UnityDto>} The updated Unity object data
+   */
+  async disableUnity(data: UnityIdArg): Promise<UnityDto> {
+    if (!data.unityId) {
+      throw new BadRequestException(
+        updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+      );
+    }
+
+    let unity = await this.prisma.unity.findFirst({
+      where: {
+        id: data.unityId,
+      },
+    });
+
+    if (!unity) {
+      throw new UnityNotFoundException(data.unityId);
+    }
+
+    if (!unity.enabled) {
+      throw new Error(updateUnityExceptionMessages.UNITY_ALREADY_DISABLED);
+    }
+
+    unity = await this.prisma.unity.update({
+      where: {
+        id: unity.id,
+      },
+      data: {
+        enabled: false,
+      },
+    });
+
+    return {
+      ...unity,
+      address: unity.address ?? undefined,
+      phone: unity.phone ?? undefined,
+      email: unity.email ?? undefined,
+    };
+  }
+
+  /**
+   * Enable a Disabled Unity
+   *
+   * @param {UnityIdArg} data The Disabled Unity Id to be disabled
+   * @returns {Promise<UnityDto>} The updated Unity object data
+   */
+  async enableUnity(data: UnityIdArg): Promise<UnityDto> {
+    if (!data.unityId) {
+      throw new BadRequestException(
+        updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+      );
+    }
+
+    let unity = await this.prisma.unity.findFirst({
+      where: {
+        id: data.unityId,
+      },
+    });
+
+    if (!unity) {
+      throw new UnityNotFoundException(data.unityId);
+    }
+
+    if (unity.enabled) {
+      throw new Error(updateUnityExceptionMessages.UNITY_ALREADY_ENABLED);
+    }
+
+    unity = await this.prisma.unity.update({
+      where: {
+        id: unity.id,
+      },
+      data: {
+        enabled: true,
+      },
+    });
+
+    return {
+      ...unity,
+      address: unity.address ?? undefined,
+      phone: unity.phone ?? undefined,
+      email: unity.email ?? undefined,
+    };
+  }
+
+  /**
+   * Updates data fpr a given Unity
+   *
+   * @param {UpdateUnityArgs} data The arguments to update unity
+   * @returns {Promise<UnityDto>} UnityDto from the updated Unity
+   */
+  async updateUnity(data: UpdateUnityArgs): Promise<UnityDto> {
+    if (!data.unityId) {
+      throw new BadRequestException(
+        updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+      );
+    }
+
+    if (!data.payload) {
+      throw new BadRequestException(
+        updateUnityExceptionMessages.PAYLOAD_REQUIRED,
+      );
+    }
+
+    const itemsPayload = Object.keys(data.payload);
+
+    if (itemsPayload.length <= 0) {
+      throw new BadRequestException(
+        updateUnityExceptionMessages.PAYLOAD_REQUIRED,
+      );
+    }
+
+    const existingUnity = await this.prisma.unity.findFirst({
+      where: {
+        id: data.unityId,
+      },
+    });
+
+    if (!existingUnity) {
+      throw new UnityNotFoundException(data.unityId);
+    }
+
+    const unity = await this.prisma.unity.update({
+      where: {
+        id: data.unityId,
+      },
+      data: {
+        ...data.payload,
+      },
+    });
+
+    return {
+      ...unity,
+      address: unity.address ?? undefined,
+      email: unity.email ?? undefined,
+      phone: unity.phone ?? undefined,
     };
   }
 }

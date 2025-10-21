@@ -3,6 +3,7 @@ import { UnityService } from './unity.service';
 import {
   CreateUnityBadRequestException,
   createUnityBadRequestExceptionMessages,
+  updateUnityExceptionMessages,
   UnityNotFoundException,
 } from './unity.exceptions';
 import { CreateUnityDto } from './unity.dto';
@@ -11,12 +12,11 @@ import {
   CreateClientDto,
   CreateClientResponseDto,
 } from 'src/client/client.dto';
+import { BadRequestException } from '@nestjs/common';
 
 const CREATE_UNITY_MOCK_DATA: Omit<CreateUnityDto, 'clientId'> = {
   name: 'Unity Name',
   address: 'some address',
-  // queueIds: [],
-  // adminIds: [],
 };
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
@@ -103,6 +103,200 @@ describe('UnityService', () => {
       expect(unity.name).toBe(CREATE_UNITY_MOCK_DATA.name);
       expect(unity.clientId).toBe(client.id);
       expect(unity.enabled).toBe(true);
+    });
+  });
+
+  describe('disableUnity', () => {
+    it('should NOT be able to disable a Unity without a valid Unity Id', async () => {
+      await expect(
+        unityService.disableUnity({
+          unityId: '',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(updateUnityExceptionMessages.UNITY_ID_REQUIRED),
+      );
+    });
+
+    it('should NOT be able to disable a not founded Unity', async () => {
+      const invalidUnityId = 'not_existing_id';
+
+      await expect(
+        unityService.disableUnity({
+          unityId: invalidUnityId,
+        }),
+      ).rejects.toThrow(new UnityNotFoundException(invalidUnityId));
+    });
+
+    it('should be able to disable an enabled existing Unity', async () => {
+      const existingUnity = await prismaService.unity.findFirst({
+        where: {
+          clientId: client.id,
+        },
+      });
+
+      if (!existingUnity) {
+        throw new Error('No Unity founded');
+      }
+
+      const disabledUnity = await unityService.disableUnity({
+        unityId: existingUnity?.id,
+      });
+
+      expect(disabledUnity.enabled).toBe(false);
+    });
+
+    it('should NOT be able to disable an already disabled Unity', async () => {
+      const existingUnity = await prismaService.unity.findFirst({
+        where: {
+          clientId: client.id,
+        },
+      });
+
+      if (!existingUnity) {
+        throw new Error('No Unity founded');
+      }
+
+      await expect(
+        unityService.disableUnity({
+          unityId: existingUnity?.id,
+        }),
+      ).rejects.toThrow(
+        new Error(updateUnityExceptionMessages.UNITY_ALREADY_DISABLED),
+      );
+    });
+  });
+
+  describe('enableUnity', () => {
+    it('should NOT be able to enable a Unity without a valid Unity Id', async () => {
+      await expect(
+        unityService.enableUnity({
+          unityId: '',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(updateUnityExceptionMessages.UNITY_ID_REQUIRED),
+      );
+    });
+
+    it('should NOT be able to enable a not founded Unity', async () => {
+      const invalidUnityId = 'not_existing_id';
+
+      await expect(
+        unityService.enableUnity({
+          unityId: invalidUnityId,
+        }),
+      ).rejects.toThrow(new UnityNotFoundException(invalidUnityId));
+    });
+
+    it('should be able to enable an disabled existing Unity', async () => {
+      const existingUnity = await prismaService.unity.findFirst({
+        where: {
+          clientId: client.id,
+        },
+      });
+
+      if (!existingUnity) {
+        throw new Error('No Unity founded');
+      }
+
+      const disabledUnity = await unityService.enableUnity({
+        unityId: existingUnity?.id,
+      });
+
+      expect(disabledUnity.enabled).toBe(true);
+    });
+
+    it('should NOT be able to enable an already enabled Unity', async () => {
+      const existingUnity = await prismaService.unity.findFirst({
+        where: {
+          clientId: client.id,
+        },
+      });
+
+      if (!existingUnity) {
+        throw new Error('No Unity founded');
+      }
+
+      await expect(
+        unityService.enableUnity({
+          unityId: existingUnity?.id,
+        }),
+      ).rejects.toThrow(
+        new Error(updateUnityExceptionMessages.UNITY_ALREADY_ENABLED),
+      );
+    });
+
+    describe('updateUnity', () => {
+      it('should NOT be able to updated Unity data without a valid Unity Id', async () => {
+        await expect(
+          unityService.updateUnity({
+            unityId: '',
+            payload: {
+              address: 'random address',
+            },
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+          ),
+        );
+      });
+    });
+
+    it('should NOT be able to updated a not founded Unity', async () => {
+      const invalidUnityId = 'not_existing_id';
+
+      await expect(
+        unityService.updateUnity({
+          unityId: invalidUnityId,
+          payload: {
+            address: 'random address',
+          },
+        }),
+      ).rejects.toThrow(new UnityNotFoundException(invalidUnityId));
+    });
+
+    it('should NOT be able to update without valid payload', async () => {
+      const existingUnity = await prismaService.unity.findFirst({
+        where: {
+          clientId: client.id,
+        },
+      });
+
+      if (!existingUnity) {
+        throw new Error('No Unity founded');
+      }
+
+      await expect(
+        unityService.updateUnity({
+          unityId: existingUnity.id,
+          payload: {},
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(updateUnityExceptionMessages.PAYLOAD_REQUIRED),
+      );
+    });
+
+    it('should be able to update Unity', async () => {
+      const newAddress = 'New random address';
+
+      const existingUnity = await prismaService.unity.findFirst({
+        where: {
+          clientId: client.id,
+        },
+      });
+
+      if (!existingUnity) {
+        throw new Error('No Unity founded');
+      }
+
+      const unity = await unityService.updateUnity({
+        unityId: existingUnity.id,
+        payload: {
+          address: newAddress,
+        },
+      });
+
+      expect(unity.address).toBe(newAddress);
     });
   });
 });
