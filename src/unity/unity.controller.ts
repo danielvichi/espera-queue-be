@@ -40,6 +40,37 @@ export class UnityController {
     return unity;
   }
 
+  @Get()
+  @UseGuards(AuthGuard)
+  @ApiOkResponse({
+    description: 'Get Unities by id that belongs to the connected user Client',
+    type: UnityDto,
+    isArray: true,
+  })
+  async getUnitiesById(
+    @Body() data: { unitiesIds: string[] },
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<UnityDto[] | null> {
+    if (!req.user.clientId) {
+      throw new MethodNotAllowedException();
+    }
+
+    checkAdminRoleHigherOrThrow({
+      userRole: req.user.role,
+      minRequiredRole: AdminRole.UNITY_ADMIN,
+    });
+
+    const unityListResponse = await this.unityService.getUnitiesByIds({
+      unitiesIds: data.unitiesIds,
+    });
+
+    const filteredUnityListByClientId = unityListResponse.filter(
+      (unity) => unity.clientId === req.user.clientId,
+    );
+
+    return filteredUnityListByClientId;
+  }
+
   @Get('all')
   @UseGuards(AuthGuard)
   @ApiOkResponse({

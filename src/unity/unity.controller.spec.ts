@@ -1,6 +1,6 @@
 import { UnityController } from './unity.controller';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
-import { CreateUnityDto } from './unity.dto';
+import { CreateUnityDto, UnityDto } from './unity.dto';
 import { AuthService } from 'src/auth/auth.service';
 import { AdminRole } from '@prisma/client';
 import { AdminResponseDto, CreatedAdminDto } from 'src/admin/admin.dto';
@@ -53,6 +53,7 @@ describe('UnityController', () => {
   let client: CreateClientResponseDto;
   let queueAdminUser: AdminResponseDto;
   let clientAdminUser: AdminResponseDto;
+  let unity: UnityDto;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
@@ -76,6 +77,20 @@ describe('UnityController', () => {
       ...CREATE_ADMIN_MOCK_DATA[1],
       clientId: client.id,
     });
+
+    const createUnityResponse = await prismaService.unity.create({
+      data: {
+        ...UNITY_MOCK_DATA[1],
+        clientId: client.id,
+      },
+    });
+
+    unity = {
+      ...createUnityResponse,
+      address: createUnityResponse.address ?? undefined,
+      email: createUnityResponse.email ?? undefined,
+      phone: createUnityResponse.phone ?? undefined,
+    };
   });
 
   it('should be defined', () => {
@@ -412,7 +427,52 @@ describe('UnityController', () => {
         .expect(200);
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
-      expect(response.body.length).toBe(1);
+      expect(response.body.length).toBe(2);
+    });
+  });
+
+  describe('/unity', () => {
+    it('should throw a UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .get('/unity')
+        .set('Cookie', [`user_token=`])
+        .send({
+          unitiesIds: [unity.id],
+        })
+        .expect(401);
+    });
+
+    it('should throw a UnauthorizedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .get('/unity')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unitiesIds: [unity.id],
+        })
+        .expect(405);
+    });
+
+    it('should return a list of Unities', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const unityResponse = await TestModuleSingleton.callEndpoint()
+        .get('/unity')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          unitiesIds: [unity.id],
+        })
+        .expect(200);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(unityResponse.body.length).toBe(1);
     });
   });
 });
