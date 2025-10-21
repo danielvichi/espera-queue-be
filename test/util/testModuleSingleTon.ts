@@ -45,11 +45,11 @@ export class TestModuleSingleton {
   }
 
   static async cleanUpDatabase() {
-    await this.prismaClient.admin.deleteMany();
-    await this.prismaClient.client.deleteMany();
+    await this.prismaClient.userQueued.deleteMany();
     await this.prismaClient.queue.deleteMany();
     await this.prismaClient.unity.deleteMany();
-    await this.prismaClient.userQueued.deleteMany();
+    await this.prismaClient.admin.deleteMany();
+    await this.prismaClient.client.deleteMany();
   }
 
   static callEndpoint(): TestAgent {
