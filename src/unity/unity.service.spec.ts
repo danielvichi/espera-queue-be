@@ -349,8 +349,8 @@ describe('UnityService', () => {
   describe('getUnityById', () => {
     it('should NOT return not data with missing unity Id', async () => {
       await expect(
-        unityService.getUnityById({
-          unityId: '',
+        unityService.getUnitiesByIds({
+          unitiesIds: [],
         }),
       ).rejects.toThrow(
         new BadRequestException(
@@ -360,12 +360,12 @@ describe('UnityService', () => {
     });
 
     it('should return the UnityDto for a given Unity Id', async () => {
-      const response = await unityService.getUnityById({
-        unityId: unity?.id,
+      const response = await unityService.getUnitiesByIds({
+        unitiesIds: [unity?.id],
       });
 
-      expect(response?.id).toBe(unity?.id);
-      expect(response?.address).toBe(unity?.address);
+      expect(response[0].id).toBe(unity?.id);
+      expect(response[0].address).toBe(unity?.address);
     });
   });
 });

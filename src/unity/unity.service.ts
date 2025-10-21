@@ -17,6 +17,10 @@ interface UnityIdArg {
   unityId: string;
 }
 
+interface GetUnitiesByIdsArg {
+  unitiesIds: string[];
+}
+
 export interface UpdateUnityArgs extends UnityIdArg {
   payload: Partial<Omit<CreateUnityDto, 'clientId'>>;
 }
@@ -87,36 +91,42 @@ export class UnityService {
   }
 
   /**
-   * Get data from an Unity by its Id
+   * Get Unity list data by its Ids
    *
-   * @param {UnityIdArg} data The id of the Unity
-   * @returns Return the UnityDto or null if not founded
+   * @param {GetUnitiesByIdsArg} data The List of ids for Unities
+   * @returns Return a List of UnityDto
    */
-  async getUnityById(data: UnityIdArg): Promise<UnityDto | null> {
-    if (!data.unityId) {
+  async getUnitiesByIds(data: GetUnitiesByIdsArg): Promise<UnityDto[]> {
+    if (data.unitiesIds.length <= 0) {
       throw new BadRequestException(
         defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
       );
     }
 
-    const unity = await this.prisma.unity.findFirst({
-      where: {
-        id: data.unityId,
-      },
-    });
+    const unitiesList = Promise.all(
+      data.unitiesIds.map(async (unityId) => {
+        const result = await this.prisma.unity.findFirst({
+          where: {
+            id: unityId,
+          },
+        });
 
-    if (!unity) {
-      return null;
-    }
+        if (result) {
+          return {
+            ...result,
+            address: result?.address ?? undefined,
+            phone: result?.phone ?? undefined,
+            email: result?.email ?? undefined,
+          };
+        }
+      }),
+    );
 
-    const formattedUnity: UnityDto = {
-      ...unity,
-      address: unity?.address ?? undefined,
-      phone: unity?.phone ?? undefined,
-      email: unity?.email ?? undefined,
-    };
+    const filteredUnityList = (await unitiesList).filter(
+      (unity) => unity !== undefined,
+    );
 
-    return formattedUnity;
+    return filteredUnityList;
   }
 
   /**
