@@ -2,6 +2,7 @@ import { CreateUnityDto } from './unity.dto';
 import {
   CreateUnityBadRequestException,
   createUnityBadRequestExceptionMessages,
+  defaultUnityExceptionsMessages,
 } from './unity.exceptions';
 
 export function checkCreateUnityRequirementsOrThrowError(data: CreateUnityDto) {
@@ -13,7 +14,7 @@ export function checkCreateUnityRequirementsOrThrowError(data: CreateUnityDto) {
 
   if (!data.clientId || data.clientId === '') {
     throw new CreateUnityBadRequestException(
-      createUnityBadRequestExceptionMessages.CLIENT_ID_REQUIRED,
+      defaultUnityExceptionsMessages.CLIENT_ID_REQUIRED,
     );
   }
 }

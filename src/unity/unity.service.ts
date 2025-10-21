@@ -5,8 +5,13 @@ import {
   createUnityBadRequestExceptionMessages,
   updateUnityExceptionMessages,
   UnityNotFoundException,
+  defaultUnityExceptionsMessages,
 } from './unity.exceptions';
 import { checkCreateUnityRequirementsOrThrowError } from './unity.utils';
+
+interface GetAllUnitiesArgs {
+  clientId: string;
+}
 
 interface UnityIdArg {
   unityId: string;
@@ -19,6 +24,35 @@ export interface UpdateUnityArgs extends UnityIdArg {
 @Injectable()
 export class UnityService {
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Returns all UnityDto for a given Client
+   *
+   * @param {GetAllUnitiesArgs} data Client Id
+   * @returns {Promise<Array<UnityDto>>} Returns a list of UnityDto
+   */
+  async getAllUnities(data: GetAllUnitiesArgs): Promise<Array<UnityDto>> {
+    if (!data.clientId) {
+      throw new BadRequestException(
+        defaultUnityExceptionsMessages.CLIENT_ID_REQUIRED,
+      );
+    }
+
+    const unityList = await this.prisma.unity.findMany({
+      where: {
+        clientId: data.clientId,
+      },
+    });
+
+    const formattedUnities: UnityDto[] = unityList.map((unity) => ({
+      ...unity,
+      email: unity.email ?? undefined,
+      address: unity.address ?? undefined,
+      phone: unity.phone ?? undefined,
+    }));
+
+    return formattedUnities;
+  }
 
   /**
    *  Create a new Unity for a Client in the database using the provided data.
@@ -61,7 +95,7 @@ export class UnityService {
   async disableUnity(data: UnityIdArg): Promise<UnityDto> {
     if (!data.unityId || data.unityId === '') {
       throw new BadRequestException(
-        updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+        defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
       );
     }
 
@@ -105,7 +139,7 @@ export class UnityService {
   async enableUnity(data: UnityIdArg): Promise<UnityDto> {
     if (!data.unityId || data.unityId === '') {
       throw new BadRequestException(
-        updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+        defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
       );
     }
 
@@ -149,7 +183,7 @@ export class UnityService {
   async updateUnity(data: UpdateUnityArgs): Promise<UnityDto> {
     if (!data.unityId) {
       throw new BadRequestException(
-        updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+        defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
       );
     }
 

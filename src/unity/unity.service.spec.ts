@@ -5,6 +5,7 @@ import {
   createUnityBadRequestExceptionMessages,
   updateUnityExceptionMessages,
   UnityNotFoundException,
+  defaultUnityExceptionsMessages,
 } from './unity.exceptions';
 import { CreateUnityDto } from './unity.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -75,7 +76,7 @@ describe('UnityService', () => {
         }),
       ).rejects.toThrow(
         new CreateUnityBadRequestException(
-          createUnityBadRequestExceptionMessages.CLIENT_ID_REQUIRED,
+          defaultUnityExceptionsMessages.CLIENT_ID_REQUIRED,
         ),
       );
     });
@@ -113,7 +114,9 @@ describe('UnityService', () => {
           unityId: '',
         }),
       ).rejects.toThrow(
-        new BadRequestException(updateUnityExceptionMessages.UNITY_ID_REQUIRED),
+        new BadRequestException(
+          defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
+        ),
       );
     });
 
@@ -173,7 +176,9 @@ describe('UnityService', () => {
           unityId: '',
         }),
       ).rejects.toThrow(
-        new BadRequestException(updateUnityExceptionMessages.UNITY_ID_REQUIRED),
+        new BadRequestException(
+          defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
+        ),
       );
     });
 
@@ -236,7 +241,7 @@ describe('UnityService', () => {
           }),
         ).rejects.toThrow(
           new BadRequestException(
-            updateUnityExceptionMessages.UNITY_ID_REQUIRED,
+            defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
           ),
         );
       });
@@ -297,6 +302,28 @@ describe('UnityService', () => {
       });
 
       expect(unity.address).toBe(newAddress);
+    });
+  });
+
+  describe('getAllUnities', () => {
+    it('should NOT return not data with missing clientId', async () => {
+      await expect(
+        unityService.getAllUnities({
+          clientId: '',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          defaultUnityExceptionsMessages.CLIENT_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should return a list of UnityDto for a given clientId', async () => {
+      const unityList = await unityService.getAllUnities({
+        clientId: client.id,
+      });
+
+      expect(unityList.length).toBe(1);
     });
   });
 });
