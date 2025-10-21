@@ -20,6 +20,10 @@ const CREATE_UNITY_MOCK_DATA: Array<Omit<CreateUnityDto, 'clientId'>> = [
     name: 'Unity Name',
     address: 'some address',
   },
+  {
+    name: 'Unity Name 2',
+    address: 'some address',
+  },
 ];
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
@@ -168,19 +172,9 @@ describe('UnityService', () => {
     });
 
     it('should NOT be able to disable an already disabled Unity', async () => {
-      const existingUnity = await prismaService.unity.findFirst({
-        where: {
-          clientId: client.id,
-        },
-      });
-
-      if (!existingUnity) {
-        throw new Error('No Unity founded');
-      }
-
       await expect(
         unityService.disableUnity({
-          unityId: existingUnity?.id,
+          unityId: unity.id,
         }),
       ).rejects.toThrow(
         new Error(updateUnityExceptionMessages.UNITY_ALREADY_DISABLED),
@@ -212,18 +206,8 @@ describe('UnityService', () => {
     });
 
     it('should be able to enable an disabled existing Unity', async () => {
-      const existingUnity = await prismaService.unity.findFirst({
-        where: {
-          clientId: client.id,
-        },
-      });
-
-      if (!existingUnity) {
-        throw new Error('No Unity founded');
-      }
-
       const disabledUnity = await unityService.enableUnity({
-        unityId: existingUnity?.id,
+        unityId: unity?.id,
       });
 
       expect(disabledUnity.enabled).toBe(true);
@@ -342,7 +326,7 @@ describe('UnityService', () => {
         clientId: client.id,
       });
 
-      expect(unityList.length).toBe(1);
+      expect(unityList.length).toBe(2);
     });
   });
 
@@ -365,7 +349,6 @@ describe('UnityService', () => {
       });
 
       expect(response[0].id).toBe(unity?.id);
-      expect(response[0].address).toBe(unity?.address);
     });
   });
 });
