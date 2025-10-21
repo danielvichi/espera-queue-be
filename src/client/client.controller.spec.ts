@@ -37,6 +37,7 @@ const CLIENT_OWNER_ADMIN_MOCK_DATA: Array<
 ];
 
 describe('ClientController', () => {
+  // TODO FIX NAMING
   let controller: ClientController;
   let adminService: AdminService;
   let prismaService: PrismaService;
@@ -63,33 +64,36 @@ describe('ClientController', () => {
     expect(controller).toBeDefined();
   });
 
-  it('should return an Array with Clients', async () => {
-    const clients = await controller.getAllClients();
+  describe('/client/all', () => {
+    // TODO FIX TO ENDPOINT CALLS INSTEAD OF methods
+    it('should return an Array with Clients', async () => {
+      const clients = await controller.getAllClients();
 
-    const matchClient = clients.filter((client) => {
-      if (client.name === CLIENTS_MOCK_DATA[0].name) {
-        return client;
-      }
+      const matchClient = clients.filter((client) => {
+        if (client.name === CLIENTS_MOCK_DATA[0].name) {
+          return client;
+        }
+      });
+
+      expect(Array.isArray(clients)).toBe(true);
+      expect(matchClient.length).toBe(1);
     });
 
-    expect(Array.isArray(clients)).toBe(true);
-    expect(matchClient.length).toBe(1);
-  });
+    it('should return a client by ID', async () => {
+      const customId = '123e4567';
+      const clientMockData = CLIENTS_MOCK_DATA[1];
+      await prismaService.client.create({
+        data: {
+          id: customId,
+          ...clientMockData,
+        },
+      });
 
-  it('should return a client by ID', async () => {
-    const customId = '123e4567';
-    const clientMockData = CLIENTS_MOCK_DATA[1];
-    await prismaService.client.create({
-      data: {
-        id: customId,
-        ...clientMockData,
-      },
+      const clientResponse = await controller.getClientById(customId);
+
+      expect(clientResponse).toBeDefined();
+      expect(clientResponse?.id).toBe(customId);
     });
-
-    const clientResponse = await controller.getClientById(customId);
-
-    expect(clientResponse).toBeDefined();
-    expect(clientResponse?.id).toBe(customId);
   });
 
   describe('/client/create', () => {
