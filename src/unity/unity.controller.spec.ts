@@ -1,18 +1,156 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { UnityController } from './unity.controller';
+import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
+import { CreateUnityDto } from './unity.dto';
+import { AuthService } from 'src/auth/auth.service';
+import { AdminRole } from '@prisma/client';
+import { AdminResponseDto, CreatedAdminDto } from 'src/admin/admin.dto';
+import { AdminService } from 'src/admin/admin.service';
+import { ClientService } from 'src/client/client.service';
+import {
+  CreateClientDto,
+  CreateClientResponseDto,
+} from 'src/client/client.dto';
+
+const UNITY_MOCK_DATA: Array<Omit<CreateUnityDto, 'clientId'>> = [
+  {
+    name: 'Unity Controller A',
+  },
+  {
+    name: 'Unity Controller B',
+  },
+];
+
+const CLIENT_MOCK_DATA: CreateClientDto = {
+  name: 'Client mock name',
+};
+
+const CREATE_ADMIN_MOCK_DATA: Array<Omit<CreatedAdminDto, 'clientId'>> = [
+  {
+    name: 'Admin Name',
+    passwordHash: 'password_hash',
+    role: AdminRole.QUEUE_ADMIN,
+    queueIds: ['1'],
+    email: 'admin@email.com',
+  },
+  {
+    name: 'Admin Name 2',
+    passwordHash: 'password_hash',
+    role: AdminRole.CLIENT_ADMIN,
+    unityIds: ['1'],
+    email: 'admin2@email.com',
+  },
+];
 
 describe('UnityController', () => {
-  let controller: UnityController;
+  let unityController: UnityController;
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [UnityController],
-    }).compile();
+  let clientService: ClientService;
+  let authService: AuthService;
+  let adminService: AdminService;
 
-    controller = module.get<UnityController>(UnityController);
+  let client: CreateClientResponseDto;
+  let queueAdminUser: AdminResponseDto;
+  let clientAdminUser: AdminResponseDto;
+
+  beforeAll(async () => {
+    const module = await TestModuleSingleton.createTestModule();
+    unityController = module.get<UnityController>(UnityController);
+
+    clientService = module.get<ClientService>(ClientService);
+    authService = module.get<AuthService>(AuthService);
+    adminService = module.get<AdminService>(AdminService);
+
+    await TestModuleSingleton.cleanUpDatabase();
+
+    client = await clientService.createClient(CLIENT_MOCK_DATA);
+
+    queueAdminUser = await adminService.createAdmin({
+      ...CREATE_ADMIN_MOCK_DATA[0],
+      clientId: client.id,
+    });
+
+    clientAdminUser = await adminService.createAdmin({
+      ...CREATE_ADMIN_MOCK_DATA[1],
+      clientId: client.id,
+    });
   });
 
   it('should be defined', () => {
-    expect(controller).toBeDefined();
+    expect(unityController).toBeDefined();
+  });
+
+  describe('/unity/create', () => {
+    it('should throw a UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/create')
+        .set('Cookie', [`user_token=`])
+        .send({
+          name: UNITY_MOCK_DATA[0].name,
+        })
+        .expect(401);
+    });
+
+    it('should throw a BadRequestException if Unity Name is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/create')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          name: '',
+        })
+        .expect(400);
+    });
+
+    it('should throw a BadRequestException if Unity ClientId is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/create')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          name: UNITY_MOCK_DATA[0].name,
+          clientId: '',
+        })
+        .expect(400);
+    });
+  });
+
+  it('should throw MethodNotAllowedException a connected admin does NOT has proper Admin Role', async () => {
+    const userToken = await authService.generateJwtForUser({
+      ...queueAdminUser,
+      client: client,
+    });
+
+    await TestModuleSingleton.callEndpoint()
+      .post('/unity/create')
+      .set('Cookie', [`user_token=${userToken}`])
+      .send({
+        name: UNITY_MOCK_DATA[0].name,
+        clientId: client.id,
+      })
+      .expect(405);
+  });
+
+  it('should create a Unity with proper connected admin role and proper payload', async () => {
+    const userToken = await authService.generateJwtForUser({
+      ...clientAdminUser,
+      client: client,
+    });
+
+    await TestModuleSingleton.callEndpoint()
+      .post('/unity/create')
+      .set('Cookie', [`user_token=${userToken}`])
+      .send({
+        name: UNITY_MOCK_DATA[0].name,
+        clientId: client.id,
+      })
+      .expect(201);
   });
 });
