@@ -55,6 +55,39 @@ export class UnityService {
   }
 
   /**
+   * Get data from an Unity by its Id
+   *
+   * @param {UnityIdArg} data The id of the Unity
+   * @returns Return the UnityDto or null if not founded
+   */
+  async getUnityById(data: UnityIdArg): Promise<UnityDto | null> {
+    if (!data.unityId) {
+      throw new BadRequestException(
+        defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
+      );
+    }
+
+    const unity = await this.prisma.unity.findFirst({
+      where: {
+        id: data.unityId,
+      },
+    });
+
+    if (!unity) {
+      return null;
+    }
+
+    const formattedUnity: UnityDto = {
+      ...unity,
+      address: unity?.address ?? undefined,
+      phone: unity?.phone ?? undefined,
+      email: unity?.email ?? undefined,
+    };
+
+    return formattedUnity;
+  }
+
+  /**
    *  Create a new Unity for a Client in the database using the provided data.
    *
    * @param {CreateUnityDto} data  The data required to create a new unity.

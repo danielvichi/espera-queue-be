@@ -7,7 +7,7 @@ import {
   UnityNotFoundException,
   defaultUnityExceptionsMessages,
 } from './unity.exceptions';
-import { CreateUnityDto } from './unity.dto';
+import { CreateUnityDto, UnityDto } from './unity.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   CreateClientDto,
@@ -15,10 +15,12 @@ import {
 } from 'src/client/client.dto';
 import { BadRequestException } from '@nestjs/common';
 
-const CREATE_UNITY_MOCK_DATA: Omit<CreateUnityDto, 'clientId'> = {
-  name: 'Unity Name',
-  address: 'some address',
-};
+const CREATE_UNITY_MOCK_DATA: Array<Omit<CreateUnityDto, 'clientId'>> = [
+  {
+    name: 'Unity Name',
+    address: 'some address',
+  },
+];
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -29,6 +31,7 @@ describe('UnityService', () => {
   let prismaService: PrismaService;
 
   let client: CreateClientResponseDto;
+  let unity: UnityDto;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
@@ -47,6 +50,20 @@ describe('UnityService', () => {
       address: undefined,
       ownerId: undefined,
     };
+
+    const createUnityResponse = await prismaService.unity.create({
+      data: {
+        ...CREATE_UNITY_MOCK_DATA[0],
+        clientId: client.id,
+      },
+    });
+
+    unity = {
+      ...createUnityResponse,
+      address: createUnityResponse.address ?? undefined,
+      email: undefined,
+      phone: undefined,
+    };
   });
 
   it('should be defined', () => {
@@ -57,7 +74,7 @@ describe('UnityService', () => {
     it('should NOT be able to create a Unity with missing name', async () => {
       await expect(
         unityService.createUnity({
-          ...CREATE_UNITY_MOCK_DATA,
+          ...CREATE_UNITY_MOCK_DATA[1],
           name: '',
           clientId: 'id',
         }),
@@ -71,7 +88,7 @@ describe('UnityService', () => {
     it('should NOT be able to create a Unity with missing clientId', async () => {
       await expect(
         unityService.createUnity({
-          ...CREATE_UNITY_MOCK_DATA,
+          ...CREATE_UNITY_MOCK_DATA[1],
           clientId: '',
         }),
       ).rejects.toThrow(
@@ -84,7 +101,7 @@ describe('UnityService', () => {
     it('should NOT be able to create a Unity with clientId of invalid Client', async () => {
       await expect(
         unityService.createUnity({
-          ...CREATE_UNITY_MOCK_DATA,
+          ...CREATE_UNITY_MOCK_DATA[1],
           clientId: 'client_id_from_invalid_client',
         }),
       ).rejects.toThrow(
@@ -95,13 +112,15 @@ describe('UnityService', () => {
     });
 
     it('should create a Unity with proper data', async () => {
+      const createUnityData = CREATE_UNITY_MOCK_DATA[1];
+
       const unity = await unityService.createUnity({
-        ...CREATE_UNITY_MOCK_DATA,
+        ...createUnityData,
         clientId: client.id,
       });
 
       expect(unity.id).toBeTruthy();
-      expect(unity.name).toBe(CREATE_UNITY_MOCK_DATA.name);
+      expect(unity.name).toBe(createUnityData.name);
       expect(unity.clientId).toBe(client.id);
       expect(unity.enabled).toBe(true);
     });
@@ -324,6 +343,29 @@ describe('UnityService', () => {
       });
 
       expect(unityList.length).toBe(1);
+    });
+  });
+
+  describe('getUnityById', () => {
+    it('should NOT return not data with missing unity Id', async () => {
+      await expect(
+        unityService.getUnityById({
+          unityId: '',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should return the UnityDto for a given Unity Id', async () => {
+      const response = await unityService.getUnityById({
+        unityId: unity?.id,
+      });
+
+      expect(response?.id).toBe(unity?.id);
+      expect(response?.address).toBe(unity?.address);
     });
   });
 });
