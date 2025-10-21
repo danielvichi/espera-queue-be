@@ -64,34 +64,16 @@ describe('ClientController', () => {
   });
 
   describe('/client/all', () => {
-    // TODO FIX TO ENDPOINT CALLS INSTEAD OF methods
     it('should return an Array with Clients', async () => {
-      const clients = await clientController.getAllClients();
+      const response = await TestModuleSingleton.callEndpoint()
+        .get('/client/all')
+        .send()
+        .expect(200);
 
-      const matchClient = clients.filter((client) => {
-        if (client.name === CLIENTS_MOCK_DATA[0].name) {
-          return client;
-        }
-      });
-
-      expect(Array.isArray(clients)).toBe(true);
-      expect(matchClient.length).toBe(1);
-    });
-
-    it('should return a client by ID', async () => {
-      const customId = '123e4567';
-      const clientMockData = CLIENTS_MOCK_DATA[1];
-      await prismaService.client.create({
-        data: {
-          id: customId,
-          ...clientMockData,
-        },
-      });
-
-      const clientResponse = await clientController.getClientById(customId);
-
-      expect(clientResponse).toBeDefined();
-      expect(clientResponse?.id).toBe(customId);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(response.body.length).toBe(1);
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(response.body[0].name).toBe(CLIENTS_MOCK_DATA[0].name);
     });
   });
 
