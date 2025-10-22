@@ -84,9 +84,7 @@ model UserQueued {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  Queue        Queue?   @relation(fields: [queueId], references: [id])
-  queueId      String?
-  enabled      Boolean  @default(true)
+  enabled Boolean @default(true)
 }
 
 enum QueueType {
@@ -119,7 +117,7 @@ model Queue {
   Admin   Admin?  @relation(fields: [adminId], references: [id])
   adminId String?
 
-  UserQueue UserQueued[]
+  userInQueue String[]
 }
 
 // Future Implementation

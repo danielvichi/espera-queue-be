@@ -1,5 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { QueueType, UserQueued } from '@prisma/client';
+import { QueueType } from '@prisma/client';
 
 export class QueueDto {
   @ApiProperty({
@@ -100,7 +100,7 @@ export class QueueDto {
     example: 'c1234567-89ab-cdef-0123-456789abcdef',
     required: true,
   })
-  UserQueue: UserQueued[];
+  userInQueue: string[];
 }
 
 export class CreateQueueDto {
