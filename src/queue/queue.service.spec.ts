@@ -6,7 +6,7 @@ import {
 } from 'src/client/client.dto';
 import { CreateUnityDto, UnityDto } from 'src/unity/unity.dto';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
-import { CreateQueueDto } from './queue.dto';
+import { CreateQueueDto, QueueDto } from './queue.dto';
 import { QueueType } from '@prisma/client';
 import {
   CreateQueueBadRequestException,
@@ -14,6 +14,7 @@ import {
 } from './queue.exceptions';
 import { ClientNotFoundException } from 'src/client/client.exceptions';
 import { UnityNotFoundException } from 'src/unity/unity.exceptions';
+import { BadRequestException } from '@nestjs/common';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -47,7 +48,7 @@ describe('QueueService', () => {
 
   let client: CreateClientResponseDto;
   let unity: UnityDto;
-  // let queue: QueueDto;
+  const queues: QueueDto[] = [];
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
@@ -83,24 +84,25 @@ describe('QueueService', () => {
       phone: undefined,
     };
 
-    // const createQueueResponse = await prismaService.queue.create({
-    //   data: {
-    //     ...CREATE_QUEUE_MOCK_DATA[1],
-    //     clientId: client.id,
-    //     unityId: unity.id,
-    //   },
-    // });
+    for (let i = 0; i < 2; i++) {
+      const createQueueResponse = await prismaService.queue.create({
+        data: {
+          ...CREATE_QUEUE_MOCK_DATA[i + 1],
+          clientId: client.id,
+          unityId: unity.id,
+        },
+      });
 
-    // Format response to QueueDto
-    // queue = {
-    //   ...createQueueResponse,
-    //   name: createQueueResponse.name ?? undefined,
-    //   minWaitingTimeInMinutes: undefined,
-    //   maxWaitingTimeInMinutes: undefined,
-    //   currentWaitingTimeInMinutes: undefined,
-    //   adminId: undefined,
-    //   UserQueue: [],
-    // };
+      // Format response to QueueDto
+      queues.push({
+        ...createQueueResponse,
+        name: createQueueResponse.name ?? undefined,
+        minWaitingTimeInMinutes: undefined,
+        maxWaitingTimeInMinutes: undefined,
+        currentWaitingTimeInMinutes: undefined,
+        adminId: undefined,
+      });
+    }
   });
 
   it('should be defined', () => {
@@ -183,6 +185,24 @@ describe('QueueService', () => {
       expect(queueResponse.id).toBeDefined();
       expect(queueResponse.clientId).toBe(client.id);
       expect(queueResponse.unityId).toBe(unity.id);
+    });
+
+    describe('getQueuesByIds', () => {
+      it('Should NOT be able to retrieve Queue data with proper Queue Id ', async () => {
+        await expect(queueService.getQueuesByIds([])).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+          ),
+        );
+      });
+      it('Should return a list of 2 Queues by its Ids ', async () => {
+        const queueIds = queues.map((queue) => queue.id);
+        const queueResponse = await queueService.getQueuesByIds(queueIds);
+
+        expect(queueResponse.length).toBe(2);
+        expect(queueResponse[0].id).toBe(queueIds[0]);
+        expect(queueResponse[1].id).toBe(queueIds[1]);
+      });
     });
   });
 });
