@@ -27,9 +27,9 @@ export function checkAdminRoleHigherOrThrow(
   const minRequiredHierarchyValue =
     ADMIN_ROLES_HIERARCHY_VALUES[minRequiredRole];
 
-  if (userHierarchyValue >= minRequiredHierarchyValue) {
-    return true;
+  if (userHierarchyValue < minRequiredHierarchyValue) {
+    throw new MethodNotAllowedException();
   }
 
-  throw new MethodNotAllowedException();
+  return true;
 }
