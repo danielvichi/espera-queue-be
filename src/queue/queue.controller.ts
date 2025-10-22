@@ -1,16 +1,63 @@
-import { Body, Controller, Post, Request, UseGuards } from '@nestjs/common';
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Get,
+  Post,
+  Request,
+  UseGuards,
+} from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { CreateQueueDto, QueueDto } from './queue.dto';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
-import { checkAdminAllowedToCreateQueueOrThrow } from './queue.utils';
+import { checkAdminAllowedToAccessQueueMethodOrThrow } from './queue.utils';
 import { QueueService } from './queue.service';
+import { defaultQueueExceptionsMessage } from './queue.exceptions';
 
 @Controller('queue')
 export class QueueController {
   constructor(private readonly queueService: QueueService) {}
+
+  @Get()
+  @UseGuards(AuthGuard)
+  @ApiOkResponse({
+    description: 'Retrieve a list of Queue by its Ids',
+    type: QueueDto,
+    isArray: true,
+  })
+  async getQueueByIds(
+    @Body() queueIds: string[],
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<QueueDto[]> {
+    if (!queueIds || queueIds.length === 0) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+      );
+    }
+
+    checkAdminRoleHigherOrThrow({
+      userRole: req.user.role,
+      minRequiredRole: AdminRole.UNITY_ADMIN,
+    });
+
+    queueIds.forEach((queueId) => {
+      checkAdminAllowedToAccessQueueMethodOrThrow({
+        queueUnityId: queueId,
+        authenticatedUser: req.user,
+      });
+    });
+
+    // should also include CLIENT ID
+    const queueList = await this.queueService.getQueuesByIds({
+      queueIds,
+      clientId: req.user.clientId as string,
+    });
+
+    return queueList;
+  }
 
   @Post('create')
   @UseGuards(AuthGuard)
@@ -27,7 +74,7 @@ export class QueueController {
       minRequiredRole: AdminRole.UNITY_ADMIN,
     });
 
-    checkAdminAllowedToCreateQueueOrThrow({
+    checkAdminAllowedToAccessQueueMethodOrThrow({
       queueUnityId: inputData.unityId,
       authenticatedUser: req.user,
     });
