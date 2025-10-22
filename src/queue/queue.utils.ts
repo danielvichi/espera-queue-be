@@ -34,7 +34,7 @@ export function checkCreateQueueRequirementsOrThrow(data: CreateQueueDto) {
   }
 }
 
-export function checkAdminAllowedToCreateQueueOrThrow(data: {
+export function checkAdminAllowedToAccessQueueMethodOrThrow(data: {
   queueUnityId: string;
   authenticatedUser: AdminWithClientDto;
 }) {

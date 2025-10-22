@@ -6,6 +6,11 @@ import { ClientNotFoundException } from 'src/client/client.exceptions';
 import { UnityNotFoundException } from 'src/unity/unity.exceptions';
 import { defaultQueueExceptionsMessage } from './queue.exceptions';
 
+interface GetQueuesByIdsArgs {
+  queueIds: string[];
+  clientId: string;
+}
+
 @Injectable()
 export class QueueService {
   constructor(private readonly prismaService: PrismaService) {}
@@ -56,18 +61,27 @@ export class QueueService {
     };
   }
 
-  async getQueuesByIds(queueIds: string[]): Promise<QueueDto[]> {
-    if (!queueIds || queueIds.length === 0) {
+  async getQueuesByIds(data: GetQueuesByIdsArgs): Promise<QueueDto[]> {
+    if (!data.clientId) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+      );
+    }
+
+    if (!data.queueIds || data.queueIds.length === 0) {
       throw new BadRequestException(
         defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
       );
     }
 
     const queueList = Promise.all(
-      queueIds.map(async (queueId) => {
+      data.queueIds.map(async (queueId) => {
         const queueResponse = await this.prismaService.queue.findFirst({
           where: {
             id: queueId,
+            AND: {
+              clientId: data.clientId,
+            },
           },
         });
 

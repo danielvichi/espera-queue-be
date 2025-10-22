@@ -189,7 +189,12 @@ describe('QueueService', () => {
 
     describe('getQueuesByIds', () => {
       it('Should NOT be able to retrieve Queue data with proper Queue Id ', async () => {
-        await expect(queueService.getQueuesByIds([])).rejects.toThrow(
+        await expect(
+          queueService.getQueuesByIds({
+            queueIds: [],
+            clientId: client.id,
+          }),
+        ).rejects.toThrow(
           new BadRequestException(
             defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
           ),
@@ -197,7 +202,10 @@ describe('QueueService', () => {
       });
       it('Should return a list of 2 Queues by its Ids ', async () => {
         const queueIds = queues.map((queue) => queue.id);
-        const queueResponse = await queueService.getQueuesByIds(queueIds);
+        const queueResponse = await queueService.getQueuesByIds({
+          queueIds: queueIds,
+          clientId: client.id,
+        });
 
         expect(queueResponse.length).toBe(2);
         expect(queueResponse[0].id).toBe(queueIds[0]);
