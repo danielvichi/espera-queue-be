@@ -69,8 +69,8 @@ model Unity {
   email     String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Client    Client?  @relation(fields: [clientId], references: [id])
-  clientId  String?
+  Client    Client  @relation(fields: [clientId], references: [id])
+  clientId  String
   Queue     Queue[]
   Admin     Admin[]
   enabled   Boolean  @default(true)

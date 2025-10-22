@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import {
   ClientDto,
-  InputClientDto,
-  InputResponseClientDto,
+  CreateClientDto,
+  CreateClientResponseDto,
 } from './client.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
@@ -18,10 +18,10 @@ export class ClientService {
   /**
    * Creates a new client in the database using the provided data.
    *
-   * @param {InputClientDto} data The data required to create a new client.
+   * @param {CreateClientDto} data The data required to create a new client.
    * @returns {Promise<ClientDto>} The created ClientDto object.
    **/
-  async createClient(data: InputClientDto): Promise<InputResponseClientDto> {
+  async createClient(data: CreateClientDto): Promise<CreateClientResponseDto> {
     if (!data.name) {
       throw new CreateClientBadRequestException(
         createClientBadRequestExceptionMessages.NAME_REQUIRED,
@@ -87,10 +87,10 @@ export class ClientService {
    * Updates a client by its unique identifier (ID) in the database.
    *
    * @param {string} id - The unique identifier of the client to be updated.
-   * @param {Partial<InputClientDto>} data - The data to update the client with.
+   * @param {Partial<CreateClientDto>} data - The data to update the client with.
    * @returns {Promise<ClientDto>} The updated ClientDto object.
    * **/
-  async updateClient(id: string, data: Partial<InputClientDto>) {
+  async updateClient(id: string, data: Partial<CreateClientDto>) {
     const client = await this.prisma.client.findUnique({
       where: { id },
     });
