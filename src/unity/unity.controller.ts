@@ -24,7 +24,6 @@ export class UnityController {
   @ApiOkResponse({
     description: 'Create a Unity for the connected user with proper Admin Role',
     type: UnityDto,
-    isArray: true,
   })
   async createUnity(
     @Body() inputData: CreateUnityDto,
@@ -103,7 +102,6 @@ export class UnityController {
     description:
       'Disable a Enabled Unity for the connected user with proper Admin Role',
     type: UnityDto,
-    isArray: true,
   })
   async disableUnity(
     @Body() data: { unityId: string },
@@ -127,7 +125,6 @@ export class UnityController {
     description:
       'Enable a Disabled Unity for the connected user with proper Admin Role',
     type: UnityDto,
-    isArray: true,
   })
   async enableUnity(
     @Body() data: { unityId: string },
@@ -151,7 +148,6 @@ export class UnityController {
     description:
       'Update a Unity data for the connected user with proper Admin Role',
     type: UnityDto,
-    isArray: true,
   })
   async updateUnity(
     @Body() payload: UpdateUnityArgs,
