@@ -61,6 +61,12 @@ export class QueueService {
     };
   }
 
+  /**
+   * Return a list of Queue by its Ids from a Client
+   *
+   * @param {GetQueuesByIdsArgs} data List of Queue Ids and the Client Id it all belongs
+   * @returns {Promise<QueueDto[]} Return a list of Queue data
+   */
   async getQueuesByIds(data: GetQueuesByIdsArgs): Promise<QueueDto[]> {
     if (!data.clientId) {
       throw new BadRequestException(
