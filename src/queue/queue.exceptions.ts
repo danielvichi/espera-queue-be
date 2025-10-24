@@ -6,6 +6,8 @@ export const defaultQueueExceptionsMessage = {
   UNITY_ID_REQUIRED: 'Unity Id is required.',
   TYPE_IS_REQUIRED: 'Queue Type is required.',
   QUEUE_ID_REQUIRED: 'Queue Id is required',
+  PAYLOAD_REQUIRED: 'Payload is required',
+  QUEUE_NOT_FOUND: 'Queue not found',
 };
 
 export class CreateQueueBadRequestException extends BadRequestException {

@@ -1,4 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateQueueDto, QueueDto } from './queue.dto';
 import { checkCreateQueueRequirementsOrThrow } from './queue.utils';
@@ -9,6 +13,12 @@ import { defaultQueueExceptionsMessage } from './queue.exceptions';
 interface GetQueuesByIdsArgs {
   queueIds: string[];
   clientId: string;
+}
+
+interface UpdateQueueArgs {
+  queueId: string;
+  clientId: string;
+  payload: Partial<CreateQueueDto>;
 }
 
 @Injectable()
@@ -112,5 +122,60 @@ export class QueueService {
     );
 
     return filteredQueueList;
+  }
+
+  /**
+   * Updates and returns a Queue
+   *
+   * @param {UpdateQueueArgs} data
+   * @returns {Promise<QueueDto>}
+   */
+  async updateQueue(data: UpdateQueueArgs): Promise<QueueDto> {
+    if (!data.queueId) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+      );
+    }
+
+    if (!data.clientId) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+      );
+    }
+
+    if (!data.payload || Object.keys(data.payload).length === 0) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.PAYLOAD_REQUIRED,
+      );
+    }
+
+    try {
+      const updatedQueue = await this.prismaService.queue.update({
+        where: {
+          id: data.queueId,
+          AND: {
+            clientId: data.clientId,
+          },
+        },
+        data: data.payload,
+      });
+
+      return {
+        ...updatedQueue,
+        name: updatedQueue.name ?? undefined,
+        adminId: updatedQueue.adminId ?? undefined,
+        minWaitingTimeInMinutes:
+          updatedQueue.minWaitingTimeInMinutes ?? undefined,
+        maxWaitingTimeInMinutes:
+          updatedQueue.maxWaitingTimeInMinutes ?? undefined,
+        currentWaitingTimeInMinutes:
+          updatedQueue.currentWaitingTimeInMinutes ?? undefined,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
+    } catch (err) {
+      throw new NotFoundException(
+        defaultQueueExceptionsMessage.QUEUE_NOT_FOUND,
+      );
+    }
   }
 }

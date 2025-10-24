@@ -14,7 +14,7 @@ import {
 } from './queue.exceptions';
 import { ClientNotFoundException } from 'src/client/client.exceptions';
 import { UnityNotFoundException } from 'src/unity/unity.exceptions';
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -210,6 +210,96 @@ describe('QueueService', () => {
         expect(queueResponse.length).toBe(2);
         expect(queueResponse[0].id).toBe(queueIds[0]);
         expect(queueResponse[1].id).toBe(queueIds[1]);
+      });
+    });
+
+    describe('updateQueue', () => {
+      it('Should NOT updated a Queue with missing queueId', async () => {
+        await expect(
+          queueService.updateQueue({
+            queueId: '',
+            clientId: client.id,
+            payload: {
+              name: 'new name',
+            },
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+          ),
+        );
+      });
+
+      it('Should NOT updated a Queue with missing clientId', async () => {
+        await expect(
+          queueService.updateQueue({
+            queueId: queues[0].id,
+            clientId: '',
+            payload: {
+              name: 'new name',
+            },
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+          ),
+        );
+      });
+
+      it('Should NOT updated a Queue with missing payload', async () => {
+        await expect(
+          queueService.updateQueue({
+            queueId: queues[0].id,
+            clientId: client.id,
+            payload: {},
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.PAYLOAD_REQUIRED,
+          ),
+        );
+      });
+
+      it('Should NOT updated a Queue with invalid Queue Id', async () => {
+        await expect(
+          queueService.updateQueue({
+            queueId: 'invalid_queue_id',
+            clientId: client.id,
+            payload: {
+              name: 'new name',
+            },
+          }),
+        ).rejects.toThrow(
+          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+        );
+      });
+
+      it('Should NOT updated a Queue with invalid Client Id', async () => {
+        await expect(
+          queueService.updateQueue({
+            queueId: queues[0].id,
+            clientId: 'invalid_client_id',
+            payload: {
+              name: 'new name',
+            },
+          }),
+        ).rejects.toThrow(
+          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+        );
+      });
+
+      it('Should updated a Queue', async () => {
+        const payload: Partial<CreateQueueDto> = {
+          name: 'new name 2',
+        };
+
+        const queueResponse = await queueService.updateQueue({
+          queueId: queues[0].id,
+          clientId: client.id,
+          payload: payload,
+        });
+
+        expect(queueResponse.name).toBe(payload.name);
       });
     });
   });
