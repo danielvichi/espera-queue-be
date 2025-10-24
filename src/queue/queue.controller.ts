@@ -17,6 +17,11 @@ import { checkAdminAllowedToAccessQueueMethodOrThrow } from './queue.utils';
 import { QueueService } from './queue.service';
 import { defaultQueueExceptionsMessage } from './queue.exceptions';
 
+interface UpdateQueueArgs {
+  queueId: string;
+  payload: Partial<Omit<CreateQueueDto, 'clientId' | 'queueId'>>;
+}
+
 @Controller('queue')
 export class QueueController {
   constructor(private readonly queueService: QueueService) {}
@@ -62,7 +67,7 @@ export class QueueController {
   @Post('create')
   @UseGuards(AuthGuard)
   @ApiOkResponse({
-    description: 'Create a Unity for the connected user with proper Admin Role',
+    description: 'Create a Queue for the connected user with proper Admin Role',
     type: QueueDto,
   })
   async createQueue(
@@ -82,6 +87,31 @@ export class QueueController {
     const queueResponse = await this.queueService.createQueue({
       ...inputData,
       clientId: req.user.clientId as string,
+    });
+
+    return queueResponse;
+  }
+
+  @Post('update')
+  @UseGuards(AuthGuard)
+  @ApiOkResponse({
+    description:
+      'Updated a Queue for the connected user with proper Admin Role >= Unity Admin',
+    type: QueueDto,
+  })
+  async updateQueue(
+    @Body() inputData: UpdateQueueArgs,
+    @Request() req: AuthenticatedRequestDto,
+  ) {
+    checkAdminRoleHigherOrThrow({
+      userRole: req.user.role,
+      minRequiredRole: AdminRole.UNITY_ADMIN,
+    });
+
+    const queueResponse = await this.queueService.updateQueue({
+      queueId: inputData.queueId,
+      clientId: req.user.clientId as string,
+      payload: inputData.payload,
     });
 
     return queueResponse;

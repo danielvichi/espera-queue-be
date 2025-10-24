@@ -150,7 +150,6 @@ describe('QueueController', () => {
         .set('Cookie', [`user_token=`])
         .send({
           queueIds: queueIds,
-          clientId: client.id,
         })
         .expect(401);
     });
@@ -247,22 +246,6 @@ describe('QueueController', () => {
         .expect(400);
     });
 
-    it('should throw BadRequestException if Queue Type Client Id is missing', async () => {
-      const userToken = await authService.generateJwtForUser({
-        ...clientAdminUser,
-        client: client,
-      });
-
-      await TestModuleSingleton.callEndpoint()
-        .post('/queue/create')
-        .set('Cookie', [`user_token=${userToken}`])
-        .send({
-          ...CREATE_QUEUE_MOCK_DATA[2],
-          clientId: '',
-        })
-        .expect(400);
-    });
-
     it('should throw BadRequestException if Queue Unity Id is missing', async () => {
       const userToken = await authService.generateJwtForUser({
         ...clientAdminUser,
@@ -308,6 +291,90 @@ describe('QueueController', () => {
           unityId: unity.id,
         })
         .expect(201);
+    });
+
+    describe('/queue/update', () => {
+      it('Should throw UnauthorizedException if user is not signed in', async () => {
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue/update')
+          .set('Cookie', [`user_token=`])
+          .send({
+            queueId: queues[0].id,
+            payload: { name: 'not connected admin' },
+          })
+          .expect(401);
+      });
+
+      it('should throw MethodNotAllowedException if the connected admin does NOT has proper Admin Role', async () => {
+        const userToken = await authService.generateJwtForUser({
+          ...queueAdminUser,
+          client: client,
+        });
+
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue/update')
+          .set('Cookie', [`user_token=${userToken}`])
+          .send({
+            queueId: queues[0].id,
+            payload: { name: 'wrong not connected admin' },
+          })
+          .expect(405);
+      });
+
+      it('should throw BadRequestException if Queue Id is missing', async () => {
+        const userToken = await authService.generateJwtForUser({
+          ...clientAdminUser,
+          client: client,
+        });
+
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue/update')
+          .set('Cookie', [`user_token=${userToken}`])
+          .send({
+            queueId: '',
+            payload: { name: 'missing queue id name' },
+          })
+          .expect(400);
+      });
+
+      it('should throw BadRequestException if Payload is missing', async () => {
+        const userToken = await authService.generateJwtForUser({
+          ...clientAdminUser,
+          client: client,
+        });
+
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue/update')
+          .set('Cookie', [`user_token=${userToken}`])
+          .send({
+            queueId: queues[0].id,
+            payload: {},
+          })
+          .expect(400);
+      });
+    });
+
+    it('should updated Queue', async () => {
+      const payload: Partial<CreateQueueDto> = {
+        name: 'new proper queue name',
+      };
+
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const queueResponse = (await TestModuleSingleton.callEndpoint()
+        .post('/queue/update')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          queueId: queues[0].id,
+          payload: payload,
+        })
+        .expect(201)) as { body: QueueDto };
+
+      expect(queueResponse.body.name).toBeDefined();
+      expect(queueResponse.body.name).toBe(payload.name);
     });
   });
 });
