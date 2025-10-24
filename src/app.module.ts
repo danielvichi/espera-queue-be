@@ -6,9 +6,17 @@ import { ClientModule } from './client/client.module';
 import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { UnityModule } from './unity/unity.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
-  imports: [PrismaModule, ClientModule, AdminModule, AuthModule, UnityModule],
+  imports: [
+    PrismaModule,
+    ClientModule,
+    AdminModule,
+    AuthModule,
+    UnityModule,
+    QueueModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

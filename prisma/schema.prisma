@@ -34,6 +34,7 @@ model Client {
   // Payment   Payment[]
   enabled   Boolean  @default(true)
   Admin     Admin[]
+  Queue     Queue[]
 }
 
 enum AdminRole {
@@ -57,8 +58,8 @@ model Admin {
   unityId      String?
   Unity        Unity?    @relation(fields: [unityId], references: [id])
   enabled      Boolean   @default(true)
-  Client   Client? @relation(fields: [clientId], references: [id])
-  clientId String?
+  Client       Client?   @relation(fields: [clientId], references: [id])
+  clientId     String?
 }
 
 model Unity {
@@ -69,7 +70,7 @@ model Unity {
   email     String?  @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  Client    Client  @relation(fields: [clientId], references: [id])
+  Client    Client   @relation(fields: [clientId], references: [id])
   clientId  String
   Queue     Queue[]
   Admin     Admin[]
@@ -83,9 +84,7 @@ model UserQueued {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  Queue        Queue?   @relation(fields: [queueId], references: [id])
-  queueId      String?
-  enabled      Boolean  @default(true)
+  enabled Boolean @default(true)
 }
 
 enum QueueType {
@@ -98,23 +97,27 @@ enum QueueType {
 }
 
 model Queue {
-  id                 String    @id @default(cuid())
-  type               QueueType @default(GENERAL)
-  name               String?
-  minWaitingTime     Int?
-  maxWaitingTime     Int?
-  currentWaitingTime Int?
-  isActive           Boolean   @default(true)
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
-  enabled            Boolean   @default(true)
+  id                          String    @id @default(cuid())
+  type                        QueueType @default(GENERAL)
+  name                        String?
+  minWaitingTimeInMinutes     Int?
+  maxWaitingTimeInMinutes     Int?
+  currentWaitingTimeInMinutes Int?
+  isActive                    Boolean   @default(true)
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+  enabled                     Boolean   @default(true)
 
-  Unity   Unity?  @relation(fields: [unityId], references: [id])
-  unityId String?
+  Client   Client @relation(fields: [clientId], references: [id])
+  clientId String
 
-  UserQueue UserQueued[]
-  Admin     Admin?       @relation(fields: [adminId], references: [id])
-  adminId   String?
+  Unity   Unity  @relation(fields: [unityId], references: [id])
+  unityId String
+
+  Admin   Admin?  @relation(fields: [adminId], references: [id])
+  adminId String?
+
+  userInQueue String[]
 }
 
 // Future Implementation
