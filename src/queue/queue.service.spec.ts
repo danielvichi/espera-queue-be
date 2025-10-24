@@ -302,5 +302,122 @@ describe('QueueService', () => {
         expect(queueResponse.name).toBe(payload.name);
       });
     });
+
+    describe('disableQueue', () => {
+      it('Should NOT disable a Queue with missing queueId', async () => {
+        await expect(
+          queueService.disableQueue({
+            queueId: '',
+            clientId: client.id,
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+          ),
+        );
+      });
+
+      it('Should NOT disable a Queue with missing clientId', async () => {
+        await expect(
+          queueService.disableQueue({
+            queueId: queues[0].id,
+            clientId: '',
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+          ),
+        );
+      });
+
+      it('Should disable a enabled Queue', async () => {
+        const disabledQueue = await queueService.disableQueue({
+          queueId: queues[0].id,
+          clientId: client.id,
+        });
+
+        expect(disabledQueue.id).toBe(queues[0].id);
+        expect(disabledQueue.enabled).toBe(false);
+      });
+
+      it('Should NOT disable a Queue if its already disabled', async () => {
+        await expect(
+          queueService.disableQueue({
+            queueId: queues[0].id,
+            clientId: client.id,
+          }),
+        ).rejects.toThrow(
+          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+        );
+      });
+    });
+
+    describe('enableQueue', () => {
+      it('Should NOT enable a Queue with missing queueId', async () => {
+        await expect(
+          queueService.enableQueue({
+            queueId: '',
+            clientId: client.id,
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+          ),
+        );
+      });
+
+      it('Should NOT enable a Queue with missing clientId', async () => {
+        await expect(
+          queueService.enableQueue({
+            queueId: queues[0].id,
+            clientId: '',
+          }),
+        ).rejects.toThrow(
+          new BadRequestException(
+            defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+          ),
+        );
+      });
+
+      it('Should enable a disabled Queue ', async () => {
+        const queueIdToDisabled = queues[0].id;
+
+        let disabledQueue = await queueService.getQueuesByIds({
+          queueIds: [queueIdToDisabled],
+          clientId: client.id,
+        });
+
+        if (disabledQueue[0].enabled) {
+          disabledQueue = [
+            await queueService.disableQueue({
+              queueId: queueIdToDisabled,
+              clientId: client.id,
+            }),
+          ];
+        }
+
+        expect(disabledQueue[0]).toBeDefined();
+        expect(disabledQueue[0].enabled).toBe(false);
+
+        const enabledQueue = await queueService.enableQueue({
+          queueId: queueIdToDisabled,
+          clientId: client.id,
+        });
+
+        expect(enabledQueue.id).toBe(queueIdToDisabled);
+        expect(enabledQueue.enabled).toBe(true);
+      });
+
+      it('Should NOT disable a Queue if its already disabled', async () => {
+        await expect(
+          queueService.enableQueue({
+            queueId: queues[0].id,
+            clientId: client.id,
+          }),
+        ).rejects.toThrow(
+          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+        );
+      });
+    });
   });
 });

@@ -62,3 +62,20 @@ export function checkAdminAllowedToAccessQueueMethodOrThrow(data: {
     throw new MethodNotAllowedException();
   }
 }
+
+export function checkQueueAndClientIdRequirementOrThrow(data: {
+  queueId: string;
+  clientId: string;
+}) {
+  if (!data.queueId) {
+    throw new BadRequestException(
+      defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+    );
+  }
+
+  if (!data.clientId) {
+    throw new BadRequestException(
+      defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+    );
+  }
+}
