@@ -60,7 +60,7 @@ export class AdminDto {
     required: false,
     nullable: true,
   })
-  clientId?: string | null | undefined;
+  clientId: string;
 
   @ApiProperty({
     description: 'List of Unity IDs associated with the admin (if applicable)',

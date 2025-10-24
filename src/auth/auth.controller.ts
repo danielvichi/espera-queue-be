@@ -72,7 +72,7 @@ export class AuthController {
 
     let client: ClientDto | null = null;
 
-    client = await this.clientService.getClientById(user.clientId as string);
+    client = await this.clientService.getClientById(user.clientId);
 
     if (client === null) {
       throw new Error('No Client entity admin found');

@@ -1,6 +1,5 @@
 import { AuthService } from './auth.service';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
-import { AdminService } from 'src/admin/admin.service';
 import { AdminResponseDto, CreatedAdminDto } from 'src/admin/admin.dto';
 import { AdminRole } from '@prisma/client';
 import {
@@ -11,8 +10,9 @@ import { JwtService } from '@nestjs/jwt';
 import { AuthenticatedRequestDto } from './auth.dto';
 import { COOKIE_MAX_AGE_IN_MS } from 'src/constants/config';
 import { ClientDto } from 'src/client/client.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
-const ADMIN_MOCK_DATA: CreatedAdminDto = {
+const ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
   name: 'Admin Name',
   email: 'admin@email.com',
   passwordHash: 'password_hash',
@@ -31,20 +31,45 @@ const CLIENT_MOCK_DATA: ClientDto = {
 
 describe('AuthService', () => {
   let authService: AuthService;
-  let adminService: AdminService;
-  let adminUser: AdminResponseDto;
   let jwtService: JwtService;
+  let prismaService: PrismaService;
+
+  let client: ClientDto;
+  let admin: AdminResponseDto;
   const loginData = ADMIN_MOCK_DATA;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
     authService = module.get<AuthService>(AuthService);
-    adminService = module.get<AdminService>(AdminService);
     jwtService = module.get<JwtService>(JwtService);
+    prismaService = module.get<PrismaService>(PrismaService);
 
     await TestModuleSingleton.cleanUpDatabase();
 
-    adminUser = await adminService.createAdmin(ADMIN_MOCK_DATA);
+    const clientResponse = await prismaService.client.create({
+      data: {
+        ...CLIENT_MOCK_DATA,
+      },
+    });
+
+    client = {
+      ...clientResponse,
+      address: clientResponse.address ?? undefined,
+      phone: clientResponse.phone ?? undefined,
+    };
+
+    const adminResponse = await prismaService.admin.create({
+      data: {
+        ...ADMIN_MOCK_DATA,
+        clientId: client.id,
+      },
+    });
+
+    admin = {
+      ...adminResponse,
+      queueIds: adminResponse.queueIds ?? [],
+      unityIds: adminResponse.unityIds ?? [],
+    };
   });
 
   it('should be defined', () => {
@@ -58,7 +83,7 @@ describe('AuthService', () => {
       });
 
       expect(signedUser?.clientId).toBeDefined();
-      expect(signedUser?.email).toBe(adminUser.email);
+      expect(signedUser?.email).toBe(admin.email);
     });
 
     it('should NOT be able to signin with a miss matched password', async () => {
@@ -86,7 +111,7 @@ describe('AuthService', () => {
 
   describe('Generate JWT', () => {
     it('should be able to generate a Jwt with user data', async () => {
-      const mock_request_with_user_data = adminUser;
+      const mock_request_with_user_data = admin;
 
       const signedJwtToken = await authService.generateJwtForUser({
         ...mock_request_with_user_data,
@@ -109,11 +134,11 @@ describe('AuthService', () => {
 
     it('should generate a JWT cookie ', async () => {
       const mock_request_with_user_data = {
-        user: adminUser,
+        user: admin,
       } as AuthenticatedRequestDto;
 
       const signedJwtToken = await authService.generateJwtForUser({
-        ...adminUser,
+        ...admin,
         client: CLIENT_MOCK_DATA,
       });
 
@@ -132,7 +157,7 @@ describe('AuthService', () => {
 
     it('should return an empty expired cookie', () => {
       const mock_request_with_user_data = {
-        user: adminUser,
+        user: admin,
       } as AuthenticatedRequestDto;
       const cookie = authService.generateExpiredCookie(
         mock_request_with_user_data,
