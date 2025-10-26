@@ -146,7 +146,10 @@ describe('AdminController', () => {
     });
 
     it('should create new admin', async () => {
-      const completeData = CREATE_ADMIN_MOCK_DATA[1];
+      const completeData: CreatedAdminDto = {
+        ...CREATE_ADMIN_MOCK_DATA[1],
+        clientId: client.id,
+      };
 
       const userToken = await authService.generateJwtForUser({
         ...adminUser,
