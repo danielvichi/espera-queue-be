@@ -58,8 +58,8 @@ model Admin {
   unityId      String?
   Unity        Unity?    @relation(fields: [unityId], references: [id])
   enabled      Boolean   @default(true)
-  Client       Client?   @relation(fields: [clientId], references: [id])
-  clientId     String?
+  Client       Client    @relation(fields: [clientId], references: [id])
+  clientId     String
 }
 
 model Unity {
@@ -84,7 +84,7 @@ model UserQueued {
   passwordHash String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
-  enabled Boolean @default(true)
+  enabled      Boolean  @default(true)
 }
 
 enum QueueType {

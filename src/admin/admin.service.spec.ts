@@ -191,6 +191,7 @@ describe('AdminService', () => {
       await expect(
         adminService.createAdmin({
           ...unityAdminDataWithoutUnityIds,
+          clientId: clientData.id,
           unityIds: [],
         }),
       ).rejects.toThrow(
@@ -203,7 +204,10 @@ describe('AdminService', () => {
     it('should be able to create a Unity Admin', async () => {
       const unityAdminData = ADMIN_MOCK_DATA[3];
 
-      const newUnityAdmin = await adminService.createAdmin(unityAdminData);
+      const newUnityAdmin = await adminService.createAdmin({
+        ...unityAdminData,
+        clientId: clientData.id,
+      });
 
       expect(newUnityAdmin.id).toBeDefined();
       expect(newUnityAdmin.name).toMatch(unityAdminData.name);
@@ -219,6 +223,7 @@ describe('AdminService', () => {
       await expect(
         adminService.createAdmin({
           ...queueAdminDataWithoutQueueIds,
+          clientId: clientData.id,
           queueIds: [],
         }),
       ).rejects.toThrow(
@@ -231,7 +236,10 @@ describe('AdminService', () => {
     it('should be able to create a Queue Admin', async () => {
       const queueAdminData = ADMIN_MOCK_DATA[4];
 
-      const newQueueAdmin = await adminService.createAdmin(queueAdminData);
+      const newQueueAdmin = await adminService.createAdmin({
+        ...queueAdminData,
+        clientId: clientData.id,
+      });
 
       expect(newQueueAdmin.id).toBeDefined();
       expect(newQueueAdmin.name).toMatch(queueAdminData.name);
@@ -249,6 +257,7 @@ describe('AdminService', () => {
       await expect(
         adminService.createOwnerAdmin({
           ...ownerAdminDataWithoutName,
+          clientId: clientData.id,
           name: '',
         }),
       ).rejects.toThrow(
@@ -265,6 +274,7 @@ describe('AdminService', () => {
       await expect(
         adminService.createOwnerAdmin({
           ...ownerAdminDataWithoutEmail,
+          clientId: clientData.id,
           email: '',
         }),
       ).rejects.toThrow(
@@ -281,6 +291,7 @@ describe('AdminService', () => {
       await expect(
         adminService.createOwnerAdmin({
           ...ownerAdminDataWithoutEmail,
+          clientId: clientData.id,
           email: 'invalid_email.com',
         }),
       ).rejects.toThrow(
@@ -295,6 +306,7 @@ describe('AdminService', () => {
 
       const newOwnerAdmin = await adminService.createOwnerAdmin({
         ...ownerAdminData,
+        clientId: clientData.id,
       });
 
       expect(newOwnerAdmin.id).toBeDefined();
@@ -308,6 +320,7 @@ describe('AdminService', () => {
       await expect(
         adminService.createOwnerAdmin({
           ...ownerAdminData,
+          clientId: clientData.id,
         }),
       ).rejects.toThrow(
         new CreateAdminConflictException(
@@ -327,7 +340,10 @@ describe('AdminService', () => {
     });
 
     it('should be able to DELETE a Admin with a valid email ', async () => {
-      const validAdmin = await adminService.createAdmin(ADMIN_MOCK_DATA[5]);
+      const validAdmin = await adminService.createAdmin({
+        ...ADMIN_MOCK_DATA[5],
+        clientId: clientData.id,
+      });
 
       const deleteResponse = await adminService.deleteAdmin(validAdmin.email);
 

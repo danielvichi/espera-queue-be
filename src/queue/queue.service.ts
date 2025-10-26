@@ -5,7 +5,10 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateQueueDto, QueueDto } from './queue.dto';
-import { checkCreateQueueRequirementsOrThrow } from './queue.utils';
+import {
+  checkCreateQueueRequirementsOrThrow,
+  checkQueueAndClientIdRequirementOrThrow,
+} from './queue.utils';
 import { ClientNotFoundException } from 'src/client/client.exceptions';
 import { UnityNotFoundException } from 'src/unity/unity.exceptions';
 import { defaultQueueExceptionsMessage } from './queue.exceptions';
@@ -94,10 +97,12 @@ export class QueueService {
       data.queueIds.map(async (queueId) => {
         const queueResponse = await this.prismaService.queue.findFirst({
           where: {
-            id: queueId,
-            AND: {
-              clientId: data.clientId,
-            },
+            AND: [
+              { id: queueId },
+              {
+                clientId: data.clientId,
+              },
+            ],
           },
         });
 
@@ -131,18 +136,6 @@ export class QueueService {
    * @returns {Promise<QueueDto>}
    */
   async updateQueue(data: UpdateQueueArgs): Promise<QueueDto> {
-    if (!data.queueId) {
-      throw new BadRequestException(
-        defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
-      );
-    }
-
-    if (!data.clientId) {
-      throw new BadRequestException(
-        defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
-      );
-    }
-
     if (!data.payload || Object.keys(data.payload).length === 0) {
       throw new BadRequestException(
         defaultQueueExceptionsMessage.PAYLOAD_REQUIRED,
@@ -170,6 +163,94 @@ export class QueueService {
           updatedQueue.maxWaitingTimeInMinutes ?? undefined,
         currentWaitingTimeInMinutes:
           updatedQueue.currentWaitingTimeInMinutes ?? undefined,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
+    } catch (err) {
+      throw new NotFoundException(
+        defaultQueueExceptionsMessage.QUEUE_NOT_FOUND,
+      );
+    }
+  }
+
+  /**
+   * Disable a Queue for a given Client
+   *
+   * @param  {queueId: string; clientId: string } data
+   * @returns {Promise<QueueDto>}
+   */
+  async disableQueue(data: {
+    queueId: string;
+    clientId: string;
+  }): Promise<QueueDto> {
+    try {
+      const disabledQueue = await this.prismaService.queue.update({
+        where: {
+          id: data.queueId,
+          AND: {
+            clientId: data.clientId,
+            enabled: true,
+          },
+        },
+        data: {
+          enabled: false,
+        },
+      });
+
+      return {
+        ...disabledQueue,
+        name: disabledQueue.name ?? undefined,
+        adminId: disabledQueue.adminId ?? undefined,
+        minWaitingTimeInMinutes:
+          disabledQueue.minWaitingTimeInMinutes ?? undefined,
+        maxWaitingTimeInMinutes:
+          disabledQueue.maxWaitingTimeInMinutes ?? undefined,
+        currentWaitingTimeInMinutes:
+          disabledQueue.currentWaitingTimeInMinutes ?? undefined,
+      };
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
+    } catch (err) {
+      throw new NotFoundException(
+        defaultQueueExceptionsMessage.QUEUE_NOT_FOUND,
+      );
+    }
+  }
+
+  /**
+   * Enables a Queue for a given Client
+   *
+   * @param {queueId: string; clientId: string } data
+   * @returns {Promise<QueueDto>}
+   */
+  async enableQueue(data: {
+    queueId: string;
+    clientId: string;
+  }): Promise<QueueDto> {
+    checkQueueAndClientIdRequirementOrThrow(data);
+
+    try {
+      const enabledQueue = await this.prismaService.queue.update({
+        where: {
+          id: data.queueId,
+          AND: {
+            clientId: data.clientId,
+            enabled: false,
+          },
+        },
+        data: {
+          enabled: true,
+        },
+      });
+
+      return {
+        ...enabledQueue,
+        name: enabledQueue.name ?? undefined,
+        adminId: enabledQueue.adminId ?? undefined,
+        minWaitingTimeInMinutes:
+          enabledQueue.minWaitingTimeInMinutes ?? undefined,
+        maxWaitingTimeInMinutes:
+          enabledQueue.maxWaitingTimeInMinutes ?? undefined,
+        currentWaitingTimeInMinutes:
+          enabledQueue.currentWaitingTimeInMinutes ?? undefined,
       };
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
     } catch (err) {

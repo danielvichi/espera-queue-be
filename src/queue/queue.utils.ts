@@ -62,3 +62,28 @@ export function checkAdminAllowedToAccessQueueMethodOrThrow(data: {
     throw new MethodNotAllowedException();
   }
 }
+
+export function checkQueueAndClientIdRequirementOrThrow(data: {
+  queueId: string;
+  clientId: string;
+}) {
+  if (
+    !data.queueId ||
+    data.queueId === '' ||
+    typeof data.queueId !== 'string'
+  ) {
+    throw new BadRequestException(
+      defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+    );
+  }
+
+  if (
+    !data.clientId ||
+    data.clientId === '' ||
+    typeof data.clientId !== 'string'
+  ) {
+    throw new BadRequestException(
+      defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+    );
+  }
+}
