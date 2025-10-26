@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, MethodNotAllowedException } from '@nestjs/common';
 
 export const defaultQueueExceptionsMessage = {
   NAME_REQUIRED: 'Name is required.',
@@ -14,5 +14,14 @@ export class CreateQueueBadRequestException extends BadRequestException {
   constructor(message: string) {
     super(message);
     this.name = 'CreateQueueBadRequestException';
+  }
+}
+
+export class QueueMethodNotAllowedException extends MethodNotAllowedException {
+  constructor(message: { adminId: string; adminName: string }) {
+    super({
+      error: 'QueueMethodNotAllowedException',
+      message: `Method not allowed for Admin ${message.adminName} of id - ${message.adminId}`,
+    });
   }
 }

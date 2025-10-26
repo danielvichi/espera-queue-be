@@ -12,7 +12,6 @@ import {
   CreateQueueBadRequestException,
   defaultQueueExceptionsMessage,
 } from './queue.exceptions';
-import { ClientNotFoundException } from 'src/client/client.exceptions';
 import { UnityNotFoundException } from 'src/unity/unity.exceptions';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
 
@@ -125,44 +124,47 @@ describe('QueueService', () => {
       );
     });
 
-    it('Should NOT create a Queue with missing Client Id', async () => {
-      await expect(
-        queueService.createQueue({
-          ...CREATE_QUEUE_MOCK_DATA[1],
-          clientId: '',
-          unityId: unity.id,
-        }),
-      ).rejects.toThrow(
-        new CreateQueueBadRequestException(
-          defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
-        ),
-      );
-    });
+    // Leverage check to Endpoint
+    // it('Should NOT create a Queue with missing Client Id', async () => {
+    //   await expect(
+    //     queueService.createQueue({
+    //       ...CREATE_QUEUE_MOCK_DATA[1],
+    //       clientId: '',
+    //       unityId: unity.id,
+    //     }),
+    //   ).rejects.toThrow(
+    //     new CreateQueueBadRequestException(
+    //       defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
 
-    it('Should NOT create a Queue with missing Unity Id', async () => {
-      await expect(
-        queueService.createQueue({
-          ...CREATE_QUEUE_MOCK_DATA[1],
-          clientId: client.id,
-          unityId: '',
-        }),
-      ).rejects.toThrow(
-        new CreateQueueBadRequestException(
-          defaultQueueExceptionsMessage.UNITY_ID_REQUIRED,
-        ),
-      );
-    });
+    // Leverage check to Endpoint
+    // it('Should NOT create a Queue with missing Unity Id', async () => {
+    //   await expect(
+    //     queueService.createQueue({
+    //       ...CREATE_QUEUE_MOCK_DATA[1],
+    //       clientId: client.id,
+    //       unityId: '',
+    //     }),
+    //   ).rejects.toThrow(
+    //     new CreateQueueBadRequestException(
+    //       defaultQueueExceptionsMessage.UNITY_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
 
-    it('Should NOT create a Queue with invalid Client Id', async () => {
-      const notExistingClientId = 'not_existing_client_id';
-      await expect(
-        queueService.createQueue({
-          ...CREATE_QUEUE_MOCK_DATA[1],
-          clientId: notExistingClientId,
-          unityId: unity.id,
-        }),
-      ).rejects.toThrow(new ClientNotFoundException(notExistingClientId));
-    });
+    // Leverage check to Endpoint
+    // it('Should NOT create a Queue with invalid Client Id', async () => {
+    //   const notExistingClientId = 'not_existing_client_id';
+    //   await expect(
+    //     queueService.createQueue({
+    //       ...CREATE_QUEUE_MOCK_DATA[1],
+    //       clientId: notExistingClientId,
+    //       unityId: unity.id,
+    //     }),
+    //   ).rejects.toThrow(new ClientNotFoundException(notExistingClientId));
+    // });
 
     it('Should NOT create a Queue with invalid Unity Id', async () => {
       const notExistingUnityId = 'not_existing_unity_id';
@@ -186,238 +188,240 @@ describe('QueueService', () => {
       expect(queueResponse.clientId).toBe(client.id);
       expect(queueResponse.unityId).toBe(unity.id);
     });
-
-    describe('getQueuesByIds', () => {
-      it('Should NOT be able to retrieve Queue data with proper Queue Id ', async () => {
-        await expect(
-          queueService.getQueuesByIds({
-            queueIds: [],
-            clientId: client.id,
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
-          ),
-        );
-      });
-      it('Should return a list of 2 Queues by its Ids ', async () => {
-        const queueIds = queues.map((queue) => queue.id);
-        const queueResponse = await queueService.getQueuesByIds({
-          queueIds: queueIds,
+  });
+  describe('getQueuesByIds', () => {
+    it('Should NOT be able to retrieve Queue data with proper Queue Id ', async () => {
+      await expect(
+        queueService.getQueuesByIds({
+          queueIds: [],
           clientId: client.id,
-        });
-
-        expect(queueResponse.length).toBe(2);
-        expect(queueResponse[0].id).toBe(queueIds[0]);
-        expect(queueResponse[1].id).toBe(queueIds[1]);
-      });
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+        ),
+      );
     });
-
-    describe('updateQueue', () => {
-      it('Should NOT updated a Queue with missing queueId', async () => {
-        await expect(
-          queueService.updateQueue({
-            queueId: '',
-            clientId: client.id,
-            payload: {
-              name: 'new name',
-            },
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
-          ),
-        );
+    it('Should return a list of 2 Queues by its Ids ', async () => {
+      const queueIds = queues.map((queue) => queue.id);
+      const queueResponse = await queueService.getQueuesByIds({
+        queueIds: queueIds,
+        clientId: client.id,
       });
 
-      it('Should NOT updated a Queue with missing clientId', async () => {
-        await expect(
-          queueService.updateQueue({
-            queueId: queues[0].id,
-            clientId: '',
-            payload: {
-              name: 'new name',
-            },
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
-          ),
-        );
-      });
+      expect(queueResponse.length).toBe(2);
+      expect(queueResponse[0].id).toBe(queueIds[0]);
+      expect(queueResponse[1].id).toBe(queueIds[1]);
+    });
+  });
 
-      it('Should NOT updated a Queue with missing payload', async () => {
-        await expect(
-          queueService.updateQueue({
-            queueId: queues[0].id,
-            clientId: client.id,
-            payload: {},
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.PAYLOAD_REQUIRED,
-          ),
-        );
-      });
+  describe('updateQueue', () => {
+    // // Leverage check to Endpoint
+    // it('Should NOT updated a Queue with missing queueId', async () => {
+    //   await expect(
+    //     queueService.updateQueue({
+    //       queueId: '',
+    //       clientId: client.id,
+    //       payload: {
+    //         name: 'new name',
+    //       },
+    //     }),
+    //   ).rejects.toThrow(
+    //     new BadRequestException(
+    //       defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
 
-      it('Should NOT updated a Queue with invalid Queue Id', async () => {
-        await expect(
-          queueService.updateQueue({
-            queueId: 'invalid_queue_id',
-            clientId: client.id,
-            payload: {
-              name: 'new name',
-            },
-          }),
-        ).rejects.toThrow(
-          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
-        );
-      });
+    // // Leverage check to Endpoint
+    // it('Should NOT updated a Queue with missing clientId', async () => {
+    //   await expect(
+    //     queueService.updateQueue({
+    //       queueId: queues[0].id,
+    //       clientId: '',
+    //       payload: {
+    //         name: 'new name',
+    //       },
+    //     }),
+    //   ).rejects.toThrow(
+    //     new BadRequestException(
+    //       defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
 
-      it('Should NOT updated a Queue with invalid Client Id', async () => {
-        await expect(
-          queueService.updateQueue({
-            queueId: queues[0].id,
-            clientId: 'invalid_client_id',
-            payload: {
-              name: 'new name',
-            },
-          }),
-        ).rejects.toThrow(
-          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
-        );
-      });
-
-      it('Should updated a Queue', async () => {
-        const payload: Partial<CreateQueueDto> = {
-          name: 'new name 2',
-        };
-
-        const queueResponse = await queueService.updateQueue({
+    it('Should NOT updated a Queue with missing payload', async () => {
+      await expect(
+        queueService.updateQueue({
           queueId: queues[0].id,
           clientId: client.id,
-          payload: payload,
-        });
-
-        expect(queueResponse.name).toBe(payload.name);
-      });
+          payload: {},
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(defaultQueueExceptionsMessage.PAYLOAD_REQUIRED),
+      );
     });
 
-    describe('disableQueue', () => {
-      it('Should NOT disable a Queue with missing queueId', async () => {
-        await expect(
-          queueService.disableQueue({
-            queueId: '',
-            clientId: client.id,
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
-          ),
-        );
+    it('Should NOT updated a Queue with invalid Queue Id', async () => {
+      await expect(
+        queueService.updateQueue({
+          queueId: 'invalid_queue_id',
+          clientId: client.id,
+          payload: {
+            name: 'new name',
+          },
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+      );
+    });
+
+    it('Should NOT updated a Queue with invalid Client Id', async () => {
+      await expect(
+        queueService.updateQueue({
+          queueId: queues[0].id,
+          clientId: 'invalid_client_id',
+          payload: {
+            name: 'new name',
+          },
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+      );
+    });
+
+    it('Should updated a Queue', async () => {
+      const payload: Partial<CreateQueueDto> = {
+        name: 'new name 2',
+      };
+
+      const queueResponse = await queueService.updateQueue({
+        queueId: queues[0].id,
+        clientId: client.id,
+        payload: payload,
       });
 
-      it('Should NOT disable a Queue with missing clientId', async () => {
-        await expect(
-          queueService.disableQueue({
-            queueId: queues[0].id,
-            clientId: '',
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
-          ),
-        );
+      expect(queueResponse.name).toBe(payload.name);
+    });
+  });
+  describe('disableQueue', () => {
+    // // Leverage check to Endpoint
+    // it('Should NOT disable a Queue with missing queueId', async () => {
+    //   await expect(
+    //     queueService.disableQueue({
+    //       queueId: '',
+    //       clientId: client.id,
+    //     }),
+    //   ).rejects.toThrow(
+    //     new BadRequestException(
+    //       defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
+
+    // // Leverage check to Endpoint
+    // it('Should NOT disable a Queue with missing clientId', async () => {
+    //   await expect(
+    //     queueService.disableQueue({
+    //       queueId: queues[0].id,
+    //       clientId: '',
+    //     }),
+    //   ).rejects.toThrow(
+    //     new BadRequestException(
+    //       defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
+
+    it('Should disable a enabled Queue', async () => {
+      const disabledQueue = await queueService.disableQueue({
+        queueId: queues[0].id,
+        clientId: client.id,
       });
 
-      it('Should disable a enabled Queue', async () => {
-        const disabledQueue = await queueService.disableQueue({
+      expect(disabledQueue.id).toBe(queues[0].id);
+      expect(disabledQueue.enabled).toBe(false);
+    });
+
+    it('Should NOT disable a Queue if its already disabled', async () => {
+      await expect(
+        queueService.disableQueue({
           queueId: queues[0].id,
           clientId: client.id,
-        });
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+      );
+    });
+  });
 
-        expect(disabledQueue.id).toBe(queues[0].id);
-        expect(disabledQueue.enabled).toBe(false);
+  describe('enableQueue', () => {
+    // // Leverage check to Endpoint
+    // it('Should NOT enable a Queue with missing queueId', async () => {
+    //   await expect(
+    //     queueService.enableQueue({
+    //       queueId: '',
+    //       clientId: client.id,
+    //     }),
+    //   ).rejects.toThrow(
+    //     new BadRequestException(
+    //       defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
+
+    // // Leverage check to Endpoint
+    // it('Should NOT enable a Queue with missing clientId', async () => {
+    //   await expect(
+    //     queueService.enableQueue({
+    //       queueId: queues[0].id,
+    //       clientId: '',
+    //     }),
+    //   ).rejects.toThrow(
+    //     new BadRequestException(
+    //       defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+    //     ),
+    //   );
+    // });
+
+    it('Should enable a disabled Queue ', async () => {
+      const queueIdToDisabled = queues[0].id;
+
+      let disabledQueue = await queueService.getQueuesByIds({
+        queueIds: [queueIdToDisabled],
+        clientId: client.id,
       });
 
-      it('Should NOT disable a Queue if its already disabled', async () => {
-        await expect(
-          queueService.disableQueue({
-            queueId: queues[0].id,
+      if (disabledQueue[0].enabled) {
+        disabledQueue = [
+          await queueService.disableQueue({
+            queueId: queueIdToDisabled,
             clientId: client.id,
           }),
-        ).rejects.toThrow(
-          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
-        );
+        ];
+      }
+
+      expect(disabledQueue[0]).toBeDefined();
+      expect(disabledQueue[0].enabled).toBe(false);
+
+      const enabledQueue = await queueService.enableQueue({
+        queueId: queueIdToDisabled,
+        clientId: client.id,
       });
+
+      expect(enabledQueue.id).toBe(queueIdToDisabled);
+      expect(enabledQueue.enabled).toBe(true);
     });
 
-    describe('enableQueue', () => {
-      it('Should NOT enable a Queue with missing queueId', async () => {
-        await expect(
-          queueService.enableQueue({
-            queueId: '',
-            clientId: client.id,
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
-          ),
-        );
-      });
-
-      it('Should NOT enable a Queue with missing clientId', async () => {
-        await expect(
-          queueService.enableQueue({
-            queueId: queues[0].id,
-            clientId: '',
-          }),
-        ).rejects.toThrow(
-          new BadRequestException(
-            defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
-          ),
-        );
-      });
-
-      it('Should enable a disabled Queue ', async () => {
-        const queueIdToDisabled = queues[0].id;
-
-        let disabledQueue = await queueService.getQueuesByIds({
-          queueIds: [queueIdToDisabled],
+    it('Should NOT disable a Queue if its already disabled', async () => {
+      await expect(
+        queueService.enableQueue({
+          queueId: queues[0].id,
           clientId: client.id,
-        });
-
-        if (disabledQueue[0].enabled) {
-          disabledQueue = [
-            await queueService.disableQueue({
-              queueId: queueIdToDisabled,
-              clientId: client.id,
-            }),
-          ];
-        }
-
-        expect(disabledQueue[0]).toBeDefined();
-        expect(disabledQueue[0].enabled).toBe(false);
-
-        const enabledQueue = await queueService.enableQueue({
-          queueId: queueIdToDisabled,
-          clientId: client.id,
-        });
-
-        expect(enabledQueue.id).toBe(queueIdToDisabled);
-        expect(enabledQueue.enabled).toBe(true);
-      });
-
-      it('Should NOT disable a Queue if its already disabled', async () => {
-        await expect(
-          queueService.enableQueue({
-            queueId: queues[0].id,
-            clientId: client.id,
-          }),
-        ).rejects.toThrow(
-          new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
-        );
-      });
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(defaultQueueExceptionsMessage.QUEUE_NOT_FOUND),
+      );
     });
   });
 });

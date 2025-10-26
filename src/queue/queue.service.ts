@@ -97,10 +97,12 @@ export class QueueService {
       data.queueIds.map(async (queueId) => {
         const queueResponse = await this.prismaService.queue.findFirst({
           where: {
-            id: queueId,
-            AND: {
-              clientId: data.clientId,
-            },
+            AND: [
+              { id: queueId },
+              {
+                clientId: data.clientId,
+              },
+            ],
           },
         });
 
@@ -134,8 +136,6 @@ export class QueueService {
    * @returns {Promise<QueueDto>}
    */
   async updateQueue(data: UpdateQueueArgs): Promise<QueueDto> {
-    checkQueueAndClientIdRequirementOrThrow(data);
-
     if (!data.payload || Object.keys(data.payload).length === 0) {
       throw new BadRequestException(
         defaultQueueExceptionsMessage.PAYLOAD_REQUIRED,
@@ -182,8 +182,6 @@ export class QueueService {
     queueId: string;
     clientId: string;
   }): Promise<QueueDto> {
-    checkQueueAndClientIdRequirementOrThrow(data);
-
     try {
       const disabledQueue = await this.prismaService.queue.update({
         where: {
