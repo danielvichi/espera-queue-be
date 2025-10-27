@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class UserQueueDto {
+export class QueueUserDto {
   @ApiProperty({
     description: 'Unique identifier for User Queue',
     example: 'c1234567-89ab-cdef-0123-456789abcdef',
@@ -51,7 +51,7 @@ export class UserQueueDto {
   enabled: boolean;
 }
 
-export class CreateUserQueueDto {
+export class CreateQueueUserDto {
   @ApiProperty({
     description: 'Name of the User Queue',
     example: 'John Doe',
