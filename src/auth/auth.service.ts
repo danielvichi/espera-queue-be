@@ -1,6 +1,5 @@
 import { Injectable } from '@nestjs/common';
 import { AdminResponseDto, AdminWithClientDto } from 'src/admin/admin.dto';
-import { AdminService } from 'src/admin/admin.service';
 import {
   defaultAuthExceptionMessage,
   InvalidCredentialsException,
@@ -11,8 +10,10 @@ import {
   generateUserTokenCookie,
 } from './auth.utils';
 import { AuthenticatedRequestDto } from './auth.dto';
+import { QueueUserDto } from 'src/queue-user/queue-user.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
-interface AdminSignIn {
+interface SignInCredentials {
   email: string;
   passwordHash: string;
 }
@@ -20,20 +21,24 @@ interface AdminSignIn {
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly adminService: AdminService,
+    private readonly prismaService: PrismaService,
     private jwtService: JwtService,
   ) {}
 
   /**
    * Returns admin data for a Sign In session without password hash
    *
-   * @param {AdminSignIn} data - Admin credentials for a Sign in session
+   * @param {SignInCredentials} data - Admin credentials for a Sign in session
    * @returns {Promise<AdminResponseDto>}
    */
   async checkAdminCredentials(
-    data: AdminSignIn,
+    data: SignInCredentials,
   ): Promise<AdminResponseDto | null> {
-    const adminUser = await this.adminService.findAdminByEmail(data.email);
+    const adminUser = await this.prismaService.admin.findFirst({
+      where: {
+        email: data.email,
+      },
+    });
 
     if (!adminUser) {
       return null;
@@ -48,6 +53,24 @@ export class AuthService {
     }
 
     return adminDataWithoutPassword;
+  }
+
+  async checkQueueUserCredentials(
+    data: SignInCredentials,
+  ): Promise<QueueUserDto> {
+    const queueUser = await this.prismaService.queueUser.findFirst({
+      where: {
+        email: data.email,
+      },
+    });
+
+    if (!queueUser || data.passwordHash !== queueUser.passwordHash) {
+      throw new InvalidCredentialsException(
+        defaultAuthExceptionMessage.INVALID_CREDENTIALS,
+      );
+    }
+
+    return queueUser;
   }
 
   // TODO - IMPROVE
@@ -84,7 +107,9 @@ export class AuthService {
    * @param {AdminWithClientDto} user
    * @returns {Promise<string>}
    */
-  async generateJwtForUser(user: AdminWithClientDto): Promise<string> {
+  async generateJwtForUser(
+    user: AdminWithClientDto | QueueUserDto,
+  ): Promise<string> {
     return this.generateJwtToken(
       {
         ...user,
