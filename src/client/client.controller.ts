@@ -48,9 +48,10 @@ export class ClientController {
     return responsePayload;
   }
 
-  @Post('create')
+  @Post('create-and-signin')
   @ApiOkResponse({
-    description: 'Create a new Client and its Owner Admin account',
+    description:
+      'Create a new Client and its Owner Admin account and create Auth Session',
     type: String,
   })
   async createClient(
@@ -117,7 +118,7 @@ export class ClientController {
 
     const { email, passwordHash } = createAdminData;
 
-    // 5 - Create a auth session
+    // 5 - Create auth session
     const user = await this.authService.checkAdminCredentials({
       email,
       passwordHash,

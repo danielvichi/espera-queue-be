@@ -5,12 +5,15 @@ import {
   AdminWithClientDto,
   CreatedAdminDto,
 } from 'src/admin/admin.dto';
-import { AdminService } from 'src/admin/admin.service';
 import { AdminRole } from '@prisma/client';
 import { JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth.service';
 import { ClientDto, CreateClientDto } from 'src/client/client.dto';
-import { ClientService } from 'src/client/client.service';
+import {
+  CreateQueueUserDto,
+  QueueUserDto,
+} from 'src/queue-user/queue-user.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 const ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
   name: 'Admin Name',
@@ -18,6 +21,12 @@ const ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
   passwordHash: 'password_hash',
   role: AdminRole.QUEUE_ADMIN,
   queueIds: ['1'],
+};
+
+const QUEUE_USER_MOCK_DATA: Omit<CreateQueueUserDto, 'clientId'> = {
+  name: 'Queue User Name',
+  email: 'queue_user@email.com',
+  passwordHash: 'password_hash',
 };
 
 const CLIENT_MOCK_DATA: CreateClientDto = {
@@ -29,30 +38,45 @@ const CLIENT_MOCK_DATA: CreateClientDto = {
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
-  let adminService: AdminService;
+  let prismaSerivce: PrismaService;
   let jwtService: JwtService;
-  let clientService: ClientService;
   let adminUser: AdminResponseDto;
+  let queueUser: QueueUserDto;
   let client: ClientDto;
-  const loginData = ADMIN_MOCK_DATA;
+  const adminLoginData = ADMIN_MOCK_DATA;
+  const queueLoginData = QUEUE_USER_MOCK_DATA;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
-    adminService = module.get<AdminService>(AdminService);
-    clientService = module.get<ClientService>(ClientService);
+    prismaSerivce = module.get<PrismaService>(PrismaService);
+
+    // adminService = module.get<AdminService>(AdminService);
+    // clientService = module.get<ClientService>(ClientService);
 
     await TestModuleSingleton.cleanUpDatabase();
 
-    client = await clientService.createClient({
-      ...CLIENT_MOCK_DATA,
+    const clientResponse = await prismaSerivce.client.create({
+      data: CLIENT_MOCK_DATA,
     });
 
-    adminUser = await adminService.createAdmin({
-      ...ADMIN_MOCK_DATA,
-      clientId: client.id,
+    client = {
+      ...clientResponse,
+      phone: clientResponse.phone ?? undefined,
+      address: clientResponse.address ?? undefined,
+    };
+
+    adminUser = await prismaSerivce.admin.create({
+      data: {
+        ...ADMIN_MOCK_DATA,
+        clientId: client.id,
+      },
+    });
+
+    queueUser = await prismaSerivce.queueUser.create({
+      data: QUEUE_USER_MOCK_DATA,
     });
   });
 
@@ -61,31 +85,42 @@ describe('AuthController', () => {
   });
 
   describe('/auth/login/admin', () => {
-    it('should get Bad Request 400 Error if no credentials is provided', async () => {
+    it('should get BadRequestException if no credentials is provided', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint().post(url).expect(400);
     });
 
-    it('should get Bad Request 400 Error if email is not provided', async () => {
+    it('should get BadRequestException if email is not provided', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
         .post(url)
         .send({
           email: '',
-          passwordHash: loginData.passwordHash,
+          passwordHash: adminLoginData.passwordHash,
         })
         .expect(400);
     });
 
-    it('should get Bad Request 400 Error if password_hash is not provided', async () => {
+    it('should get BadRequestException if password_hash is not provided', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
         .post(url)
         .send({
-          email: loginData.email,
+          email: adminLoginData.email,
           passwordHash: '',
         })
         .expect(400);
+    });
+
+    it('should throw NotFoundException if user credentials does not exist', async () => {
+      const url = '/auth/login/admin';
+      await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: 'non-existing-admin@email.com',
+          passwordHash: 'some_password_hash',
+        })
+        .expect(404);
     });
 
     it('should return credentials cookies if correct credentials is provided', async () => {
@@ -93,8 +128,8 @@ describe('AuthController', () => {
       const response = await TestModuleSingleton.callEndpoint()
         .post(url)
         .send({
-          email: loginData.email,
-          passwordHash: loginData.passwordHash,
+          email: adminLoginData.email,
+          passwordHash: adminLoginData.passwordHash,
         })
         .expect(201);
       expect(response.headers['set-cookie']).toBeDefined();
@@ -107,9 +142,72 @@ describe('AuthController', () => {
       const decodedUserToken: AdminWithClientDto =
         jwtService.decode(userTokenFromCookie);
 
-      expect(decodedUserToken.email).toMatch(loginData.email);
+      expect(decodedUserToken.email).toMatch(adminLoginData.email);
       expect(decodedUserToken.id).toMatch(adminUser.id);
       expect(decodedUserToken.client).not.toBeNull();
+    });
+  });
+
+  describe('/auth/login/queue-user', () => {
+    it('should get BadRequestException if no credentials is provided', async () => {
+      const url = '/auth/login/queue-user';
+      await TestModuleSingleton.callEndpoint().post(url).expect(400);
+    });
+
+    it('should get BadRequestException if email is not provided', async () => {
+      const url = '/auth/login/queue-user';
+      await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: '',
+          passwordHash: queueLoginData.passwordHash,
+        })
+        .expect(400);
+    });
+
+    it('should get BadRequestException if password_hash is not provided', async () => {
+      const url = '/auth/login/queue-user';
+      await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: queueLoginData.email,
+          passwordHash: '',
+        })
+        .expect(400);
+    });
+
+    it('should throw NotFoundException if user credentials does not exist', async () => {
+      const url = '/auth/login/queue-user';
+      await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: 'non-existing-user@email.com',
+          passwordHash: 'some_password_hash',
+        })
+        .expect(404);
+    });
+
+    it('should return credentials cookies if correct credentials is provided', async () => {
+      const url = '/auth/login/queue-user';
+      const response = await TestModuleSingleton.callEndpoint()
+        .post(url)
+        .send({
+          email: queueLoginData.email,
+          passwordHash: queueLoginData.passwordHash,
+        })
+        .expect(201);
+      expect(response.headers['set-cookie']).toBeDefined();
+
+      const userTokenCookie = response.headers['set-cookie'][0];
+      const userTokenFromCookie = userTokenCookie
+        .split('user_token=')[1]
+        .split(';')[0];
+
+      const decodedUserToken: AdminWithClientDto =
+        jwtService.decode(userTokenFromCookie);
+
+      expect(decodedUserToken.email).toMatch(queueLoginData.email);
+      expect(decodedUserToken.id).toMatch(queueUser.id);
     });
   });
 

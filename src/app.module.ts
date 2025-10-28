@@ -7,6 +7,7 @@ import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { UnityModule } from './unity/unity.module';
 import { QueueModule } from './queue/queue.module';
+import { QueueUserModule } from './queue-user/queue-user.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { QueueModule } from './queue/queue.module';
     AuthModule,
     UnityModule,
     QueueModule,
+    QueueUserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

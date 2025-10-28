@@ -77,14 +77,14 @@ describe('ClientController', () => {
     });
   });
 
-  describe('/client/create', () => {
+  describe('/client/create-and-signin', () => {
     it('should throw a BadRequestException if Client Name is missing', async () => {
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- excluding name on propose
       const { name, ...createClientMockDataWithoutName } = CLIENTS_MOCK_DATA[2];
       const adminMockData = CLIENT_OWNER_ADMIN_MOCK_DATA[0];
 
       await TestModuleSingleton.callEndpoint()
-        .post('/client/create')
+        .post('/client/create-and-signin')
         .send({
           ...createClientMockDataWithoutName,
           admin: adminMockData,
@@ -99,7 +99,7 @@ describe('ClientController', () => {
         CLIENT_OWNER_ADMIN_MOCK_DATA[0];
 
       await TestModuleSingleton.callEndpoint()
-        .post('/client/create')
+        .post('/client/create-and-signin')
         .send({
           ...createClientMockData,
           admin: adminMockDataWithoutName,
@@ -114,7 +114,7 @@ describe('ClientController', () => {
         CLIENT_OWNER_ADMIN_MOCK_DATA[0];
 
       await TestModuleSingleton.callEndpoint()
-        .post('/client/create')
+        .post('/client/create-and-signin')
         .send({
           ...createClientMockData,
           admin: adminMockDataWithoutEmail,
@@ -129,7 +129,7 @@ describe('ClientController', () => {
         CLIENT_OWNER_ADMIN_MOCK_DATA[0];
 
       await TestModuleSingleton.callEndpoint()
-        .post('/client/create')
+        .post('/client/create-and-signin')
         .send({
           ...createClientMockData,
           admin: {
@@ -147,7 +147,7 @@ describe('ClientController', () => {
         CLIENT_OWNER_ADMIN_MOCK_DATA[0];
 
       await TestModuleSingleton.callEndpoint()
-        .post('/client/create')
+        .post('/client/create-and-signin')
         .send({
           ...createClientMockData,
           admin: adminMockDataWithoutPassword,
@@ -161,7 +161,7 @@ describe('ClientController', () => {
       const createAdminMockData = CLIENT_OWNER_ADMIN_MOCK_DATA[0];
 
       await TestModuleSingleton.callEndpoint()
-        .post('/client/create')
+        .post('/client/create-and-signin')
         .send({
           ...createClientMockDataWithoutName,
           admin: createAdminMockData,
@@ -181,7 +181,7 @@ describe('ClientController', () => {
       const createAdminMockData = CLIENT_OWNER_ADMIN_MOCK_DATA[0];
 
       const response = await TestModuleSingleton.callEndpoint()
-        .post('/client/create')
+        .post('/client/create-and-signin')
         .send({
           ...createClientMockData,
           admin: createAdminMockData,
