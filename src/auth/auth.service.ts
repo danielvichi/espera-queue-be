@@ -26,7 +26,7 @@ export class AuthService {
   ) {}
 
   /**
-   * Returns admin data for a Sign In session without password hash
+   * Returns admin data for a Sign In session
    *
    * @param {SignInCredentials} data - Admin credentials for a Sign in session
    * @returns {Promise<AdminResponseDto>}
@@ -55,22 +55,33 @@ export class AuthService {
     return adminDataWithoutPassword;
   }
 
+  /**
+   * Returns Queue User data for a Sign In session
+   *
+   * @param {SignInCredentials}data
+   * @returns {Promise<QueueUserDto>}
+   */
   async checkQueueUserCredentials(
     data: SignInCredentials,
-  ): Promise<QueueUserDto> {
+  ): Promise<QueueUserDto | null> {
     const queueUser = await this.prismaService.queueUser.findFirst({
       where: {
         email: data.email,
       },
     });
 
-    if (!queueUser || data.passwordHash !== queueUser.passwordHash) {
+    if (!queueUser) {
+      return null;
+    }
+
+    const { passwordHash, ...queueUserWithoutPassword } = queueUser;
+    if (data.passwordHash !== passwordHash) {
       throw new InvalidCredentialsException(
         defaultAuthExceptionMessage.INVALID_CREDENTIALS,
       );
     }
 
-    return queueUser;
+    return queueUserWithoutPassword;
   }
 
   // TODO - IMPROVE

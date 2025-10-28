@@ -14,9 +14,6 @@ export class QueueUserService {
       },
     });
 
-    console.log('======================================');
-    console.log('Existing User Queue:', existingUserQueue);
-
     if (existingUserQueue) {
       throw new Error(defaultQueueUserExceptionsMessage.EMAIL_ALREADY_EXISTS);
     }

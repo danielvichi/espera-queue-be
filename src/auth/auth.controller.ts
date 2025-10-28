@@ -12,6 +12,7 @@ import { type Response } from 'express';
 import { type AuthenticatedRequestDto } from './auth.dto';
 import { ClientService } from 'src/client/client.service';
 import { ClientDto } from 'src/client/client.dto';
+import { checkSignInRequirementsOrThrow } from './auth.utils';
 
 @Controller('auth')
 export class AuthController {
@@ -23,7 +24,7 @@ export class AuthController {
   @Post('login/admin')
   @ApiOkResponse({
     description:
-      'Set an authenticated wrapped in a JWT cookie with the user_token.',
+      'Set an authenticated wrapped in a JWT cookie with the user_token for Admin users',
   })
   @ApiHeader({
     name: 'Authorization',
@@ -81,6 +82,63 @@ export class AuthController {
     const signedJwt = await this.authService.generateJwtForUser({
       ...user,
       client,
+    });
+    const cookie = this.authService.generateJwtCookie(req, signedJwt);
+
+    res.setHeader('Set-Cookie', cookie);
+    return res.send();
+  }
+
+  @Post('login/queue-user')
+  @ApiOkResponse({
+    description:
+      'Set an authenticated wrapped in a JWT cookie with the user_token, for Queue Users.',
+  })
+  @ApiHeader({
+    name: 'Authorization',
+    description: 'Basic auth header with email and password',
+  })
+  @ApiBody({
+    description: 'Queue User sign-in',
+    type: SignInDto,
+    required: true,
+  })
+  async checkQueueUserCredentials(
+    @Body() signInData: SignInDto,
+    @Req() req: AuthenticatedRequestDto,
+    @Res() res: Response,
+  ): Promise<unknown> {
+    checkSignInRequirementsOrThrow(signInData);
+
+    try {
+      validateEmailOrThrow(signInData.email);
+    } catch (err) {
+      if (err instanceof Error) {
+        throw new InvalidCredentialsException(
+          defaultAuthExceptionMessage.INVALID_CREDENTIALS,
+        );
+      }
+    }
+
+    if (!signInData.passwordHash) {
+      throw new InvalidCredentialsException(
+        defaultAuthExceptionMessage.PASSWORD_REQUIRED,
+      );
+    }
+
+    const user = await this.authService.checkQueueUserCredentials({
+      email: signInData.email,
+      passwordHash: signInData.passwordHash,
+    });
+
+    if (!user) {
+      throw new UserNotFoundException(
+        defaultAuthExceptionMessage.USER_NOT_FOUNDED,
+      );
+    }
+
+    const signedJwt = await this.authService.generateJwtForUser({
+      ...user,
     });
     const cookie = this.authService.generateJwtCookie(req, signedJwt);
 

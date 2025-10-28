@@ -23,13 +23,6 @@ export class QueueUserDto {
   email: string;
 
   @ApiProperty({
-    description: 'Hashed password of the User Queue',
-    example: '$2b$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQoeG6Lruj3vjPGga31lW',
-    required: true,
-  })
-  passwordHash: string;
-
-  @ApiProperty({
     description: 'Timestamp when the User Queue was created',
     example: '2023-10-01T12:34:56.789Z',
     required: true,

@@ -1,5 +1,9 @@
 import { IncomingHttpHeaders } from 'http';
 import { COOKIE_MAX_AGE_IN_MS } from 'src/constants/config';
+import {
+  defaultAuthExceptionMessage,
+  InvalidCredentialsException,
+} from './auth.exceptions';
 
 const baseUrlDomain = process.env.BASE_URL_DOMAIN ?? 'localhost';
 
@@ -37,3 +41,34 @@ export const generateExpiredUserTokenCookie = generateCookie({
   cookieName: 'user_token',
   maxAgeInMs: 0,
 });
+
+export function checkSignInRequirementsOrThrow(data: {
+  email: string;
+  passwordHash: string;
+}) {
+  if (!data) {
+    throw new InvalidCredentialsException(
+      defaultAuthExceptionMessage.INVALID_CREDENTIALS,
+    );
+  }
+
+  if (
+    !data.email ||
+    typeof data.email !== 'string' ||
+    data.email.trim() === ''
+  ) {
+    throw new InvalidCredentialsException(
+      defaultAuthExceptionMessage.INVALID_CREDENTIALS,
+    );
+  }
+
+  if (
+    !data.passwordHash ||
+    typeof data.passwordHash !== 'string' ||
+    data.passwordHash.trim() === ''
+  ) {
+    throw new InvalidCredentialsException(
+      defaultAuthExceptionMessage.INVALID_CREDENTIALS,
+    );
+  }
+}
