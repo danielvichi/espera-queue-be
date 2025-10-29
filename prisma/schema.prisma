@@ -104,6 +104,9 @@ model Queue {
   maxWaitingTimeInMinutes     Int?
   currentWaitingTimeInMinutes Int?
   isActive                    Boolean   @default(true)
+  startQueueAt                String?
+  endQueueAt                  String?
+  maxUsersInQueue             Int?
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
   enabled                     Boolean   @default(true)
@@ -117,7 +120,21 @@ model Queue {
   Admin   Admin?  @relation(fields: [adminId], references: [id])
   adminId String?
 
-  userInQueue String[]
+  QueueInstance QueueInstance[]
+}
+
+model QueueInstance {
+  id           String   @id @default(cuid())
+  date         DateTime
+  startQueueAt String?
+  endQueueAt   String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  Queue         Queue    @relation(fields: [queueId], references: [id])
+  queueId       String
+  usersInQueue  String[]
+  attendedUsers String[]
 }
 
 // Future Implementation
