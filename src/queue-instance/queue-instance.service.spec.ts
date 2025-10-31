@@ -8,8 +8,15 @@ import {
 import { QueueType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
-import { defaultQueueInstanceExceptionsMessage } from './queue-instance.execeptions';
+import { DateTime } from 'luxon';
+import {
+  defaultQueueInstanceExceptionsMessage,
+  QueueInstanceNotFoundException,
+  UserAlreadyInQueueException,
+  UserNotFoundException,
+} from './queue-instance.execeptions';
 import { NotFoundException } from '@nestjs/common';
+import { QueueUserDto } from 'src/queue-user/queue-user.dto';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -33,6 +40,12 @@ const CREATE_QUEUE_MOCK_DATA: Array<
   },
 ];
 
+const CREATE_QUEUE_USER_MOCK_DATA = {
+  name: 'User Test',
+  email: 'testuser@example.com',
+  passwordHash: 'hashed-password',
+};
+
 describe('QueueInstanceService', () => {
   let queueInstanceService: QueueInstanceService;
   let prismaService: PrismaService;
@@ -41,13 +54,16 @@ describe('QueueInstanceService', () => {
   let unity: UnityDto;
   let queueGeneral: QueueDto;
   let queuePriority: QueueDto;
+  let queueUser: QueueUserDto;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
     queueInstanceService =
       module.get<QueueInstanceService>(QueueInstanceService);
     prismaService = module.get<PrismaService>(PrismaService);
+  });
 
+  beforeEach(async () => {
     await TestModuleSingleton.cleanUpDatabase();
 
     const createClientResponse = await prismaService.client.create({
@@ -92,6 +108,10 @@ describe('QueueInstanceService', () => {
         unityId: unity.id,
       },
     });
+
+    queueUser = await prismaService.queueUser.create({
+      data: CREATE_QUEUE_USER_MOCK_DATA,
+    });
   });
 
   it('should be defined', () => {
@@ -123,6 +143,7 @@ describe('QueueInstanceService', () => {
     });
 
     it('should throw error when a Queue Instance is already created for today', async () => {
+      await queueInstanceService.addQueueInstance(queueGeneral.id);
       await expect(
         queueInstanceService.addQueueInstance(queueGeneral.id),
       ).rejects.toThrow(
@@ -143,6 +164,141 @@ describe('QueueInstanceService', () => {
       expect(queueInstance.date).toBeDefined();
       expect(queueInstance.name).toBe(queuePriority.name);
       expect(queueInstance.type).toBe(queuePriority.type);
+    });
+  });
+
+  describe('addUserToQueue', () => {
+    it('should throw NotFoundException when queue instance does not exist', async () => {
+      const nonExistingQueueInstanceId = 'non-existing-queue-instance-id';
+
+      await expect(
+        queueInstanceService.addUserToQueue({
+          queueInstanceId: nonExistingQueueInstanceId,
+          userId: 'some-user-id',
+        }),
+      ).rejects.toThrow(
+        new QueueInstanceNotFoundException(nonExistingQueueInstanceId),
+      );
+    });
+
+    it('should throw NotFoundException when user does not exist', async () => {
+      const nonExistingUserId = 'non-existing-user-id';
+
+      // First, create a queue instance
+      const queueInstance = await queueInstanceService.addQueueInstance(
+        queueGeneral.id,
+      );
+
+      await expect(
+        queueInstanceService.addUserToQueue({
+          queueInstanceId: queueInstance.queueInstanceId,
+          userId: nonExistingUserId,
+        }),
+      ).rejects.toThrow(new UserNotFoundException(nonExistingUserId));
+    });
+
+    it('should add user to queue instance', async () => {
+      const queueInstance = await queueInstanceService.addQueueInstance(
+        queueGeneral.id,
+      );
+
+      const updatedUsersInQueue = await queueInstanceService.addUserToQueue({
+        queueInstanceId: queueInstance.queueInstanceId,
+        userId: queueUser.id,
+      });
+
+      expect(updatedUsersInQueue).toContain(queueUser.id);
+    });
+
+    it('should throw UserAlreadyInQueueException when user is already in queue', async () => {
+      const queueInstance = await queueInstanceService.addQueueInstance(
+        queueGeneral.id,
+      );
+
+      await queueInstanceService.addUserToQueue({
+        queueInstanceId: queueInstance.queueInstanceId,
+        userId: queueUser.id,
+      });
+      await expect(
+        queueInstanceService.addUserToQueue({
+          queueInstanceId: queueInstance.queueInstanceId,
+          userId: queueUser.id,
+        }),
+      ).rejects.toThrow(
+        new UserAlreadyInQueueException({
+          queueInstanceId: queueInstance.queueInstanceId,
+          userId: queueUser.id,
+        }),
+      );
+    });
+
+    // it('should throw UserAlreadyInQueueException when user is already in another queue from the same unity at the same day', async () => {
+    it('should add user even if there is a queue instance for previous day with the user in the queue', async () => {
+      const yesterdayQueueInstance =
+        await queueInstanceService.addQueueInstance(queueGeneral.id);
+
+      const twentyFourHoursInMs = 60000 * 60 * 24 + 1000;
+      const yesterday = DateTime.now().minus(twentyFourHoursInMs);
+
+      // Updated queue instance record for past day with user in the Queue Instance for previous day
+      await prismaService.queueInstance.update({
+        where: {
+          id: yesterdayQueueInstance.queueInstanceId,
+        },
+        data: {
+          createdAt: yesterday.toJSDate(),
+          date: yesterday.toJSDate(),
+          usersInQueue: [queueUser.id],
+        },
+      });
+
+      const todayQueueInstance = await queueInstanceService.addQueueInstance(
+        queueGeneral.id,
+      );
+
+      await queueInstanceService.addUserToQueue({
+        queueInstanceId: todayQueueInstance.queueInstanceId,
+        userId: queueUser.id,
+      });
+
+      const response = await queueInstanceService.addUserToQueue({
+        queueInstanceId: todayQueueInstance.queueInstanceId,
+        userId: queueUser.id,
+      });
+
+      expect(response.includes(queueUser.id)).toBe(true);
+    });
+
+    it('should throw UserAlreadyInQueueException when user is already in another queue from the same unity at the same day', async () => {
+      const priorityQueueInstance = await queueInstanceService.addQueueInstance(
+        queuePriority.id,
+      );
+
+      // Adding user to Priority Queue Instance
+      await prismaService.queueInstance.update({
+        where: {
+          id: priorityQueueInstance.queueInstanceId,
+        },
+        data: {
+          usersInQueue: [queueUser.id],
+        },
+      });
+
+      const generalQueueInstance = await queueInstanceService.addQueueInstance(
+        queueGeneral.id,
+      );
+
+      await expect(
+        queueInstanceService.addUserToQueue({
+          queueInstanceId: generalQueueInstance.queueInstanceId,
+          userId: queueUser.id,
+        }),
+      ).rejects.toThrow(
+        new UserAlreadyInQueueException({
+          queueInstanceId: generalQueueInstance.queueInstanceId,
+          userId: queueUser.id,
+        }),
+      );
     });
   });
 });
