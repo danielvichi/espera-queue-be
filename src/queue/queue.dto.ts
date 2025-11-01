@@ -14,7 +14,7 @@ export class QueueDto {
     example: 'Unity A',
     required: false,
   })
-  name?: string;
+  name?: string | null;
 
   @ApiProperty({
     description: 'Queue type',
@@ -29,21 +29,21 @@ export class QueueDto {
     example: '10',
     required: false,
   })
-  minWaitingTimeInMinutes?: number;
+  minWaitingTimeInMinutes?: number | null;
 
   @ApiProperty({
     description: 'Average maximum waiting time in minutes',
     example: '30',
     required: true,
   })
-  maxWaitingTimeInMinutes?: number;
+  maxWaitingTimeInMinutes?: number | null;
 
   @ApiProperty({
     description: 'Last user waiting time in minutes',
     example: '15',
     required: false,
   })
-  currentWaitingTimeInMinutes?: number;
+  currentWaitingTimeInMinutes?: number | null;
 
   @ApiProperty({
     description: 'Is queue already operating',
@@ -51,6 +51,27 @@ export class QueueDto {
     required: true,
   })
   isActive: boolean;
+
+  @ApiProperty({
+    description: 'Timestamp when the queue starts operating',
+    example: '19:00',
+    required: false,
+  })
+  startQueueAt?: string | null;
+
+  @ApiProperty({
+    description: 'Timestamp when the queue starts operating',
+    example: '23:00',
+    required: false,
+  })
+  endQueueAt?: string | null;
+
+  @ApiProperty({
+    description: 'Max number of users allowed in the queue',
+    example: '15',
+    required: false,
+  })
+  maxUsersInQueue?: number | null;
 
   @ApiProperty({
     description: 'Timestamp when the queue was created',
@@ -93,14 +114,7 @@ export class QueueDto {
     required: false,
     nullable: true,
   })
-  adminId?: string;
-
-  @ApiProperty({
-    description: "List of User's IDs of in this queue",
-    example: 'c1234567-89ab-cdef-0123-456789abcdef',
-    required: true,
-  })
-  userInQueue: string[];
+  adminId?: string | null;
 }
 
 export class CreateQueueDto {
@@ -118,6 +132,27 @@ export class CreateQueueDto {
     enum: QueueType,
   })
   type: QueueType;
+
+  @ApiProperty({
+    description: 'Timestamp when the queue starts operating',
+    example: '19:00',
+    required: false,
+  })
+  startQueueAt?: string;
+
+  @ApiProperty({
+    description: 'Timestamp when the queue starts operating',
+    example: '23:00',
+    required: false,
+  })
+  endQueueAt?: string;
+
+  @ApiProperty({
+    description: 'Max number of users allowed in the queue',
+    example: '15',
+    required: false,
+  })
+  maxUsersInQueue?: number;
 
   @ApiProperty({
     description: 'ID of the Client associated with the queue',

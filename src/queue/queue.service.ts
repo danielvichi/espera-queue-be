@@ -61,17 +61,7 @@ export class QueueService {
       data,
     });
 
-    return {
-      ...queueResponse,
-      name: queueResponse.name ?? undefined,
-      adminId: queueResponse.adminId ?? undefined,
-      minWaitingTimeInMinutes:
-        queueResponse.minWaitingTimeInMinutes ?? undefined,
-      maxWaitingTimeInMinutes:
-        queueResponse.maxWaitingTimeInMinutes ?? undefined,
-      currentWaitingTimeInMinutes:
-        queueResponse.currentWaitingTimeInMinutes ?? undefined,
-    };
+    return queueResponse;
   }
 
   /**
@@ -117,6 +107,9 @@ export class QueueService {
               queueResponse.maxWaitingTimeInMinutes ?? undefined,
             currentWaitingTimeInMinutes:
               queueResponse.currentWaitingTimeInMinutes ?? undefined,
+            startQueueAt: queueResponse.startQueueAt ?? undefined,
+            endQueueAt: queueResponse.endQueueAt ?? undefined,
+            maxUsersInQueue: queueResponse.maxUsersInQueue ?? undefined,
           };
         }
       }),
@@ -196,17 +189,7 @@ export class QueueService {
         },
       });
 
-      return {
-        ...disabledQueue,
-        name: disabledQueue.name ?? undefined,
-        adminId: disabledQueue.adminId ?? undefined,
-        minWaitingTimeInMinutes:
-          disabledQueue.minWaitingTimeInMinutes ?? undefined,
-        maxWaitingTimeInMinutes:
-          disabledQueue.maxWaitingTimeInMinutes ?? undefined,
-        currentWaitingTimeInMinutes:
-          disabledQueue.currentWaitingTimeInMinutes ?? undefined,
-      };
+      return disabledQueue;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
     } catch (err) {
       throw new NotFoundException(
