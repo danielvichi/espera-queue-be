@@ -6,6 +6,7 @@ import {
   QueueInstanceNotFoundException,
   UserAlreadyInQueueException,
   UserNotFoundException,
+  UserNotInQueueException,
 } from './queue-instance.execeptions';
 import { DateTime } from 'luxon';
 
@@ -13,7 +14,7 @@ interface IsUserAlreadyInUnityQueueArgs {
   userId: string;
   unityId: string;
 }
-interface AddUserToQueueArgs {
+interface ModifyUserToQueueArgs {
   queueInstanceId: string;
   userId: string;
 }
@@ -178,10 +179,10 @@ export class QueueInstanceService {
   /**
    * Add user to queue instance
    *
-   * @param {AddUserToQueueArgs} data - Data containing queueInstanceId and userId
+   * @param {ModifyUserToQueueArgs} data - Data containing queueInstanceId and userId
    * @returns {Promise<string[]>} Updated list of user IDs in the queue instance
    */
-  async addUserToQueue(data: AddUserToQueueArgs): Promise<string[]> {
+  async addUserToQueue(data: ModifyUserToQueueArgs): Promise<string[]> {
     const queueInstance = await this.getQueueInstanceById(data.queueInstanceId);
 
     if (!queueInstance) {
@@ -223,5 +224,46 @@ export class QueueInstanceService {
     });
 
     return updatedQueueInstance.usersInQueue;
+  }
+
+  async removeUserFromQueue(data: ModifyUserToQueueArgs): Promise<string[]> {
+    const queueInstance = await this.getQueueInstanceById(data.queueInstanceId);
+
+    if (!queueInstance) {
+      throw new QueueInstanceNotFoundException(data.queueInstanceId);
+    }
+
+    const isUserInTheCurrentQueue = queueInstance.usersInQueue.includes(
+      data.userId,
+    );
+
+    if (!isUserInTheCurrentQueue) {
+      throw new UserNotInQueueException({
+        queueInstanceId: queueInstance.queueInstanceId,
+        userId: data.userId,
+      });
+    }
+
+    const updateUsersInQueue = queueInstance.usersInQueue.filter(
+      (userId) => userId !== data.userId,
+    );
+
+    const updatedAttendedUsersQueue = [
+      ...queueInstance.attendedUsers,
+      data.userId,
+    ];
+
+    const updatedQueueInstanceResponse =
+      await this.prismaService.queueInstance.update({
+        where: {
+          id: queueInstance.queueInstanceId,
+        },
+        data: {
+          usersInQueue: updateUsersInQueue,
+          attendedUsers: updatedAttendedUsersQueue,
+        },
+      });
+
+    return updatedQueueInstanceResponse.usersInQueue;
   }
 }

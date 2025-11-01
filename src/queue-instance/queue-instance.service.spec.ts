@@ -14,6 +14,7 @@ import {
   QueueInstanceNotFoundException,
   UserAlreadyInQueueException,
   UserNotFoundException,
+  UserNotInQueueException,
 } from './queue-instance.execeptions';
 import { NotFoundException } from '@nestjs/common';
 import { QueueUserDto } from 'src/queue-user/queue-user.dto';
@@ -297,6 +298,63 @@ describe('QueueInstanceService', () => {
         new UserAlreadyInQueueException({
           queueInstanceId: generalQueueInstance.queueInstanceId,
           userId: queueUser.id,
+        }),
+      );
+    });
+  });
+
+  describe('removeUserFromQueue', () => {
+    it('should throw NotFoundException when queue instance does not exist', async () => {
+      const nonExistingQueueInstanceId = 'non-existing-queue-instance-id';
+
+      await expect(
+        queueInstanceService.removeUserFromQueue({
+          queueInstanceId: nonExistingQueueInstanceId,
+          userId: 'some-user-id',
+        }),
+      ).rejects.toThrow(
+        new QueueInstanceNotFoundException(nonExistingQueueInstanceId),
+      );
+    });
+
+    it('should throw UserNotInQueueException if userId is not in the Queue Instance', async () => {
+      const nonExistingUserId = 'non-existing-user-id';
+
+      // First, create a queue instance
+      const queueInstance = await queueInstanceService.addQueueInstance(
+        queueGeneral.id,
+      );
+
+      await expect(
+        queueInstanceService.removeUserFromQueue({
+          queueInstanceId: queueInstance.queueInstanceId,
+          userId: nonExistingUserId,
+        }),
+      ).rejects.toThrow(
+        new UserNotInQueueException({
+          queueInstanceId: queueInstance.queueInstanceId,
+          userId: nonExistingUserId,
+        }),
+      );
+    });
+
+    it('should remove user from Queue Instance', async () => {
+      const nonExistingUserId = 'non-existing-user-id';
+
+      // First, create a queue instance
+      const queueInstance = await queueInstanceService.addQueueInstance(
+        queueGeneral.id,
+      );
+
+      await expect(
+        queueInstanceService.removeUserFromQueue({
+          queueInstanceId: queueInstance.queueInstanceId,
+          userId: nonExistingUserId,
+        }),
+      ).rejects.toThrow(
+        new UserNotInQueueException({
+          queueInstanceId: queueInstance.queueInstanceId,
+          userId: nonExistingUserId,
         }),
       );
     });

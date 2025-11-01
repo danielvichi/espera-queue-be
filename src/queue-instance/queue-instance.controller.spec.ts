@@ -4,12 +4,13 @@ import {
 } from 'src/client/client.dto';
 import { CreateUnityDto, UnityDto } from 'src/unity/unity.dto';
 import { CreateQueueDto, QueueDto } from 'src/queue/queue.dto';
-import { QueueType } from '@prisma/client';
+import { AdminRole, QueueType } from '@prisma/client';
 import { QueueUserDto } from 'src/queue-user/queue-user.dto';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QueueInstanceController } from './queue-instance.controller';
 import { AuthService } from 'src/auth/auth.service';
+import { AdminDto } from 'src/admin/admin.dto';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -39,11 +40,20 @@ const CREATE_QUEUE_USER_MOCK_DATA = {
   passwordHash: 'hashed-password',
 };
 
+const CREATE_ADMIN_MOCK_DATA = {
+  name: 'Amin Test',
+  role: AdminRole.UNITY_ADMIN,
+  email: 'testadmin@example.com',
+  passwordHash: 'hashed-password',
+};
+
 describe('QueueInstanceController', () => {
   let queueInstanceController: QueueInstanceController;
   let authService: AuthService;
   let prismaService: PrismaService;
+
   let client: CreateClientResponseDto;
+  let admin: AdminDto;
   let unity: UnityDto;
   let queueGeneral: QueueDto;
   let queueUser: QueueUserDto;
@@ -87,6 +97,14 @@ describe('QueueInstanceController', () => {
       email: undefined,
       phone: undefined,
     };
+
+    admin = await prismaService.admin.create({
+      data: {
+        ...CREATE_ADMIN_MOCK_DATA,
+        clientId: client.id,
+        unityIds: [unity.id],
+      },
+    });
 
     queueGeneral = await prismaService.queue.create({
       data: {
@@ -175,6 +193,92 @@ describe('QueueInstanceController', () => {
           queueInstanceId: queueInstanceId,
         })
         .expect(409);
+    });
+
+    describe('/queue-instance/remove-user', () => {
+      it('should throw UserNotFoundException if user is not signed in', async () => {
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue-instance/remove-user')
+          .set('Cookie', [`user_token=`])
+          .send({
+            queueInstanceId: queueInstanceId,
+          })
+          .expect(401);
+      });
+
+      it('should throw BadRequestException if Queue Instance Id is missing', async () => {
+        const userToken = await authService.generateJwtForUser({
+          ...queueUser,
+        });
+
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue-instance/remove-user')
+          .set('Cookie', [`user_token=${userToken}`])
+          .send({
+            queueInstanceId: '',
+            userId: queueUser.id,
+          })
+          .expect(400);
+      });
+
+      it('should throw UserNotInQueueException if user is not in the Queue Instance', async () => {
+        const userToken = await authService.generateJwtForUser({
+          ...queueUser,
+        });
+
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue-instance/remove-user')
+          .set('Cookie', [`user_token=${userToken}`])
+          .send({
+            queueInstanceId: queueInstanceId,
+            userId: queueUser.id,
+          })
+          .expect(409);
+      });
+
+      it('should throw MethodNotAllowedException if signed User is not Admin and trying to remove a different user of the Authenticated', async () => {
+        const userToken = await authService.generateJwtForUser({
+          ...queueUser,
+        });
+
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue-instance/remove-user')
+          .set('Cookie', [`user_token=${userToken}`])
+          .send({
+            queueInstanceId: queueInstanceId,
+            userId: 'different_id',
+          })
+          .expect(405);
+      });
+
+      it('should remove user from the Queue Instance', async () => {
+        const adminToken = await authService.generateJwtForUser({
+          ...admin,
+        });
+
+        const queueInstanceWithUser = await prismaService.queueInstance.update({
+          where: {
+            id: queueInstanceId,
+          },
+          data: {
+            usersInQueue: [queueUser.id],
+          },
+        });
+
+        expect(queueInstanceWithUser.usersInQueue.length).toBe(1);
+        expect(queueInstanceWithUser.usersInQueue[0]).toBe(queueUser.id);
+
+        await TestModuleSingleton.callEndpoint()
+          .post('/queue-instance/remove-user')
+          .set('Cookie', [`user_token=${adminToken}`])
+          .send({
+            queueInstanceId: queueInstanceId,
+            userId: queueUser.id,
+          })
+          .expect(201);
+      });
+
+      it('should remove a different userId from authenticated one if signed User is an Admin ', async () => {});
     });
   });
 });
