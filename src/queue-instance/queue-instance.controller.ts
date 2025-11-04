@@ -3,7 +3,7 @@ import {
   Body,
   Controller,
   MethodNotAllowedException,
-  Post,
+  Patch,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -23,7 +23,7 @@ import { AddUserToQueueInstanceDto } from './queue-instance.dto';
 export class QueueInstanceController {
   constructor(private readonly queueInstanceService: QueueInstanceService) {}
 
-  @Post('add-user')
+  @Patch('add-user')
   @ApiBody({
     required: true,
     type: AddUserToQueueInstanceDto,
@@ -50,9 +50,6 @@ export class QueueInstanceController {
         queueId: data.queueId,
       });
 
-    console.log('======================================');
-    console.log(todayQueueInstance);
-
     if (!todayQueueInstance) {
       const queueInstanceResponse =
         await this.queueInstanceService.addQueueInstance({
@@ -72,7 +69,7 @@ export class QueueInstanceController {
     return { success: result.includes(req.user.id) ? true : false };
   }
 
-  @Post('remove-user')
+  @Patch('remove-user')
   @ApiOkResponse({
     description:
       'Remove user from queue instance (only proper admins can remove an userId witch is not the authenticatedUser one)',

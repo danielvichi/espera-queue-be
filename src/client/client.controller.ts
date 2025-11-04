@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
 import { ClientService } from './client.service';
-import { ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
 import { ClientDto, CreateClientWithAdminDto } from './client.dto';
 import { checkCreateClientWithAdminRequirementsOrThrowError } from './client.utils';
 import { AdminService } from 'src/admin/admin.service';
@@ -49,6 +49,10 @@ export class ClientController {
   }
 
   @Post('create-and-signin')
+  @ApiBody({
+    type: CreateClientWithAdminDto,
+    required: true,
+  })
   @ApiOkResponse({
     description:
       'Create a new Client and its Owner Admin account and create Auth Session',

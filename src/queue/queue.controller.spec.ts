@@ -312,7 +312,7 @@ describe('QueueController', () => {
   describe('/queue/update', () => {
     it('Should throw UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/update')
+        .patch('/queue/update')
         .set('Cookie', [`user_token=`])
         .send({
           queueId: queues[0].id,
@@ -328,7 +328,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/update')
+        .patch('/queue/update')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[0].id,
@@ -344,7 +344,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/update')
+        .patch('/queue/update')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: '',
@@ -360,7 +360,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/update')
+        .patch('/queue/update')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[0].id,
@@ -380,13 +380,13 @@ describe('QueueController', () => {
       });
 
       const queueResponse = (await TestModuleSingleton.callEndpoint()
-        .post('/queue/update')
+        .patch('/queue/update')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[0].id,
           payload: payload,
         })
-        .expect(201)) as { body: QueueDto };
+        .expect(200)) as { body: QueueDto };
 
       expect(queueResponse.body.name).toBeDefined();
       expect(queueResponse.body.name).toBe(payload.name);
@@ -396,7 +396,7 @@ describe('QueueController', () => {
   describe('/queue/disable', () => {
     it('Should throw UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/disable')
+        .patch('/queue/disable')
         .set('Cookie', [`user_token=`])
         .send({
           queueId: queues[0].id,
@@ -412,7 +412,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/disable')
+        .patch('/queue/disable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[0].id,
@@ -428,7 +428,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/disable')
+        .patch('/queue/disable')
         .set('Cookie', [`user_token=${wrongUnityUserToken}`])
         .send({
           queueId: queues[0].id,
@@ -443,7 +443,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/disable')
+        .patch('/queue/disable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: '',
@@ -458,12 +458,12 @@ describe('QueueController', () => {
       });
 
       const queueResponse = (await TestModuleSingleton.callEndpoint()
-        .post('/queue/disable')
+        .patch('/queue/disable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[1].id,
         })
-        .expect(201)) as { body: QueueDto };
+        .expect(200)) as { body: QueueDto };
 
       expect(queueResponse.body.id).toBe(queues[1].id);
       expect(queueResponse.body.enabled).toBe(false);
@@ -476,7 +476,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/disable')
+        .patch('/queue/disable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[1].id,
@@ -488,7 +488,7 @@ describe('QueueController', () => {
   describe('/queue/enable', () => {
     it('Should throw UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/enable')
+        .patch('/queue/enable')
         .set('Cookie', [`user_token=`])
         .send({
           queueId: queues[0].id,
@@ -504,7 +504,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/enable')
+        .patch('/queue/enable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[0].id,
@@ -520,7 +520,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/enable')
+        .patch('/queue/enable')
         .set('Cookie', [`user_token=${wrongUnityUserToken}`])
         .send({
           queueId: queues[0].id,
@@ -535,7 +535,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/enable')
+        .patch('/queue/enable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: '',
@@ -550,12 +550,12 @@ describe('QueueController', () => {
       });
 
       const queueResponse = (await TestModuleSingleton.callEndpoint()
-        .post('/queue/enable')
+        .patch('/queue/enable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[1].id,
         })
-        .expect(201)) as { body: QueueDto };
+        .expect(200)) as { body: QueueDto };
 
       expect(queueResponse.body.id).toBe(queues[1].id);
       expect(queueResponse.body.enabled).toBe(true);
@@ -568,7 +568,7 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue/enable')
+        .patch('/queue/enable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queues[1].id,

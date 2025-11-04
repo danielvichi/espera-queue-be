@@ -3,13 +3,19 @@ import {
   Controller,
   Get,
   MethodNotAllowedException,
+  Patch,
   Post,
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { UnityService, type UpdateUnityArgs } from './unity.service';
-import { ApiOkResponse } from '@nestjs/swagger';
-import { CreateUnityDto, UnityDto } from './unity.dto';
+import { UnityService } from './unity.service';
+import { ApiBody, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  CreateUnityDto,
+  InputGetUnitiesByIdDto,
+  InputUpdateUnityDto,
+  UnityDto,
+} from './unity.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
@@ -21,6 +27,10 @@ export class UnityController {
 
   @Post('create')
   @UseGuards(AuthGuard)
+  @ApiBody({
+    type: CreateUnityDto,
+    required: true,
+  })
   @ApiOkResponse({
     description: 'Create a Unity for the connected user with proper Admin Role',
     type: UnityDto,
@@ -41,13 +51,17 @@ export class UnityController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @ApiQuery({
+    type: InputGetUnitiesByIdDto,
+    required: true,
+  })
   @ApiOkResponse({
     description: 'Get Unities by id that belongs to the connected user Client',
     type: UnityDto,
     isArray: true,
   })
   async getUnitiesById(
-    @Body() data: { unitiesIds: string[] },
+    @Body() data: InputGetUnitiesByIdDto,
     @Request() req: AuthenticatedRequestDto,
   ): Promise<UnityDto[] | null> {
     if (!req.user.clientId) {
@@ -96,7 +110,7 @@ export class UnityController {
     return unityList;
   }
 
-  @Post('disable')
+  @Patch('disable')
   @UseGuards(AuthGuard)
   @ApiOkResponse({
     description:
@@ -119,7 +133,7 @@ export class UnityController {
     return unity;
   }
 
-  @Post('enable')
+  @Patch('enable')
   @UseGuards(AuthGuard)
   @ApiOkResponse({
     description:
@@ -142,7 +156,10 @@ export class UnityController {
     return unity;
   }
 
-  @Post('update')
+  @Patch('update')
+  @ApiBody({
+    type: InputUpdateUnityDto,
+  })
   @UseGuards(AuthGuard)
   @ApiOkResponse({
     description:
@@ -150,7 +167,7 @@ export class UnityController {
     type: UnityDto,
   })
   async updateUnity(
-    @Body() payload: UpdateUnityArgs,
+    @Body() payload: InputUpdateUnityDto,
     @Request() req: AuthenticatedRequestDto,
   ) {
     checkAdminRoleHigherOrThrow({

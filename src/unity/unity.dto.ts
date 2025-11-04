@@ -119,3 +119,11 @@ export class CreateUnityDto {
   // })
   // adminIds: string[];
 }
+export class InputGetUnitiesByIdDto {
+  unitiesIds: string[];
+}
+
+export class InputUpdateUnityDto {
+  payload: Partial<Omit<CreateUnityDto, 'clientId'>>;
+  unityId: string;
+}

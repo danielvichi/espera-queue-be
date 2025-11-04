@@ -1,5 +1,5 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { CreateUnityDto, UnityDto } from './unity.dto';
+import { CreateUnityDto, InputUpdateUnityDto, UnityDto } from './unity.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import {
   createUnityBadRequestExceptionMessages,
@@ -19,10 +19,6 @@ interface UnityIdArg {
 
 interface GetUnitiesByIdsArg {
   unitiesIds: string[];
-}
-
-export interface UpdateUnityArgs extends UnityIdArg {
-  payload: Partial<Omit<CreateUnityDto, 'clientId'>>;
 }
 
 @Injectable()
@@ -223,7 +219,7 @@ export class UnityService {
    * @param {UpdateUnityArgs} data The arguments to update unity
    * @returns {Promise<UnityDto>} UnityDto from the updated Unity
    */
-  async updateUnity(data: UpdateUnityArgs): Promise<UnityDto> {
+  async updateUnity(data: InputUpdateUnityDto): Promise<UnityDto> {
     if (!data.unityId) {
       throw new BadRequestException(
         defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,

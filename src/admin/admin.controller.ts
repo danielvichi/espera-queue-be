@@ -6,10 +6,10 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { type CreatedAdminDto } from './admin.dto';
+import { CreatedAdminDto } from './admin.dto';
 import { AdminRole } from '@prisma/client';
 import { AdminService } from './admin.service';
 import {
@@ -23,6 +23,10 @@ export class AdminController {
 
   @Post('create')
   @UseGuards(AuthGuard)
+  @ApiBody({
+    type: CreatedAdminDto,
+    required: true,
+  })
   @ApiOkResponse({
     description: 'Create a new client Owner Admin account',
   })
