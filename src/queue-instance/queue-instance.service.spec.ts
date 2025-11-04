@@ -138,7 +138,6 @@ describe('QueueInstanceService', () => {
       expect(queueInstance).toBeDefined();
       expect(queueInstance.queueId).toBe(queueGeneral.id);
       expect(queueInstance.queueInstanceId).toBeDefined();
-      expect(queueInstance.date).toBeDefined();
       expect(queueInstance.name).toBe(queueGeneral.name);
       expect(queueInstance.type).toBe(queueGeneral.type);
     });
@@ -162,7 +161,6 @@ describe('QueueInstanceService', () => {
       expect(queueInstance).toBeDefined();
       expect(queueInstance.queueId).toBe(queuePriority.id);
       expect(queueInstance.queueInstanceId).toBeDefined();
-      expect(queueInstance.date).toBeDefined();
       expect(queueInstance.name).toBe(queuePriority.name);
       expect(queueInstance.type).toBe(queuePriority.type);
     });
@@ -248,7 +246,6 @@ describe('QueueInstanceService', () => {
         },
         data: {
           createdAt: yesterday.toJSDate(),
-          date: yesterday.toJSDate(),
           usersInQueue: [queueUser.id],
         },
       });
@@ -356,6 +353,130 @@ describe('QueueInstanceService', () => {
           queueInstanceId: queueInstance.queueInstanceId,
           userId: nonExistingUserId,
         }),
+      );
+    });
+  });
+
+  describe('getLastQueueInstanceByQueueId', () => {
+    it('should throw NotFoundException if queueId is from a nom existing Queue', async () => {
+      await expect(
+        queueInstanceService.getLastQueueInstanceByQueueId({
+          queueId: 'invalid_queue_id',
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should throw NotFoundException if queueId is from a nom existing Queue with no Queue Instance', async () => {
+      await expect(
+        queueInstanceService.getLastQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should should return the last Queue Instance created', async () => {
+      const queueInstanceA = await prismaService.queueInstance.create({
+        data: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      const queueInstanceB = await prismaService.queueInstance.create({
+        data: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      const queueInstanceBDate = DateTime.fromISO(
+        queueInstanceB.createdAt.toISOString(),
+      );
+
+      const yesterday = queueInstanceBDate.minus({ days: 1 });
+
+      // Altering the second queue instance to yesterday to make
+      // sure the order of creation had any influence in the result
+      await prismaService.queueInstance.update({
+        where: {
+          id: queueInstanceB.id,
+        },
+        data: {
+          createdAt: yesterday.toJSDate(),
+        },
+      });
+
+      const lastQueueInstance =
+        await queueInstanceService.getLastQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        });
+
+      expect(lastQueueInstance.queueId).toBe(queueGeneral.id);
+      expect(lastQueueInstance.queueInstanceId).toBe(queueInstanceA.id);
+    });
+  });
+
+  describe('getTodayQueueInstanceByQueueId', () => {
+    it('should throw NotFoundException if queueId is from a nom existing Queue', async () => {
+      await expect(
+        queueInstanceService.getTodayQueueInstanceByQueueId({
+          queueId: 'invalid_queue_id',
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should throw NotFoundException if queueId is from a nom existing Queue with no Queue Instance', async () => {
+      await expect(
+        queueInstanceService.getTodayQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should throw NotFoundException if all Queue Instances are from past days', async () => {
+      const yesterdayQueueInstance = await prismaService.queueInstance.create({
+        data: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      const yesterdayQueueInstanceDate = DateTime.fromISO(
+        yesterdayQueueInstance.createdAt.toISOString(),
+      );
+
+      const yesterday = yesterdayQueueInstanceDate.minus({ days: 1 });
+
+      await prismaService.queueInstance.update({
+        where: {
+          id: yesterdayQueueInstance.id,
+        },
+        data: {
+          createdAt: yesterday.toJSDate(),
+        },
+      });
+
+      await expect(
+        queueInstanceService.getTodayQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+        ),
       );
     });
   });

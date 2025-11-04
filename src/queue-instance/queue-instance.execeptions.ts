@@ -2,6 +2,7 @@ import { ConflictException, NotFoundException } from '@nestjs/common';
 
 export const defaultQueueInstanceExceptionsMessage = {
   QUEUE_NOT_FOUND: 'Queue not found',
+  QUEUE_INSTANCE_NOT_FOUND: 'Queue Instance not found',
   QUEUE_INSTANCE_ID_REQUIRED: 'Queue Instance Id is required',
   QUEUE_INSTANCE_ALREADY_CREATED: 'A Queue Instance is already created.',
   USER_NOT_FOUND: 'User not found',

@@ -17,13 +17,6 @@ export class QueueInstanceDto extends OmitType(QueueDto, ['id']) {
   queueInstanceId: string;
 
   @ApiProperty({
-    description: 'Date of the Queue Instance',
-    example: '2025-10-30',
-    required: true,
-  })
-  date: Date;
-
-  @ApiProperty({
     description: "List of User's IDs of in this queue",
     example: 'c1234567-89ab-cdef-0123-456789abcdef',
     required: true,

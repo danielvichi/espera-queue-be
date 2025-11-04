@@ -9,6 +9,7 @@ import {
   UserNotInQueueException,
 } from './queue-instance.execeptions';
 import { DateTime } from 'luxon';
+import { isToday } from 'src/utils/date.utils';
 
 interface IsUserAlreadyInUnityQueueArgs {
   userId: string;
@@ -53,7 +54,7 @@ export class QueueInstanceService {
       const now = DateTime.now();
 
       const lastQueueInstanceDate = DateTime.fromISO(
-        lastExistingQueueInstanceForThisQueue.date.toISOString(),
+        lastExistingQueueInstanceForThisQueue.createdAt.toISOString(),
       );
       const isThisYear = now.year === lastQueueInstanceDate.year;
       const isThisMonth = now.month === lastQueueInstanceDate.month;
@@ -70,7 +71,6 @@ export class QueueInstanceService {
 
     const createdQueue = await this.prismaService.queueInstance.create({
       data: {
-        date: new Date(),
         queueId,
       },
     });
@@ -157,18 +157,12 @@ export class QueueInstanceService {
         return false;
       }
 
-      const queueCreationDate = DateTime.fromISO(
-        queueInstance.createdAt.toISOString(),
-      );
-
-      const today = DateTime.now();
-
-      const isThisYear = today.year === queueCreationDate.year;
-      const isThisMonth = today.month === queueCreationDate.month;
-      const isToday = today.day === queueCreationDate.day;
+      const isQueueInstanceFromToday = isToday({
+        date: queueInstance.createdAt,
+      });
       const isUserInQueue = queueInstance?.usersInQueue.includes(data.userId);
 
-      if (isThisYear && isThisMonth && isToday && isUserInQueue) {
+      if (isQueueInstanceFromToday && isUserInQueue) {
         return true;
       }
     }
@@ -265,5 +259,81 @@ export class QueueInstanceService {
       });
 
     return updatedQueueInstanceResponse.usersInQueue;
+  }
+
+  /**
+   * Find the last Queue Instance by QueueId
+   *
+   * @param {queueId: string;} data -
+   * @returns {Promise<QueueInstanceDto>}
+   */
+  async getLastQueueInstanceByQueueId(data: {
+    queueId: string;
+  }): Promise<QueueInstanceDto> {
+    const queueReference = await this.prismaService.queue.findFirst({
+      where: {
+        id: data.queueId,
+      },
+    });
+
+    if (!queueReference) {
+      throw new NotFoundException(
+        defaultQueueInstanceExceptionsMessage.QUEUE_NOT_FOUND,
+      );
+    }
+
+    const queueInstanceResponse =
+      await this.prismaService.queueInstance.findMany({
+        where: {
+          queueId: queueReference?.id,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        take: 10,
+      });
+
+    if (!queueInstanceResponse || queueInstanceResponse.length === 0) {
+      throw new NotFoundException(
+        defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+      );
+    }
+
+    const lastQueueInstance = queueInstanceResponse[0];
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id: _id, ...lastQueueInstanceWithoutId } = lastQueueInstance;
+
+    return {
+      ...queueReference,
+      ...lastQueueInstanceWithoutId,
+      queueInstanceId: lastQueueInstance.id,
+      queueId: lastQueueInstance.queueId,
+    };
+  }
+
+  /**
+   * Find today Queue Instance by QueueId, if it doesn't exist it creates a new one
+   *
+   * @param {queueId: string;} data -
+   * @returns {Promise<QueueInstanceDto>}
+   */
+  async getTodayQueueInstanceByQueueId(data: {
+    queueId: string;
+  }): Promise<QueueInstanceDto> {
+    const lastQueueInstance = await this.getLastQueueInstanceByQueueId({
+      queueId: data.queueId,
+    });
+
+    const isTodayInstance = isToday({
+      date: lastQueueInstance.createdAt,
+    });
+
+    if (!isTodayInstance) {
+      throw new NotFoundException(
+        defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+      );
+    }
+
+    return lastQueueInstance;
   }
 }
