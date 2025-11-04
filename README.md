@@ -1,6 +1,6 @@
 # Espera Queue Project
 
-Personal Back-end  project for managing waiting queues.
+Personal Back-end  project for managing restaurants, bars, and other type of bussiness waiting lines.
 
 ## Requirements
 - Node.js 
