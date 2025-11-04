@@ -30,3 +30,19 @@ export class QueueInstanceDto extends OmitType(QueueDto, ['id']) {
   })
   attendedUsers: string[];
 }
+
+export class AddUserToQueueInstanceDto {
+  @ApiProperty({
+    description: 'Unique identifier for Queue Reference',
+    example: 'c1234567-89ab-cdef-0123-456789abcdef',
+    required: true,
+  })
+  queueId: string;
+
+  @ApiProperty({
+    description: 'Unique identifier for Queue Instance',
+    example: 'c1234567-89ab-cdef-0123-456789abcdef',
+    required: false,
+  })
+  queueInstanceId?: string;
+}

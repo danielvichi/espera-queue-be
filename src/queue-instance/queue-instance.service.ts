@@ -27,13 +27,13 @@ export class QueueInstanceService {
   /**
    * Create a new queue instance
    *
-   * @param {string} queueId - The ID of the queue
+   * @param {queueId: string } queueId - The ID of the queue
    * @returns {Promise<QueueInstanceDto>} - The created queue instance data
    */
-  async addQueueInstance(queueId: string): Promise<QueueInstanceDto> {
+  async addQueueInstance(data: { queueId: string }): Promise<QueueInstanceDto> {
     const queueReference = await this.prismaService.queue.findFirst({
       where: {
-        id: queueId,
+        id: data.queueId,
       },
     });
 
@@ -46,7 +46,7 @@ export class QueueInstanceService {
     const lastExistingQueueInstanceForThisQueue =
       await this.prismaService.queueInstance.findFirst({
         where: {
-          queueId,
+          queueId: data.queueId,
         },
       });
 
@@ -71,7 +71,7 @@ export class QueueInstanceService {
 
     const createdQueue = await this.prismaService.queueInstance.create({
       data: {
-        queueId,
+        queueId: data.queueId,
       },
     });
 
