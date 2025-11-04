@@ -122,7 +122,9 @@ describe('QueueInstanceService', () => {
   describe('addQueueInstance', () => {
     it('should thrown NotFoundException when queue does not exist', async () => {
       await expect(
-        queueInstanceService.addQueueInstance('non-existing-queue-id'),
+        queueInstanceService.addQueueInstance({
+          queueId: 'non-existing-queue-id',
+        }),
       ).rejects.toThrow(
         new NotFoundException(
           defaultQueueInstanceExceptionsMessage.QUEUE_NOT_FOUND,
@@ -131,22 +133,21 @@ describe('QueueInstanceService', () => {
     });
 
     it('should create a new Queue Instance', async () => {
-      const queueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const queueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       expect(queueInstance).toBeDefined();
       expect(queueInstance.queueId).toBe(queueGeneral.id);
       expect(queueInstance.queueInstanceId).toBeDefined();
-      expect(queueInstance.date).toBeDefined();
       expect(queueInstance.name).toBe(queueGeneral.name);
       expect(queueInstance.type).toBe(queueGeneral.type);
     });
 
     it('should throw error when a Queue Instance is already created for today', async () => {
-      await queueInstanceService.addQueueInstance(queueGeneral.id);
+      await queueInstanceService.addQueueInstance({ queueId: queueGeneral.id });
       await expect(
-        queueInstanceService.addQueueInstance(queueGeneral.id),
+        queueInstanceService.addQueueInstance({ queueId: queueGeneral.id }),
       ).rejects.toThrow(
         new Error(
           defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_ALREADY_CREATED,
@@ -155,14 +156,13 @@ describe('QueueInstanceService', () => {
     });
 
     it('should create a new Queue Instance for today for other Queue', async () => {
-      const queueInstance = await queueInstanceService.addQueueInstance(
-        queuePriority.id,
-      );
+      const queueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queuePriority.id,
+      });
 
       expect(queueInstance).toBeDefined();
       expect(queueInstance.queueId).toBe(queuePriority.id);
       expect(queueInstance.queueInstanceId).toBeDefined();
-      expect(queueInstance.date).toBeDefined();
       expect(queueInstance.name).toBe(queuePriority.name);
       expect(queueInstance.type).toBe(queuePriority.type);
     });
@@ -186,9 +186,9 @@ describe('QueueInstanceService', () => {
       const nonExistingUserId = 'non-existing-user-id';
 
       // First, create a queue instance
-      const queueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const queueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       await expect(
         queueInstanceService.addUserToQueue({
@@ -199,9 +199,9 @@ describe('QueueInstanceService', () => {
     });
 
     it('should add user to queue instance', async () => {
-      const queueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const queueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       const updatedUsersInQueue = await queueInstanceService.addUserToQueue({
         queueInstanceId: queueInstance.queueInstanceId,
@@ -212,9 +212,9 @@ describe('QueueInstanceService', () => {
     });
 
     it('should throw UserAlreadyInQueueException when user is already in queue', async () => {
-      const queueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const queueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       await queueInstanceService.addUserToQueue({
         queueInstanceId: queueInstance.queueInstanceId,
@@ -236,7 +236,9 @@ describe('QueueInstanceService', () => {
     // it('should throw UserAlreadyInQueueException when user is already in another queue from the same unity at the same day', async () => {
     it('should add user even if there is a queue instance for previous day with the user in the queue', async () => {
       const yesterdayQueueInstance =
-        await queueInstanceService.addQueueInstance(queueGeneral.id);
+        await queueInstanceService.addQueueInstance({
+          queueId: queueGeneral.id,
+        });
 
       const twentyFourHoursInMs = 60000 * 60 * 24 + 1000;
       const yesterday = DateTime.now().minus(twentyFourHoursInMs);
@@ -248,14 +250,13 @@ describe('QueueInstanceService', () => {
         },
         data: {
           createdAt: yesterday.toJSDate(),
-          date: yesterday.toJSDate(),
           usersInQueue: [queueUser.id],
         },
       });
 
-      const todayQueueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const todayQueueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       await queueInstanceService.addUserToQueue({
         queueInstanceId: todayQueueInstance.queueInstanceId,
@@ -272,7 +273,9 @@ describe('QueueInstanceService', () => {
 
     it('should throw UserAlreadyInQueueException when user is already in another queue from the same unity at the same day', async () => {
       const priorityQueueInstance = await queueInstanceService.addQueueInstance(
-        queuePriority.id,
+        {
+          queueId: queuePriority.id,
+        },
       );
 
       // Adding user to Priority Queue Instance
@@ -285,9 +288,9 @@ describe('QueueInstanceService', () => {
         },
       });
 
-      const generalQueueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const generalQueueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       await expect(
         queueInstanceService.addUserToQueue({
@@ -321,9 +324,9 @@ describe('QueueInstanceService', () => {
       const nonExistingUserId = 'non-existing-user-id';
 
       // First, create a queue instance
-      const queueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const queueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       await expect(
         queueInstanceService.removeUserFromQueue({
@@ -342,9 +345,9 @@ describe('QueueInstanceService', () => {
       const nonExistingUserId = 'non-existing-user-id';
 
       // First, create a queue instance
-      const queueInstance = await queueInstanceService.addQueueInstance(
-        queueGeneral.id,
-      );
+      const queueInstance = await queueInstanceService.addQueueInstance({
+        queueId: queueGeneral.id,
+      });
 
       await expect(
         queueInstanceService.removeUserFromQueue({
@@ -356,6 +359,130 @@ describe('QueueInstanceService', () => {
           queueInstanceId: queueInstance.queueInstanceId,
           userId: nonExistingUserId,
         }),
+      );
+    });
+  });
+
+  describe('getLastQueueInstanceByQueueId', () => {
+    it('should throw NotFoundException if queueId is from a nom existing Queue', async () => {
+      await expect(
+        queueInstanceService.getLastQueueInstanceByQueueId({
+          queueId: 'invalid_queue_id',
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should throw NotFoundException if queueId is from a nom existing Queue with no Queue Instance', async () => {
+      await expect(
+        queueInstanceService.getLastQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should should return the last Queue Instance created', async () => {
+      const queueInstanceA = await prismaService.queueInstance.create({
+        data: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      const queueInstanceB = await prismaService.queueInstance.create({
+        data: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      const queueInstanceBDate = DateTime.fromISO(
+        queueInstanceB.createdAt.toISOString(),
+      );
+
+      const yesterday = queueInstanceBDate.minus({ days: 1 });
+
+      // Altering the second queue instance to yesterday to make
+      // sure the order of creation had any influence in the result
+      await prismaService.queueInstance.update({
+        where: {
+          id: queueInstanceB.id,
+        },
+        data: {
+          createdAt: yesterday.toJSDate(),
+        },
+      });
+
+      const lastQueueInstance =
+        await queueInstanceService.getLastQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        });
+
+      expect(lastQueueInstance.queueId).toBe(queueGeneral.id);
+      expect(lastQueueInstance.queueInstanceId).toBe(queueInstanceA.id);
+    });
+  });
+
+  describe('getTodayQueueInstanceByQueueId', () => {
+    it('should throw NotFoundException if queueId is from a nom existing Queue', async () => {
+      await expect(
+        queueInstanceService.getTodayQueueInstanceByQueueId({
+          queueId: 'invalid_queue_id',
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should throw NotFoundException if queueId is from a nom existing Queue with no Queue Instance', async () => {
+      await expect(
+        queueInstanceService.getTodayQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+        ),
+      );
+    });
+
+    it('should throw NotFoundException if all Queue Instances are from past days', async () => {
+      const yesterdayQueueInstance = await prismaService.queueInstance.create({
+        data: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      const yesterdayQueueInstanceDate = DateTime.fromISO(
+        yesterdayQueueInstance.createdAt.toISOString(),
+      );
+
+      const yesterday = yesterdayQueueInstanceDate.minus({ days: 1 });
+
+      await prismaService.queueInstance.update({
+        where: {
+          id: yesterdayQueueInstance.id,
+        },
+        data: {
+          createdAt: yesterday.toJSDate(),
+        },
+      });
+
+      await expect(
+        queueInstanceService.getTodayQueueInstanceByQueueId({
+          queueId: queueGeneral.id,
+        }),
+      ).rejects.toThrow(
+        new NotFoundException(
+          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+        ),
       );
     });
   });

@@ -125,7 +125,6 @@ model Queue {
 
 model QueueInstance {
   id           String   @id @default(cuid())
-  date         DateTime
   startQueueAt String?
   endQueueAt   String?
   createdAt    DateTime @default(now())

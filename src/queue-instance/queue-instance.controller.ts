@@ -8,7 +8,7 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { QueueInstanceService } from './queue-instance.service';
-import { ApiOkResponse } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
 import {
   defaultQueueInstanceExceptionsMessage,
   methodNotAllowedWithoutAdminRole,
@@ -17,29 +17,55 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
+import { AddUserToQueueInstanceDto } from './queue-instance.dto';
 
 @Controller('queue-instance')
 export class QueueInstanceController {
   constructor(private readonly queueInstanceService: QueueInstanceService) {}
 
   @Post('add-user')
+  @ApiBody({
+    required: true,
+    type: AddUserToQueueInstanceDto,
+  })
   @ApiOkResponse({
     description: 'Add user to queue instance',
     type: Object,
   })
   @UseGuards(AuthGuard)
   async addQueueUserToQueueInstance(
-    @Body() data: { queueInstanceId: string },
+    @Body() data: AddUserToQueueInstanceDto,
     @Request() req: AuthenticatedRequestDto,
   ): Promise<{ success: boolean }> {
-    if (!data.queueInstanceId) {
+    if (!data.queueId) {
       throw new BadRequestException(
-        defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_ID_REQUIRED,
+        defaultQueueInstanceExceptionsMessage.QUEUE_ID,
       );
     }
 
+    let queueInstanceId: string;
+
+    const todayQueueInstance =
+      await this.queueInstanceService.getTodayQueueInstanceByQueueId({
+        queueId: data.queueId,
+      });
+
+    console.log('======================================');
+    console.log(todayQueueInstance);
+
+    if (!todayQueueInstance) {
+      const queueInstanceResponse =
+        await this.queueInstanceService.addQueueInstance({
+          queueId: data.queueId,
+        });
+
+      queueInstanceId = queueInstanceResponse.queueInstanceId;
+    } else {
+      queueInstanceId = todayQueueInstance.queueInstanceId;
+    }
+
     const result = await this.queueInstanceService.addUserToQueue({
-      queueInstanceId: data.queueInstanceId,
+      queueInstanceId: queueInstanceId,
       userId: req.user.id,
     });
 

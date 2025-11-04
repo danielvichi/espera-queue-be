@@ -116,7 +116,6 @@ describe('QueueInstanceController', () => {
 
     const queueInstanceResponse = await prismaService.queueInstance.create({
       data: {
-        date: new Date(),
         queueId: queueGeneral.id,
       },
     });
@@ -138,7 +137,7 @@ describe('QueueInstanceController', () => {
         .post('/queue-instance/add-user')
         .set('Cookie', [`user_token=`])
         .send({
-          queueInstanceId: queueInstanceId,
+          queueId: queueGeneral.id,
         })
         .expect(401);
     });
@@ -152,12 +151,30 @@ describe('QueueInstanceController', () => {
         .post('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
-          queueInstanceId: '',
+          queueId: '',
         })
         .expect(400);
     });
 
-    it('should add User to Queue Instance and return true', async () => {
+    it('should create queue Instance and add User to Queue Instance and return true', async () => {
+      // Creating fresh new Queue without Queue instance
+      const queueResponse = await prismaService.queue.create({
+        data: {
+          ...CREATE_QUEUE_MOCK_DATA[1],
+          clientId: client.id,
+          unityId: unity.id,
+        },
+      });
+
+      // Making sure there's no queue instance
+      const queueInstanceResponse = await prismaService.queueInstance.findMany({
+        where: {
+          queueId: queueResponse.id,
+        },
+      });
+
+      expect(queueInstanceResponse.length).toBe(0);
+
       const userToken = await authService.generateJwtForUser({
         ...queueUser,
       });
@@ -166,7 +183,23 @@ describe('QueueInstanceController', () => {
         .post('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
-          queueInstanceId: queueInstanceId,
+          queueId: queueGeneral.id,
+        })
+        .expect(201)) as { body: { success: boolean } };
+
+      expect(response.body.success).toBe(true);
+    });
+
+    it('should add User to an existing Queue Instance and return true', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueUser,
+      });
+
+      const response = (await TestModuleSingleton.callEndpoint()
+        .post('/queue-instance/add-user')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          queueId: queueGeneral.id,
         })
         .expect(201)) as { body: { success: boolean } };
 
@@ -182,7 +215,7 @@ describe('QueueInstanceController', () => {
         .post('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
-          queueInstanceId: queueInstanceId,
+          queueId: queueGeneral.id,
         })
         .expect(201);
 
@@ -190,95 +223,95 @@ describe('QueueInstanceController', () => {
         .post('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
+          queueId: queueGeneral.id,
+        })
+        .expect(409);
+    });
+  });
+
+  describe('/queue-instance/remove-user', () => {
+    it('should throw UserNotFoundException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .post('/queue-instance/remove-user')
+        .set('Cookie', [`user_token=`])
+        .send({
           queueInstanceId: queueInstanceId,
+        })
+        .expect(401);
+    });
+
+    it('should throw BadRequestException if Queue Instance Id is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueUser,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/queue-instance/remove-user')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          queueInstanceId: '',
+          userId: queueUser.id,
+        })
+        .expect(400);
+    });
+
+    it('should throw UserNotInQueueException if user is not in the Queue Instance', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueUser,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/queue-instance/remove-user')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          queueInstanceId: queueInstanceId,
+          userId: queueUser.id,
         })
         .expect(409);
     });
 
-    describe('/queue-instance/remove-user', () => {
-      it('should throw UserNotFoundException if user is not signed in', async () => {
-        await TestModuleSingleton.callEndpoint()
-          .post('/queue-instance/remove-user')
-          .set('Cookie', [`user_token=`])
-          .send({
-            queueInstanceId: queueInstanceId,
-          })
-          .expect(401);
+    it('should throw MethodNotAllowedException if signed User is not Admin and trying to remove a different user of the Authenticated', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueUser,
       });
 
-      it('should throw BadRequestException if Queue Instance Id is missing', async () => {
-        const userToken = await authService.generateJwtForUser({
-          ...queueUser,
-        });
-
-        await TestModuleSingleton.callEndpoint()
-          .post('/queue-instance/remove-user')
-          .set('Cookie', [`user_token=${userToken}`])
-          .send({
-            queueInstanceId: '',
-            userId: queueUser.id,
-          })
-          .expect(400);
-      });
-
-      it('should throw UserNotInQueueException if user is not in the Queue Instance', async () => {
-        const userToken = await authService.generateJwtForUser({
-          ...queueUser,
-        });
-
-        await TestModuleSingleton.callEndpoint()
-          .post('/queue-instance/remove-user')
-          .set('Cookie', [`user_token=${userToken}`])
-          .send({
-            queueInstanceId: queueInstanceId,
-            userId: queueUser.id,
-          })
-          .expect(409);
-      });
-
-      it('should throw MethodNotAllowedException if signed User is not Admin and trying to remove a different user of the Authenticated', async () => {
-        const userToken = await authService.generateJwtForUser({
-          ...queueUser,
-        });
-
-        await TestModuleSingleton.callEndpoint()
-          .post('/queue-instance/remove-user')
-          .set('Cookie', [`user_token=${userToken}`])
-          .send({
-            queueInstanceId: queueInstanceId,
-            userId: 'different_id',
-          })
-          .expect(405);
-      });
-
-      it('should remove user from the Queue Instance', async () => {
-        const adminToken = await authService.generateJwtForUser({
-          ...admin,
-        });
-
-        const queueInstanceWithUser = await prismaService.queueInstance.update({
-          where: {
-            id: queueInstanceId,
-          },
-          data: {
-            usersInQueue: [queueUser.id],
-          },
-        });
-
-        expect(queueInstanceWithUser.usersInQueue.length).toBe(1);
-        expect(queueInstanceWithUser.usersInQueue[0]).toBe(queueUser.id);
-
-        await TestModuleSingleton.callEndpoint()
-          .post('/queue-instance/remove-user')
-          .set('Cookie', [`user_token=${adminToken}`])
-          .send({
-            queueInstanceId: queueInstanceId,
-            userId: queueUser.id,
-          })
-          .expect(201);
-      });
-
-      it('should remove a different userId from authenticated one if signed User is an Admin ', async () => {});
+      await TestModuleSingleton.callEndpoint()
+        .post('/queue-instance/remove-user')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          queueInstanceId: queueInstanceId,
+          userId: 'different_id',
+        })
+        .expect(405);
     });
+
+    it('should remove user from the Queue Instance', async () => {
+      const adminToken = await authService.generateJwtForUser({
+        ...admin,
+      });
+
+      const queueInstanceWithUser = await prismaService.queueInstance.update({
+        where: {
+          id: queueInstanceId,
+        },
+        data: {
+          usersInQueue: [queueUser.id],
+        },
+      });
+
+      expect(queueInstanceWithUser.usersInQueue.length).toBe(1);
+      expect(queueInstanceWithUser.usersInQueue[0]).toBe(queueUser.id);
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/queue-instance/remove-user')
+        .set('Cookie', [`user_token=${adminToken}`])
+        .send({
+          queueInstanceId: queueInstanceId,
+          userId: queueUser.id,
+        })
+        .expect(201);
+    });
+
+    it('should remove a different userId from authenticated one if signed User is an Admin ', async () => {});
   });
 });
