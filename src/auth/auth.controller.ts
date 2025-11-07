@@ -1,6 +1,6 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Req, Res } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBody, ApiHeader, ApiOkResponse } from '@nestjs/swagger';
+import { ApiBody, ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { SignInDto } from 'src/admin/admin.dto';
 import { validateEmailOrThrow } from 'src/utils/email.utils';
 import {
@@ -14,6 +14,7 @@ import { ClientService } from 'src/client/client.service';
 import { ClientDto } from 'src/client/client.dto';
 import { checkSignInRequirementsOrThrow } from './auth.utils';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -21,10 +22,11 @@ export class AuthController {
     private clientService: ClientService,
   ) {}
 
-  @Post('login/admin')
+  @Get('login/admin')
   @ApiOkResponse({
     description:
       'Set an authenticated wrapped in a JWT cookie with the user_token for Admin users',
+    type: undefined,
   })
   @ApiHeader({
     name: 'Authorization',
@@ -89,10 +91,11 @@ export class AuthController {
     return res.send();
   }
 
-  @Post('login/queue-user')
+  @Get('login/queue-user')
   @ApiOkResponse({
     description:
       'Set an authenticated wrapped in a JWT cookie with the user_token, for Queue Users.',
+    type: undefined,
   })
   @ApiHeader({
     name: 'Authorization',
@@ -146,10 +149,11 @@ export class AuthController {
     return res.send();
   }
 
-  @Post('logout')
+  @Get('logout')
   @HttpCode(204)
   @ApiOkResponse({
     description: 'Remove the authenticated user JWT and adds an expired cookie',
+    type: undefined,
   })
   logout(@Req() req, @Res() res: Response) {
     const cookie = this.authService.generateExpiredCookie(req);

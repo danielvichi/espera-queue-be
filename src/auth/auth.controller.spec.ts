@@ -87,13 +87,13 @@ describe('AuthController', () => {
   describe('/auth/login/admin', () => {
     it('should get BadRequestException if no credentials is provided', async () => {
       const url = '/auth/login/admin';
-      await TestModuleSingleton.callEndpoint().post(url).expect(400);
+      await TestModuleSingleton.callEndpoint().get(url).expect(400);
     });
 
     it('should get BadRequestException if email is not provided', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: '',
           passwordHash: adminLoginData.passwordHash,
@@ -104,7 +104,7 @@ describe('AuthController', () => {
     it('should get BadRequestException if password_hash is not provided', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: adminLoginData.email,
           passwordHash: '',
@@ -115,7 +115,7 @@ describe('AuthController', () => {
     it('should throw NotFoundException if user credentials does not exist', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: 'non-existing-admin@email.com',
           passwordHash: 'some_password_hash',
@@ -126,12 +126,12 @@ describe('AuthController', () => {
     it('should return credentials cookies if correct credentials is provided', async () => {
       const url = '/auth/login/admin';
       const response = await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: adminLoginData.email,
           passwordHash: adminLoginData.passwordHash,
         })
-        .expect(201);
+        .expect(200);
       expect(response.headers['set-cookie']).toBeDefined();
 
       const userTokenCookie = response.headers['set-cookie'][0];
@@ -151,13 +151,13 @@ describe('AuthController', () => {
   describe('/auth/login/queue-user', () => {
     it('should get BadRequestException if no credentials is provided', async () => {
       const url = '/auth/login/queue-user';
-      await TestModuleSingleton.callEndpoint().post(url).expect(400);
+      await TestModuleSingleton.callEndpoint().get(url).expect(400);
     });
 
     it('should get BadRequestException if email is not provided', async () => {
       const url = '/auth/login/queue-user';
       await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: '',
           passwordHash: queueLoginData.passwordHash,
@@ -168,7 +168,7 @@ describe('AuthController', () => {
     it('should get BadRequestException if password_hash is not provided', async () => {
       const url = '/auth/login/queue-user';
       await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: queueLoginData.email,
           passwordHash: '',
@@ -179,7 +179,7 @@ describe('AuthController', () => {
     it('should throw NotFoundException if user credentials does not exist', async () => {
       const url = '/auth/login/queue-user';
       await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: 'non-existing-user@email.com',
           passwordHash: 'some_password_hash',
@@ -190,12 +190,12 @@ describe('AuthController', () => {
     it('should return credentials cookies if correct credentials is provided', async () => {
       const url = '/auth/login/queue-user';
       const response = await TestModuleSingleton.callEndpoint()
-        .post(url)
+        .get(url)
         .send({
           email: queueLoginData.email,
           passwordHash: queueLoginData.passwordHash,
         })
-        .expect(201);
+        .expect(200);
       expect(response.headers['set-cookie']).toBeDefined();
 
       const userTokenCookie = response.headers['set-cookie'][0];
@@ -219,7 +219,7 @@ describe('AuthController', () => {
       });
 
       const logoutResponse = await TestModuleSingleton.callEndpoint()
-        .post('/auth/logout')
+        .get('/auth/logout')
         .set('Cookie', [`user_token=${userToken}`])
         .expect(204);
 

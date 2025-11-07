@@ -67,6 +67,7 @@ export class AdminDto {
     example: ['u1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   unityIds?: string[];
@@ -76,6 +77,7 @@ export class AdminDto {
     example: ['q1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   queueIds?: string[];
@@ -137,6 +139,7 @@ export class CreatedAdminDto {
     example: ['u1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   unityIds?: string[];
@@ -146,6 +149,7 @@ export class CreatedAdminDto {
     example: ['q1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   queueIds?: string[];

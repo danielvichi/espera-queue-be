@@ -1,9 +1,17 @@
 import { ClientController } from './client.controller';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { AdminWithClientDto, CreateOwnerAdminDto } from 'src/admin/admin.dto';
+import {
+  AdminResponseDto,
+  AdminWithClientDto,
+  CreatedAdminDto,
+  CreateOwnerAdminDto,
+} from 'src/admin/admin.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AdminService } from 'src/admin/admin.service';
+import { AuthService } from 'src/auth/auth.service';
+import { AdminRole } from '@prisma/client';
+import { CreateClientResponseDto } from './client.dto';
 
 const CLIENTS_MOCK_DATA = [
   {
@@ -36,26 +44,51 @@ const CLIENT_OWNER_ADMIN_MOCK_DATA: Array<
   },
 ];
 
+const CREATE_ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
+  name: 'Admin Name',
+  passwordHash: 'password_hash',
+  role: AdminRole.QUEUE_ADMIN,
+  queueIds: ['1'],
+  email: 'admin@email.com',
+};
+
 describe('ClientController', () => {
   let clientController: ClientController;
-  let adminService: AdminService;
   let prismaService: PrismaService;
   let jwtService: JwtService;
+  let authService: AuthService;
+  let adminService: AdminService;
+
+  let client: CreateClientResponseDto;
+  let adminUser: AdminResponseDto;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
     clientController = module.get<ClientController>(ClientController);
-    adminService = module.get<AdminService>(AdminService);
     prismaService = module.get<PrismaService>(PrismaService);
     jwtService = module.get<JwtService>(JwtService);
+
+    authService = module.get<AuthService>(AuthService);
+    adminService = module.get<AdminService>(AdminService);
     await TestModuleSingleton.cleanUpDatabase();
 
     // Create a client to be used in tests
-    const clientMock1 = CLIENTS_MOCK_DATA[0];
-    await prismaService.client.create({
+    const clientResponse = await prismaService.client.create({
       data: {
-        ...clientMock1,
+        ...CLIENTS_MOCK_DATA[0],
       },
+    });
+
+    client = {
+      ...clientResponse,
+      address: clientResponse.address ?? undefined,
+      ownerId: clientResponse.ownerId ?? undefined,
+      phone: clientResponse.phone ?? undefined,
+    };
+
+    adminUser = await adminService.createAdmin({
+      ...CREATE_ADMIN_MOCK_DATA,
+      clientId: client.id,
     });
   });
 
@@ -65,8 +98,14 @@ describe('ClientController', () => {
 
   describe('/client/all', () => {
     it('should return an Array with Clients', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
+
       const response = await TestModuleSingleton.callEndpoint()
         .get('/client/all')
+        .set('Cookie', [`user_token=${userToken}`])
         .send()
         .expect(200);
 

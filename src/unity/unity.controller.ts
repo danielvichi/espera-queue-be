@@ -9,7 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UnityService } from './unity.service';
-import { ApiBody, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   CreateUnityDto,
   InputGetUnitiesByIdDto,
@@ -21,17 +28,19 @@ import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
 
+@ApiTags('Unity')
 @Controller('unity')
 export class UnityController {
   constructor(private readonly unityService: UnityService) {}
 
   @Post('create')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiBody({
     type: CreateUnityDto,
     required: true,
   })
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     description: 'Create a Unity for the connected user with proper Admin Role',
     type: UnityDto,
   })
@@ -51,6 +60,7 @@ export class UnityController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiQuery({
     type: InputGetUnitiesByIdDto,
     required: true,
@@ -86,6 +96,7 @@ export class UnityController {
 
   @Get('all')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'Get all Unities for a Client',
     type: UnityDto,
@@ -112,6 +123,7 @@ export class UnityController {
 
   @Patch('disable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Disable a Enabled Unity for the connected user with proper Admin Role',
@@ -135,6 +147,7 @@ export class UnityController {
 
   @Patch('enable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Enable a Disabled Unity for the connected user with proper Admin Role',
@@ -161,6 +174,7 @@ export class UnityController {
     type: InputUpdateUnityDto,
   })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Update a Unity data for the connected user with proper Admin Role',

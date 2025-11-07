@@ -1,6 +1,22 @@
-import { Body, Controller, Get, Post, Query, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Res,
+  UseGuards,
+} from '@nestjs/common';
 import { ClientService } from './client.service';
-import { ApiBody, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { ClientDto, CreateClientWithAdminDto } from './client.dto';
 import { checkCreateClientWithAdminRequirementsOrThrowError } from './client.utils';
 import { AdminService } from 'src/admin/admin.service';
@@ -12,7 +28,9 @@ import {
 import { type Response } from 'express';
 import { createClientBadRequestExceptionMessages } from './client.exceptions';
 import { AdminDto } from 'src/admin/admin.dto';
+import { AuthGuard } from 'src/auth/auth.guard';
 
+@ApiTags('Client')
 @Controller('client')
 export class ClientController {
   constructor(
@@ -22,9 +40,11 @@ export class ClientController {
   ) {}
 
   @Get('all')
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'List of all clients',
-    type: ClientDto,
+    type: [ClientDto],
     isArray: true,
   })
   async getAllClients() {
@@ -32,6 +52,8 @@ export class ClientController {
   }
 
   @Get()
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'Get a client by ID',
     type: ClientDto,
@@ -53,12 +75,12 @@ export class ClientController {
     type: CreateClientWithAdminDto,
     required: true,
   })
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     description:
       'Create a new Client and its Owner Admin account and create Auth Session',
-    type: String,
+    type: ClientDto,
   })
-  async createClient(
+  async createClientAndSignin(
     @Body() createClientData: CreateClientWithAdminDto,
     @Req() req,
     @Res() res: Response,
@@ -141,6 +163,6 @@ export class ClientController {
     const cookie = this.authService.generateJwtCookie(req, signedJwt);
 
     res.setHeader('Set-Cookie', cookie);
-    return res.send();
+    return res.send(formattedClient);
   }
 }

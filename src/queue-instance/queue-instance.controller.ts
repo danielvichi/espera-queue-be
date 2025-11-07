@@ -8,7 +8,12 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { QueueInstanceService } from './queue-instance.service';
-import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   defaultQueueInstanceExceptionsMessage,
   methodNotAllowedWithoutAdminRole,
@@ -19,6 +24,7 @@ import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
 import { AddUserToQueueInstanceDto } from './queue-instance.dto';
 
+@ApiTags('Queue-Instance')
 @Controller('queue-instance')
 export class QueueInstanceController {
   constructor(private readonly queueInstanceService: QueueInstanceService) {}
@@ -33,6 +39,7 @@ export class QueueInstanceController {
     type: Object,
   })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   async addQueueUserToQueueInstance(
     @Body() data: AddUserToQueueInstanceDto,
     @Request() req: AuthenticatedRequestDto,
@@ -76,6 +83,7 @@ export class QueueInstanceController {
     type: Object,
   })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   async removeQueueUserFromQueueInstance(
     @Body() data: { queueInstanceId: string; userId: string },
     @Request() req: AuthenticatedRequestDto,

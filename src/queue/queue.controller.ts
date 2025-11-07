@@ -10,7 +10,14 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBody, ApiOkResponse, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { InputCreateQueueDto, QueueDto, UpdatedQueueDto } from './queue.dto';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
@@ -24,6 +31,7 @@ import { QueueService } from './queue.service';
 import { defaultQueueExceptionsMessage } from './queue.exceptions';
 import { QueueUnityAdminVerifier } from './queue.admin.verifier';
 
+@ApiTags('Queue')
 @Controller('queue')
 export class QueueController {
   constructor(private readonly queueService: QueueService) {}
@@ -37,6 +45,7 @@ export class QueueController {
     required: true,
   })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'Retrieve a list of Queue by its Ids',
     type: QueueDto,
@@ -75,11 +84,12 @@ export class QueueController {
 
   @Post('create')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiBody({
     type: InputCreateQueueDto,
     required: true,
   })
-  @ApiOkResponse({
+  @ApiCreatedResponse({
     description: 'Create a Queue for the connected user with proper Admin Role',
     type: QueueDto,
   })
@@ -107,6 +117,7 @@ export class QueueController {
 
   @Patch('update')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiBody({
     type: UpdatedQueueDto,
     required: true,
@@ -141,6 +152,7 @@ export class QueueController {
 
   @Patch('disable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Disable a Queue by its Id for a connected Admin >= Unity Admin',
@@ -198,6 +210,7 @@ export class QueueController {
 
   @Patch('enable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Enable a Queue by its Id for a connected Admin >= Unity Admin',
