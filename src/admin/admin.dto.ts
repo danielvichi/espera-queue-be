@@ -92,6 +92,10 @@ export class AdminDto {
 
 export class AdminResponseDto extends OmitType(AdminDto, ['passwordHash']) {}
 export class AdminWithClientDto extends AdminResponseDto {
+  @ApiProperty({
+    description: 'Client Dto',
+    type: () => ClientDto,
+  })
   client: ClientDto;
 }
 
