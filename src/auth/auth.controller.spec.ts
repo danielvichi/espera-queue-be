@@ -230,4 +230,23 @@ describe('AuthController', () => {
       expect(userTokenCookie.includes(`max-age=0`)).toBe(true);
     });
   });
+
+  describe('/auth/verify', () => {
+    it('should return an authenticated user jwt if cookie session is valid', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
+
+      const verifyResponse = await TestModuleSingleton.callEndpoint()
+        .get('/auth/verify')
+        .set('Cookie', [`user_token=${userToken}`])
+        .expect(200);
+
+      const userData = verifyResponse.body as AdminWithClientDto;
+
+      expect(userData).toBeDefined();
+      expect(userData.id).toBeDefined();
+    });
+  });
 });
