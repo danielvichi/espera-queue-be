@@ -3,13 +3,15 @@ import {
   Controller,
   Get,
   HttpCode,
+  Post,
   Req,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBody, ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { SignInDto } from 'src/admin/admin.dto';
+import { AdminWithClientDto, SignInDto } from 'src/admin/admin.dto';
 import { validateEmailOrThrow } from 'src/utils/email.utils';
 import {
   defaultAuthExceptionMessage,
@@ -22,6 +24,7 @@ import { ClientService } from 'src/client/client.service';
 import { ClientDto } from 'src/client/client.dto';
 import { checkSignInRequirementsOrThrow } from './auth.utils';
 import { AuthGuard } from './auth.guard';
+import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -31,11 +34,11 @@ export class AuthController {
     private clientService: ClientService,
   ) {}
 
-  @Get('login/admin')
+  @Post('login/admin')
   @ApiOkResponse({
     description:
       'Set an authenticated wrapped in a JWT cookie with the user_token for Admin users',
-    type: undefined,
+    type: AdminWithClientDto,
   })
   @ApiHeader({
     name: 'Authorization',
@@ -96,11 +99,12 @@ export class AuthController {
     });
     const cookie = this.authService.generateJwtCookie(req, signedJwt);
 
+    // res.statusCode = 200;
     res.setHeader('Set-Cookie', cookie);
-    return res.send();
+    return res.send(signedJwt);
   }
 
-  @Get('login/queue-user')
+  @Post('login/queue-user')
   @ApiOkResponse({
     description:
       'Set an authenticated wrapped in a JWT cookie with the user_token, for Queue Users.',
@@ -175,7 +179,12 @@ export class AuthController {
   @Get('verify')
   @UseGuards(AuthGuard)
   @HttpCode(200)
-  @ApiOkResponse({})
+  @ApiOkResponse({
+    description:
+      'Verify current session and return user object if valid session',
+    type: AdminWithClientDto,
+  })
+  @ApiException(() => [UnauthorizedException])
   verify(@Req() req: AuthenticatedRequestDto, @Res() res: Response) {
     res.send(req.user);
   }

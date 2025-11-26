@@ -15,6 +15,15 @@ const setCookieConfig = (cookie: Array<string>) => {
   cookie.push('HttpOnly');
   // Setting `Secure` to prevent sending the cookie over HTTP (except for localhost)
   cookie.push('Secure');
+
+  const DEFAULT_SAMESITE_POLICY = 'Lax';
+  let sameSitePolicy = DEFAULT_SAMESITE_POLICY;
+
+  if (baseUrlDomain.includes('localhost')) {
+    sameSitePolicy = 'None';
+  }
+
+  cookie.push(`SameSite=${sameSitePolicy}`);
 };
 
 const generateCookie =

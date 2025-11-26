@@ -36,7 +36,6 @@ const isOriginAllowed = (
     } catch (error) {
       // If URL parsing fails, fall back to simple string comparison
       throw Error(error);
-      return origin === allowedOrigin;
     }
   });
 };
