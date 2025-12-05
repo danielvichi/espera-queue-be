@@ -25,6 +25,7 @@ import { ClientDto } from 'src/client/client.dto';
 import { checkSignInRequirementsOrThrow } from './auth.utils';
 import { AuthGuard } from './auth.guard';
 import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
+import extractTokenFromHeader from 'src/utils/extract-token-from-header';
 
 @ApiTags('Auth')
 @Controller('auth')
@@ -58,15 +59,7 @@ export class AuthController {
 
     const { email, passwordHash } = signInData;
 
-    try {
-      validateEmailOrThrow(email);
-    } catch (err) {
-      if (err instanceof Error) {
-        throw new InvalidCredentialsException(
-          defaultAuthExceptionMessage.INVALID_CREDENTIALS,
-        );
-      }
-    }
+    validateEmailOrThrow(email);
 
     if (!passwordHash) {
       throw new InvalidCredentialsException(
@@ -163,7 +156,7 @@ export class AuthController {
   }
 
   @Get('logout')
-  @HttpCode(204)
+  @HttpCode(200)
   @ApiOkResponse({
     description: 'Remove the authenticated user JWT and adds an expired cookie',
     type: undefined,
@@ -182,10 +175,12 @@ export class AuthController {
   @ApiOkResponse({
     description:
       'Verify current session and return user object if valid session',
-    type: AdminWithClientDto,
+    type: String,
   })
   @ApiException(() => [UnauthorizedException])
   verify(@Req() req: AuthenticatedRequestDto, @Res() res: Response) {
-    res.send(req.user);
+    const token = extractTokenFromHeader(req);
+
+    res.send(token);
   }
 }

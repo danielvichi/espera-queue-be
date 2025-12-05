@@ -38,7 +38,7 @@ const CLIENT_MOCK_DATA: CreateClientDto = {
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
-  let prismaSerivce: PrismaService;
+  let prismaService: PrismaService;
   let jwtService: JwtService;
   let adminUser: AdminResponseDto;
   let queueUser: QueueUserDto;
@@ -51,31 +51,32 @@ describe('AuthController', () => {
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
-    prismaSerivce = module.get<PrismaService>(PrismaService);
+    prismaService = module.get<PrismaService>(PrismaService);
 
     // adminService = module.get<AdminService>(AdminService);
     // clientService = module.get<ClientService>(ClientService);
 
     await TestModuleSingleton.cleanUpDatabase();
 
-    const clientResponse = await prismaSerivce.client.create({
+    const clientResponse = await prismaService.client.create({
       data: CLIENT_MOCK_DATA,
     });
 
     client = {
       ...clientResponse,
+      cnpj: clientResponse.cnpj ?? undefined,
       phone: clientResponse.phone ?? undefined,
       address: clientResponse.address ?? undefined,
     };
 
-    adminUser = await prismaSerivce.admin.create({
+    adminUser = await prismaService.admin.create({
       data: {
         ...ADMIN_MOCK_DATA,
         clientId: client.id,
       },
     });
 
-    queueUser = await prismaSerivce.queueUser.create({
+    queueUser = await prismaService.queueUser.create({
       data: QUEUE_USER_MOCK_DATA,
     });
   });
@@ -87,13 +88,13 @@ describe('AuthController', () => {
   describe('/auth/login/admin', () => {
     it('should get BadRequestException if no credentials is provided', async () => {
       const url = '/auth/login/admin';
-      await TestModuleSingleton.callEndpoint().get(url).expect(400);
+      await TestModuleSingleton.callEndpoint().post(url).expect(400);
     });
 
     it('should get BadRequestException if email is not provided', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: '',
           passwordHash: adminLoginData.passwordHash,
@@ -104,7 +105,7 @@ describe('AuthController', () => {
     it('should get BadRequestException if password_hash is not provided', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: adminLoginData.email,
           passwordHash: '',
@@ -115,7 +116,7 @@ describe('AuthController', () => {
     it('should throw NotFoundException if user credentials does not exist', async () => {
       const url = '/auth/login/admin';
       await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: 'non-existing-admin@email.com',
           passwordHash: 'some_password_hash',
@@ -126,12 +127,12 @@ describe('AuthController', () => {
     it('should return credentials cookies if correct credentials is provided', async () => {
       const url = '/auth/login/admin';
       const response = await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: adminLoginData.email,
           passwordHash: adminLoginData.passwordHash,
         })
-        .expect(200);
+        .expect(201);
       expect(response.headers['set-cookie']).toBeDefined();
 
       const userTokenCookie = response.headers['set-cookie'][0];
@@ -151,13 +152,13 @@ describe('AuthController', () => {
   describe('/auth/login/queue-user', () => {
     it('should get BadRequestException if no credentials is provided', async () => {
       const url = '/auth/login/queue-user';
-      await TestModuleSingleton.callEndpoint().get(url).expect(400);
+      await TestModuleSingleton.callEndpoint().post(url).expect(400);
     });
 
     it('should get BadRequestException if email is not provided', async () => {
       const url = '/auth/login/queue-user';
       await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: '',
           passwordHash: queueLoginData.passwordHash,
@@ -168,7 +169,7 @@ describe('AuthController', () => {
     it('should get BadRequestException if password_hash is not provided', async () => {
       const url = '/auth/login/queue-user';
       await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: queueLoginData.email,
           passwordHash: '',
@@ -179,7 +180,7 @@ describe('AuthController', () => {
     it('should throw NotFoundException if user credentials does not exist', async () => {
       const url = '/auth/login/queue-user';
       await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: 'non-existing-user@email.com',
           passwordHash: 'some_password_hash',
@@ -190,12 +191,12 @@ describe('AuthController', () => {
     it('should return credentials cookies if correct credentials is provided', async () => {
       const url = '/auth/login/queue-user';
       const response = await TestModuleSingleton.callEndpoint()
-        .get(url)
+        .post(url)
         .send({
           email: queueLoginData.email,
           passwordHash: queueLoginData.passwordHash,
         })
-        .expect(200);
+        .expect(201);
       expect(response.headers['set-cookie']).toBeDefined();
 
       const userTokenCookie = response.headers['set-cookie'][0];
@@ -221,7 +222,7 @@ describe('AuthController', () => {
       const logoutResponse = await TestModuleSingleton.callEndpoint()
         .get('/auth/logout')
         .set('Cookie', [`user_token=${userToken}`])
-        .expect(204);
+        .expect(200);
 
       expect(logoutResponse.headers['set-cookie']).toBeDefined();
 
@@ -243,7 +244,9 @@ describe('AuthController', () => {
         .set('Cookie', [`user_token=${userToken}`])
         .expect(200);
 
-      const userData = verifyResponse.body as AdminWithClientDto;
+      const userData = jwtService.decode<AdminWithClientDto>(
+        verifyResponse.text,
+      );
 
       expect(userData).toBeDefined();
       expect(userData.id).toBeDefined();

@@ -34,6 +34,7 @@ export class ClientService {
 
     return {
       ...newClient,
+      cnpj: newClient.cnpj ?? undefined,
       createdAt: newClient.createdAt,
       updatedAt: newClient.updatedAt,
       address: newClient.address ?? undefined,
@@ -52,6 +53,7 @@ export class ClientService {
 
     const formattedClients: ClientDto[] = clientsList.map((client) => ({
       ...client,
+      cnpj: client.cnpj ?? undefined,
       createdAt: client.createdAt,
       updatedAt: client.updatedAt,
       address: client.address ?? undefined,
@@ -80,6 +82,7 @@ export class ClientService {
       ...client,
       address: client.address ?? undefined,
       phone: client.phone ?? undefined,
+      cnpj: client.cnpj ?? undefined,
     };
   }
 
@@ -171,6 +174,7 @@ export class ClientService {
 
     return {
       ...deleteResponse,
+      cnpj: deleteResponse.cnpj ?? undefined,
       address: deleteResponse.address ?? undefined,
       phone: deleteResponse.phone ?? undefined,
     };

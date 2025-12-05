@@ -153,6 +153,7 @@ export class ClientController {
 
     const formattedClient = {
       ...updatedClient,
+      cnpj: updatedClient.cnpj ?? undefined,
       address: updatedClient.address ?? undefined,
       phone: updatedClient.phone ?? undefined,
     };

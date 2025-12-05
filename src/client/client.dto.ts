@@ -17,6 +17,12 @@ export class ClientDto {
   name: string;
 
   @ApiProperty({
+    description: 'cnpj of the client',
+    example: '000.000.000/0001-00',
+  })
+  cnpj?: string;
+
+  @ApiProperty({
     description: 'Client Address',
     example: 'Client address in the client format.',
     required: false,
