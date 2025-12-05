@@ -5,13 +5,21 @@ import {
   Get,
   MethodNotAllowedException,
   NotFoundException,
+  Patch,
   Post,
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { CreateQueueDto, QueueDto } from './queue.dto';
+import { InputCreateQueueDto, QueueDto, UpdatedQueueDto } from './queue.dto';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
@@ -23,17 +31,21 @@ import { QueueService } from './queue.service';
 import { defaultQueueExceptionsMessage } from './queue.exceptions';
 import { QueueUnityAdminVerifier } from './queue.admin.verifier';
 
-interface UpdateQueueArgs {
-  queueId: string;
-  payload: Partial<Omit<CreateQueueDto, 'clientId' | 'queueId'>>;
-}
-
+@ApiTags('Queue')
 @Controller('queue')
 export class QueueController {
   constructor(private readonly queueService: QueueService) {}
 
   @Get()
+  @ApiQuery({
+    name: 'queueIds',
+    type: String,
+    isArray: true,
+    description: 'List of Queue Ids to be fetched',
+    required: true,
+  })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'Retrieve a list of Queue by its Ids',
     type: QueueDto,
@@ -72,12 +84,17 @@ export class QueueController {
 
   @Post('create')
   @UseGuards(AuthGuard)
-  @ApiOkResponse({
+  @ApiBearerAuth('AuthGuard')
+  @ApiBody({
+    type: InputCreateQueueDto,
+    required: true,
+  })
+  @ApiCreatedResponse({
     description: 'Create a Queue for the connected user with proper Admin Role',
     type: QueueDto,
   })
   async createQueue(
-    @Body() inputData: Omit<CreateQueueDto, 'clientId'>,
+    @Body() inputData: InputCreateQueueDto,
     @Request() req: AuthenticatedRequestDto,
   ): Promise<QueueDto> {
     checkAdminRoleHigherOrThrow({
@@ -98,15 +115,20 @@ export class QueueController {
     return queueResponse;
   }
 
-  @Post('update')
+  @Patch('update')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
+  @ApiBody({
+    type: UpdatedQueueDto,
+    required: true,
+  })
   @ApiOkResponse({
     description:
       'Updated a Queue for the connected user with proper Admin Role >= Unity Admin',
     type: QueueDto,
   })
   async updateQueue(
-    @Body() inputData: UpdateQueueArgs,
+    @Body() inputData: UpdatedQueueDto,
     @Request() req: AuthenticatedRequestDto,
   ) {
     checkQueueAndClientIdRequirementOrThrow({
@@ -128,8 +150,9 @@ export class QueueController {
     return queueResponse;
   }
 
-  @Post('disable')
+  @Patch('disable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Disable a Queue by its Id for a connected Admin >= Unity Admin',
@@ -185,8 +208,9 @@ export class QueueController {
     }
   }
 
-  @Post('enable')
+  @Patch('enable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Enable a Queue by its Id for a connected Admin >= Unity Admin',

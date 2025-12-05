@@ -7,6 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { AuthenticatedRequestDto } from './auth.dto';
+import extractTokenFromHeader from 'src/utils/extract-token-from-header';
 
 const JWT_SECRET = process.env.JWT_PUBLIC_KEY;
 
@@ -16,7 +17,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractTokenFromHeader(request);
+    const token = extractTokenFromHeader(request);
 
     if (!token) {
       throw new UnauthorizedException();
@@ -34,23 +35,5 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     return true;
-  }
-
-  private extractTokenFromHeader(request: Request): string | undefined {
-    if (!request.headers.cookie) {
-      return undefined;
-    }
-
-    const userTokenCookie = request.headers.cookie
-      .split('user_token=')[1]
-      .split(';')[0];
-
-    if (!userTokenCookie) {
-      return undefined;
-    }
-
-    const userTokenFromCookie = userTokenCookie;
-
-    return userTokenFromCookie;
   }
 }

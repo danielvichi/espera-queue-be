@@ -324,7 +324,7 @@ describe('AdminService', () => {
         }),
       ).rejects.toThrow(
         new CreateAdminConflictException(
-          createAdminBadRequestExceptionMessages.OWNER_ALREADY_EXISTS,
+          createAdminBadRequestExceptionMessages.ADMIN_ACCOUNT_EXIST,
         ),
       );
     });

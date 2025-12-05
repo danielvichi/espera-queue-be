@@ -93,14 +93,14 @@ export class AdminService {
       role: AdminRole.CLIENT_OWNER,
     };
 
-    // Role-based validations
+    // Role-based validatio
     checkCreateAdminRequirementsOrThrowError(createAdminData);
 
     const existingAccount = await this.findAdminByEmail(data.email);
 
     if (existingAccount) {
       throw new CreateAdminConflictException(
-        createAdminBadRequestExceptionMessages.OWNER_ALREADY_EXISTS,
+        createAdminBadRequestExceptionMessages.ADMIN_ACCOUNT_EXIST,
       );
     }
 

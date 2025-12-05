@@ -3,12 +3,17 @@ import {
   Body,
   Controller,
   MethodNotAllowedException,
-  Post,
+  Patch,
   Request,
   UseGuards,
 } from '@nestjs/common';
 import { QueueInstanceService } from './queue-instance.service';
-import { ApiBody, ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import {
   defaultQueueInstanceExceptionsMessage,
   methodNotAllowedWithoutAdminRole,
@@ -19,11 +24,12 @@ import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
 import { AddUserToQueueInstanceDto } from './queue-instance.dto';
 
+@ApiTags('Queue-Instance')
 @Controller('queue-instance')
 export class QueueInstanceController {
   constructor(private readonly queueInstanceService: QueueInstanceService) {}
 
-  @Post('add-user')
+  @Patch('add-user')
   @ApiBody({
     required: true,
     type: AddUserToQueueInstanceDto,
@@ -33,6 +39,7 @@ export class QueueInstanceController {
     type: Object,
   })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   async addQueueUserToQueueInstance(
     @Body() data: AddUserToQueueInstanceDto,
     @Request() req: AuthenticatedRequestDto,
@@ -49,9 +56,6 @@ export class QueueInstanceController {
       await this.queueInstanceService.getTodayQueueInstanceByQueueId({
         queueId: data.queueId,
       });
-
-    console.log('======================================');
-    console.log(todayQueueInstance);
 
     if (!todayQueueInstance) {
       const queueInstanceResponse =
@@ -72,13 +76,14 @@ export class QueueInstanceController {
     return { success: result.includes(req.user.id) ? true : false };
   }
 
-  @Post('remove-user')
+  @Patch('remove-user')
   @ApiOkResponse({
     description:
       'Remove user from queue instance (only proper admins can remove an userId witch is not the authenticatedUser one)',
     type: Object,
   })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   async removeQueueUserFromQueueInstance(
     @Body() data: { queueInstanceId: string; userId: string },
     @Request() req: AuthenticatedRequestDto,

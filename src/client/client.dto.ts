@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { CreateOwnerAdminDto } from 'src/admin/admin.dto';
 
 export class ClientDto {
@@ -15,6 +15,12 @@ export class ClientDto {
     required: true,
   })
   name: string;
+
+  @ApiProperty({
+    description: 'cnpj of the client',
+    example: '000.000.000/0001-00',
+  })
+  cnpj?: string;
 
   @ApiProperty({
     description: 'Client Address',
@@ -91,6 +97,13 @@ export class CreateClientDto {
   ownerId?: string;
 }
 
-export class CreateClientWithAdminDto extends CreateClientDto {
+export class CreateClientWithAdminDto extends OmitType(CreateClientDto, [
+  'ownerId',
+]) {
+  @ApiProperty({
+    description: 'Owner Admin Data',
+    // type: OmitType(CreateOwnerAdminDto, ['clientId']),
+    required: true,
+  })
   admin: Omit<CreateOwnerAdminDto, 'clientId'>;
 }

@@ -17,7 +17,8 @@ export const createAdminBadRequestExceptionMessages = {
   ROLE_NOT_ALLOWED: 'Role not allowed',
   OWNER_ID_REQUIRED:
     'Owner ID is required to create an Admin with Client Owner role.',
-  OWNER_ALREADY_EXISTS: 'This client already has an owner.',
+  OWNER_ALREADY_EXISTS: 'Client already has an Admin owner.',
+  ADMIN_ACCOUNT_EXIST: 'Admin account already exist.',
   CLIENT_ID_REQUIRED:
     'Client ID is required to create an Admin with Client Owner or Client Admin role.',
   UNITY_ID_REQUIRED:

@@ -1,7 +1,17 @@
-import { Body, Controller, HttpCode, Post, Req, Res } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBody, ApiHeader, ApiOkResponse } from '@nestjs/swagger';
-import { SignInDto } from 'src/admin/admin.dto';
+import { ApiBody, ApiHeader, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { AdminWithClientDto, SignInDto } from 'src/admin/admin.dto';
 import { validateEmailOrThrow } from 'src/utils/email.utils';
 import {
   defaultAuthExceptionMessage,
@@ -13,7 +23,11 @@ import { type AuthenticatedRequestDto } from './auth.dto';
 import { ClientService } from 'src/client/client.service';
 import { ClientDto } from 'src/client/client.dto';
 import { checkSignInRequirementsOrThrow } from './auth.utils';
+import { AuthGuard } from './auth.guard';
+import { ApiException } from '@nanogiants/nestjs-swagger-api-exception-decorator';
+import extractTokenFromHeader from 'src/utils/extract-token-from-header';
 
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(
@@ -25,6 +39,7 @@ export class AuthController {
   @ApiOkResponse({
     description:
       'Set an authenticated wrapped in a JWT cookie with the user_token for Admin users',
+    type: AdminWithClientDto,
   })
   @ApiHeader({
     name: 'Authorization',
@@ -44,15 +59,7 @@ export class AuthController {
 
     const { email, passwordHash } = signInData;
 
-    try {
-      validateEmailOrThrow(email);
-    } catch (err) {
-      if (err instanceof Error) {
-        throw new InvalidCredentialsException(
-          defaultAuthExceptionMessage.INVALID_CREDENTIALS,
-        );
-      }
-    }
+    validateEmailOrThrow(email);
 
     if (!passwordHash) {
       throw new InvalidCredentialsException(
@@ -85,14 +92,16 @@ export class AuthController {
     });
     const cookie = this.authService.generateJwtCookie(req, signedJwt);
 
+    // res.statusCode = 200;
     res.setHeader('Set-Cookie', cookie);
-    return res.send();
+    return res.send(signedJwt);
   }
 
   @Post('login/queue-user')
   @ApiOkResponse({
     description:
       'Set an authenticated wrapped in a JWT cookie with the user_token, for Queue Users.',
+    type: undefined,
   })
   @ApiHeader({
     name: 'Authorization',
@@ -146,10 +155,11 @@ export class AuthController {
     return res.send();
   }
 
-  @Post('logout')
-  @HttpCode(204)
+  @Get('logout')
+  @HttpCode(200)
   @ApiOkResponse({
     description: 'Remove the authenticated user JWT and adds an expired cookie',
+    type: undefined,
   })
   logout(@Req() req, @Res() res: Response) {
     const cookie = this.authService.generateExpiredCookie(req);
@@ -157,5 +167,20 @@ export class AuthController {
     // Tells the client to expire the cookie
     res.setHeader('Set-Cookie', cookie);
     res.send();
+  }
+
+  @Get('verify')
+  @UseGuards(AuthGuard)
+  @HttpCode(200)
+  @ApiOkResponse({
+    description:
+      'Verify current session and return user object if valid session',
+    type: String,
+  })
+  @ApiException(() => [UnauthorizedException])
+  verify(@Req() req: AuthenticatedRequestDto, @Res() res: Response) {
+    const token = extractTokenFromHeader(req);
+
+    res.send(token);
   }
 }

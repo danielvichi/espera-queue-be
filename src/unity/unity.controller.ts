@@ -3,25 +3,44 @@ import {
   Controller,
   Get,
   MethodNotAllowedException,
+  Patch,
   Post,
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { UnityService, type UpdateUnityArgs } from './unity.service';
-import { ApiOkResponse } from '@nestjs/swagger';
-import { CreateUnityDto, UnityDto } from './unity.dto';
+import { UnityService } from './unity.service';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  CreateUnityDto,
+  InputGetUnitiesByIdDto,
+  InputUpdateUnityDto,
+  UnityDto,
+} from './unity.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
 
+@ApiTags('Unity')
 @Controller('unity')
 export class UnityController {
   constructor(private readonly unityService: UnityService) {}
 
   @Post('create')
   @UseGuards(AuthGuard)
-  @ApiOkResponse({
+  @ApiBearerAuth('AuthGuard')
+  @ApiBody({
+    type: CreateUnityDto,
+    required: true,
+  })
+  @ApiCreatedResponse({
     description: 'Create a Unity for the connected user with proper Admin Role',
     type: UnityDto,
   })
@@ -41,13 +60,18 @@ export class UnityController {
 
   @Get()
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
+  @ApiQuery({
+    type: InputGetUnitiesByIdDto,
+    required: true,
+  })
   @ApiOkResponse({
     description: 'Get Unities by id that belongs to the connected user Client',
     type: UnityDto,
     isArray: true,
   })
   async getUnitiesById(
-    @Body() data: { unitiesIds: string[] },
+    @Body() data: InputGetUnitiesByIdDto,
     @Request() req: AuthenticatedRequestDto,
   ): Promise<UnityDto[] | null> {
     if (!req.user.clientId) {
@@ -72,6 +96,7 @@ export class UnityController {
 
   @Get('all')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'Get all Unities for a Client',
     type: UnityDto,
@@ -96,8 +121,9 @@ export class UnityController {
     return unityList;
   }
 
-  @Post('disable')
+  @Patch('disable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Disable a Enabled Unity for the connected user with proper Admin Role',
@@ -119,8 +145,9 @@ export class UnityController {
     return unity;
   }
 
-  @Post('enable')
+  @Patch('enable')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Enable a Disabled Unity for the connected user with proper Admin Role',
@@ -142,15 +169,19 @@ export class UnityController {
     return unity;
   }
 
-  @Post('update')
+  @Patch('update')
+  @ApiBody({
+    type: InputUpdateUnityDto,
+  })
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description:
       'Update a Unity data for the connected user with proper Admin Role',
     type: UnityDto,
   })
   async updateUnity(
-    @Body() payload: UpdateUnityArgs,
+    @Body() payload: InputUpdateUnityDto,
     @Request() req: AuthenticatedRequestDto,
   ) {
     checkAdminRoleHigherOrThrow({

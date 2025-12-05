@@ -175,7 +175,7 @@ describe('UnityController', () => {
   describe('/unity/disable', () => {
     it('should throw a UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/disable')
+        .patch('/unity/disable')
         .set('Cookie', [`user_token=`])
         .send({
           unityId: '',
@@ -191,7 +191,7 @@ describe('UnityController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/disable')
+        .patch('/unity/disable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: '',
@@ -206,7 +206,7 @@ describe('UnityController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/disable')
+        .patch('/unity/disable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: '',
@@ -231,19 +231,19 @@ describe('UnityController', () => {
       }
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/disable')
+        .patch('/unity/disable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: enabledUnity?.id,
         })
-        .expect(201);
+        .expect(200);
     });
   });
 
   describe('/unity/enable', () => {
     it('should throw a UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/enable')
+        .patch('/unity/enable')
         .set('Cookie', [`user_token=`])
         .send({
           unityId: '',
@@ -259,7 +259,7 @@ describe('UnityController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/enable')
+        .patch('/unity/enable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: '',
@@ -274,7 +274,7 @@ describe('UnityController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/enable')
+        .patch('/unity/enable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: '',
@@ -299,19 +299,19 @@ describe('UnityController', () => {
       }
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/enable')
+        .patch('/unity/enable')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: enabledUnity?.id,
         })
-        .expect(201);
+        .expect(200);
     });
   });
 
   describe('/unity/enable', () => {
     it('should throw a UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/update')
+        .patch('/unity/update')
         .set('Cookie', [`user_token=`])
         .send({
           unityId: '',
@@ -329,7 +329,7 @@ describe('UnityController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/update')
+        .patch('/unity/update')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: '',
@@ -347,7 +347,7 @@ describe('UnityController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/unity/update')
+        .patch('/unity/update')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: '',
@@ -377,7 +377,7 @@ describe('UnityController', () => {
       }
 
       const updatedUnity = await TestModuleSingleton.callEndpoint()
-        .post('/unity/update')
+        .patch('/unity/update')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           unityId: existingUnity.id,
@@ -385,7 +385,7 @@ describe('UnityController', () => {
             address: newAddress,
           },
         })
-        .expect(201);
+        .expect(200);
 
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       expect(updatedUnity.body.address).toBe(newAddress);

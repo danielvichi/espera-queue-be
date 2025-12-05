@@ -7,7 +7,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { QueueUserService } from './queue-user.service';
-import { ApiResponse } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import { CreateQueueUserDto, QueueUserDto } from './queue-user.dto';
 import { checkCreateQueueUserRequirementsOrThrow } from './queue-user.utils';
 import { AuthService } from 'src/auth/auth.service';
@@ -15,6 +15,7 @@ import { UserNotFoundException } from 'src/auth/auth.exceptions';
 import { type Response } from 'express';
 import { defaultQueueUserExceptionsMessage } from './queue-user.exceptions';
 
+@ApiTags('Queue-User')
 @Controller('queue-user')
 export class QueueUserController {
   constructor(

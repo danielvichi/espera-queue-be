@@ -38,7 +38,7 @@ const CLIENT_MOCK_DATA: CreateClientDto = {
 describe('AuthController', () => {
   let authController: AuthController;
   let authService: AuthService;
-  let prismaSerivce: PrismaService;
+  let prismaService: PrismaService;
   let jwtService: JwtService;
   let adminUser: AdminResponseDto;
   let queueUser: QueueUserDto;
@@ -51,31 +51,32 @@ describe('AuthController', () => {
     authController = module.get<AuthController>(AuthController);
     authService = module.get<AuthService>(AuthService);
     jwtService = module.get<JwtService>(JwtService);
-    prismaSerivce = module.get<PrismaService>(PrismaService);
+    prismaService = module.get<PrismaService>(PrismaService);
 
     // adminService = module.get<AdminService>(AdminService);
     // clientService = module.get<ClientService>(ClientService);
 
     await TestModuleSingleton.cleanUpDatabase();
 
-    const clientResponse = await prismaSerivce.client.create({
+    const clientResponse = await prismaService.client.create({
       data: CLIENT_MOCK_DATA,
     });
 
     client = {
       ...clientResponse,
+      cnpj: clientResponse.cnpj ?? undefined,
       phone: clientResponse.phone ?? undefined,
       address: clientResponse.address ?? undefined,
     };
 
-    adminUser = await prismaSerivce.admin.create({
+    adminUser = await prismaService.admin.create({
       data: {
         ...ADMIN_MOCK_DATA,
         clientId: client.id,
       },
     });
 
-    queueUser = await prismaSerivce.queueUser.create({
+    queueUser = await prismaService.queueUser.create({
       data: QUEUE_USER_MOCK_DATA,
     });
   });
@@ -219,15 +220,36 @@ describe('AuthController', () => {
       });
 
       const logoutResponse = await TestModuleSingleton.callEndpoint()
-        .post('/auth/logout')
+        .get('/auth/logout')
         .set('Cookie', [`user_token=${userToken}`])
-        .expect(204);
+        .expect(200);
 
       expect(logoutResponse.headers['set-cookie']).toBeDefined();
 
       const userTokenCookie = logoutResponse.headers['set-cookie'][0];
       expect(userTokenCookie.includes('user_token=;')).toBe(true);
       expect(userTokenCookie.includes(`max-age=0`)).toBe(true);
+    });
+  });
+
+  describe('/auth/verify', () => {
+    it('should return an authenticated user jwt if cookie session is valid', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...adminUser,
+        client: client,
+      });
+
+      const verifyResponse = await TestModuleSingleton.callEndpoint()
+        .get('/auth/verify')
+        .set('Cookie', [`user_token=${userToken}`])
+        .expect(200);
+
+      const userData = jwtService.decode<AdminWithClientDto>(
+        verifyResponse.text,
+      );
+
+      expect(userData).toBeDefined();
+      expect(userData.id).toBeDefined();
     });
   });
 });

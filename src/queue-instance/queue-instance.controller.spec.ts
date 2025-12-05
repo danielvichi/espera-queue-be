@@ -134,7 +134,7 @@ describe('QueueInstanceController', () => {
   describe('/queue-instance/add-user', () => {
     it('should throw UserNotFoundException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/add-user')
+        .patch('/queue-instance/add-user')
         .set('Cookie', [`user_token=`])
         .send({
           queueId: queueGeneral.id,
@@ -148,7 +148,7 @@ describe('QueueInstanceController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/add-user')
+        .patch('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: '',
@@ -180,12 +180,12 @@ describe('QueueInstanceController', () => {
       });
 
       const response = (await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/add-user')
+        .patch('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queueGeneral.id,
         })
-        .expect(201)) as { body: { success: boolean } };
+        .expect(200)) as { body: { success: boolean } };
 
       expect(response.body.success).toBe(true);
     });
@@ -196,12 +196,12 @@ describe('QueueInstanceController', () => {
       });
 
       const response = (await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/add-user')
+        .patch('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queueGeneral.id,
         })
-        .expect(201)) as { body: { success: boolean } };
+        .expect(200)) as { body: { success: boolean } };
 
       expect(response.body.success).toBe(true);
     });
@@ -212,15 +212,15 @@ describe('QueueInstanceController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/add-user')
+        .patch('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queueGeneral.id,
         })
-        .expect(201);
+        .expect(200);
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/add-user')
+        .patch('/queue-instance/add-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueId: queueGeneral.id,
@@ -232,7 +232,7 @@ describe('QueueInstanceController', () => {
   describe('/queue-instance/remove-user', () => {
     it('should throw UserNotFoundException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/remove-user')
+        .patch('/queue-instance/remove-user')
         .set('Cookie', [`user_token=`])
         .send({
           queueInstanceId: queueInstanceId,
@@ -246,7 +246,7 @@ describe('QueueInstanceController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/remove-user')
+        .patch('/queue-instance/remove-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueInstanceId: '',
@@ -261,7 +261,7 @@ describe('QueueInstanceController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/remove-user')
+        .patch('/queue-instance/remove-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueInstanceId: queueInstanceId,
@@ -276,7 +276,7 @@ describe('QueueInstanceController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/remove-user')
+        .patch('/queue-instance/remove-user')
         .set('Cookie', [`user_token=${userToken}`])
         .send({
           queueInstanceId: queueInstanceId,
@@ -303,13 +303,13 @@ describe('QueueInstanceController', () => {
       expect(queueInstanceWithUser.usersInQueue[0]).toBe(queueUser.id);
 
       await TestModuleSingleton.callEndpoint()
-        .post('/queue-instance/remove-user')
+        .patch('/queue-instance/remove-user')
         .set('Cookie', [`user_token=${adminToken}`])
         .send({
           queueInstanceId: queueInstanceId,
           userId: queueUser.id,
         })
-        .expect(201);
+        .expect(200);
     });
 
     it('should remove a different userId from authenticated one if signed User is an Admin ', async () => {});

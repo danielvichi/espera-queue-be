@@ -67,6 +67,7 @@ export class AdminDto {
     example: ['u1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   unityIds?: string[];
@@ -76,6 +77,7 @@ export class AdminDto {
     example: ['q1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   queueIds?: string[];
@@ -90,6 +92,10 @@ export class AdminDto {
 
 export class AdminResponseDto extends OmitType(AdminDto, ['passwordHash']) {}
 export class AdminWithClientDto extends AdminResponseDto {
+  @ApiProperty({
+    description: 'Client Dto',
+    type: () => ClientDto,
+  })
   client: ClientDto;
 }
 
@@ -137,6 +143,7 @@ export class CreatedAdminDto {
     example: ['u1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   unityIds?: string[];
@@ -146,6 +153,7 @@ export class CreatedAdminDto {
     example: ['q1234567-89ab-cdef-0123-456789abcdef'],
     required: false,
     isArray: true,
+    type: String,
     nullable: true,
   })
   queueIds?: string[];

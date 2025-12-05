@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, OmitType } from '@nestjs/swagger';
 import { QueueType } from '@prisma/client';
 
 export class QueueDto {
@@ -153,7 +153,6 @@ export class CreateQueueDto {
     required: false,
   })
   maxUsersInQueue?: number;
-
   @ApiProperty({
     description: 'ID of the Client associated with the queue',
     example: 'c1234567-89ab-cdef-0123-456789abcdef',
@@ -175,4 +174,23 @@ export class CreateQueueDto {
     nullable: true,
   })
   adminId?: string;
+}
+
+export class InputCreateQueueDto extends OmitType(CreateQueueDto, [
+  'clientId',
+]) {}
+
+export class UpdatedQueueDto {
+  @ApiProperty({
+    description: 'Queue Id',
+    example: 'c1234567-89ab-cdef-0123-456789abcdef',
+    required: true,
+  })
+  queueId: string;
+
+  @ApiProperty({
+    description: 'Payload to be updated',
+    required: true,
+  })
+  payload: Partial<Omit<CreateQueueDto, 'clientId' | 'queueId'>>;
 }

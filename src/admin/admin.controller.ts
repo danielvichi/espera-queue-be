@@ -6,10 +6,16 @@ import {
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiOkResponse } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { type CreatedAdminDto } from './admin.dto';
+import { AdminDto, AdminWithClientDto, CreatedAdminDto } from './admin.dto';
 import { AdminRole } from '@prisma/client';
 import { AdminService } from './admin.service';
 import {
@@ -17,14 +23,21 @@ import {
   createAdminBadRequestExceptionMessages,
 } from './admin.exceptions';
 
+@ApiTags('Admin')
 @Controller('admin')
 export class AdminController {
   constructor(private adminService: AdminService) {}
 
   @Post('create')
   @UseGuards(AuthGuard)
-  @ApiOkResponse({
+  @ApiBearerAuth('AuthGuard')
+  @ApiBody({
+    type: CreatedAdminDto,
+    required: true,
+  })
+  @ApiCreatedResponse({
     description: 'Create a new client Owner Admin account',
+    type: AdminDto,
   })
   async createNewNomOwnerAdmin(@Body() inputData: CreatedAdminDto) {
     // Check is nor creating Client Owner, that should be done through the create client flow
@@ -41,8 +54,10 @@ export class AdminController {
 
   @Get('profile')
   @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'Get information for the connected account',
+    type: AdminWithClientDto,
   })
   getProfile(@Request() req: AuthenticatedRequestDto) {
     return req.user;
