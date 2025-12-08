@@ -56,6 +56,7 @@ describe('AuthService', () => {
       ...clientResponse,
       address: clientResponse.address ?? undefined,
       phone: clientResponse.phone ?? undefined,
+      cnpj: clientResponse.cnpj ?? undefined,
     };
 
     const adminResponse = await prismaService.admin.create({
@@ -70,6 +71,10 @@ describe('AuthService', () => {
       queueIds: adminResponse.queueIds ?? [],
       unityIds: adminResponse.unityIds ?? [],
     };
+  });
+
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
   });
 
   it('should be defined', () => {

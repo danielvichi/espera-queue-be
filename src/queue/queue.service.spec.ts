@@ -66,6 +66,7 @@ describe('QueueService', () => {
       phone: undefined,
       address: undefined,
       ownerId: undefined,
+      cnpj: undefined,
     };
 
     const createUnityResponse = await prismaService.unity.create({
@@ -102,6 +103,10 @@ describe('QueueService', () => {
         adminId: undefined,
       });
     }
+  });
+
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
   });
 
   it('should be defined', () => {

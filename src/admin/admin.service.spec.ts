@@ -82,6 +82,10 @@ describe('AdminService', () => {
     };
   });
 
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
+  });
+
   it('should be defined', () => {
     expect(adminService).toBeDefined();
   });

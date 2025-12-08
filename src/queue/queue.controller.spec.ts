@@ -94,6 +94,7 @@ describe('QueueController', () => {
       address: undefined,
       phone: undefined,
       ownerId: undefined,
+      cnpj: undefined,
     };
 
     queueAdminUser = await prismaService.admin.create({
@@ -150,6 +151,10 @@ describe('QueueController', () => {
         adminId: undefined,
       });
     }
+  });
+
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
   });
 
   it('should be defined', () => {

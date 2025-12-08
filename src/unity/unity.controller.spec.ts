@@ -40,6 +40,13 @@ const CREATE_ADMIN_MOCK_DATA: Array<Omit<CreatedAdminDto, 'clientId'>> = [
     unityIds: ['1'],
     email: 'admin2@email.com',
   },
+  {
+    name: 'Admin Name 3',
+    passwordHash: 'password_hash',
+    role: AdminRole.UNITY_ADMIN,
+    unityIds: ['2'],
+    email: 'admin3@email.com',
+  },
 ];
 
 describe('UnityController', () => {
@@ -53,6 +60,7 @@ describe('UnityController', () => {
   let client: CreateClientResponseDto;
   let queueAdminUser: AdminResponseDto;
   let clientAdminUser: AdminResponseDto;
+  let unityAdminUser: AdminResponseDto;
   let unity: UnityDto;
 
   beforeAll(async () => {
@@ -78,6 +86,11 @@ describe('UnityController', () => {
       clientId: client.id,
     });
 
+    unityAdminUser = await adminService.createAdmin({
+      ...CREATE_ADMIN_MOCK_DATA[2],
+      clientId: client.id,
+    });
+
     const createUnityResponse = await prismaService.unity.create({
       data: {
         ...UNITY_MOCK_DATA[1],
@@ -91,6 +104,12 @@ describe('UnityController', () => {
       email: createUnityResponse.email ?? undefined,
       phone: createUnityResponse.phone ?? undefined,
     };
+
+    unityAdminUser.unityIds = [unity.id];
+  });
+
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
   });
 
   it('should be defined', () => {
@@ -138,38 +157,38 @@ describe('UnityController', () => {
         })
         .expect(400);
     });
-  });
 
-  it('should throw MethodNotAllowedException if the connected admin does NOT has proper Admin Role', async () => {
-    const userToken = await authService.generateJwtForUser({
-      ...queueAdminUser,
-      client: client,
+    it('should throw MethodNotAllowedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/create')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          name: UNITY_MOCK_DATA[0].name,
+          clientId: client.id,
+        })
+        .expect(405);
     });
 
-    await TestModuleSingleton.callEndpoint()
-      .post('/unity/create')
-      .set('Cookie', [`user_token=${userToken}`])
-      .send({
-        name: UNITY_MOCK_DATA[0].name,
-        clientId: client.id,
-      })
-      .expect(405);
-  });
+    it('should create a Unity with proper connected admin role and proper payload', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
 
-  it('should create a Unity with proper connected admin role and proper payload', async () => {
-    const userToken = await authService.generateJwtForUser({
-      ...clientAdminUser,
-      client: client,
+      await TestModuleSingleton.callEndpoint()
+        .post('/unity/create')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({
+          name: UNITY_MOCK_DATA[0].name,
+          clientId: client.id,
+        })
+        .expect(201);
     });
-
-    await TestModuleSingleton.callEndpoint()
-      .post('/unity/create')
-      .set('Cookie', [`user_token=${userToken}`])
-      .send({
-        name: UNITY_MOCK_DATA[0].name,
-        clientId: client.id,
-      })
-      .expect(201);
   });
 
   describe('/unity/disable', () => {
@@ -308,7 +327,7 @@ describe('UnityController', () => {
     });
   });
 
-  describe('/unity/enable', () => {
+  describe('/unity/update', () => {
     it('should throw a UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
         .patch('/unity/update')
@@ -415,6 +434,22 @@ describe('UnityController', () => {
     });
 
     it('should return a list of Unity for the connected user', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const response = await TestModuleSingleton.callEndpoint()
+        .get('/unity/all')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send()
+        .expect(200);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(response.body.length).toBe(2);
+    });
+
+    it('should return a list of Unity for the filtered for the unity it has privilege do administer', async () => {
       const userToken = await authService.generateJwtForUser({
         ...clientAdminUser,
         client: client,

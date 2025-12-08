@@ -33,6 +33,10 @@ describe('QueueUserController', () => {
     await TestModuleSingleton.cleanUpDatabase();
   });
 
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
+  });
+
   it('should be defined', () => {
     expect(queueUserController).toBeDefined();
   });

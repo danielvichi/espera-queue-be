@@ -56,4 +56,8 @@ export class TestModuleSingleton {
   static callEndpoint(): TestAgent {
     return request.agent(this.app.getHttpServer());
   }
+
+  static async endClient() {
+    await this.prismaClient.$disconnect();
+  }
 }

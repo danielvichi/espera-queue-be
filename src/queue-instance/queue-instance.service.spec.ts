@@ -77,6 +77,7 @@ describe('QueueInstanceService', () => {
       phone: undefined,
       address: undefined,
       ownerId: undefined,
+      cnpj: undefined,
     };
 
     const createUnityResponse = await prismaService.unity.create({
@@ -113,6 +114,10 @@ describe('QueueInstanceService', () => {
     queueUser = await prismaService.queueUser.create({
       data: CREATE_QUEUE_USER_MOCK_DATA,
     });
+  });
+
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
   });
 
   it('should be defined', () => {

@@ -84,12 +84,17 @@ describe('ClientController', () => {
       address: clientResponse.address ?? undefined,
       ownerId: clientResponse.ownerId ?? undefined,
       phone: clientResponse.phone ?? undefined,
+      cnpj: clientResponse.cnpj ?? undefined,
     };
 
     adminUser = await adminService.createAdmin({
       ...CREATE_ADMIN_MOCK_DATA,
       clientId: client.id,
     });
+  });
+
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
   });
 
   it('should be defined', () => {

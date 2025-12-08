@@ -66,7 +66,8 @@ export class UnityController {
     required: true,
   })
   @ApiOkResponse({
-    description: 'Get Unities by id that belongs to the connected user Client',
+    description:
+      'Get Unities by id that belongs to the connected user Client and Admin Privileges',
     type: UnityDto,
     isArray: true,
   })
@@ -90,6 +91,14 @@ export class UnityController {
     const filteredUnityListByClientId = unityListResponse.filter(
       (unity) => unity.clientId === req.user.clientId,
     );
+
+    // If the user is a UNITY_ADMIN, filter further by their allowed unity IDs
+    if (req.user.role === AdminRole.UNITY_ADMIN) {
+      const allowedUnityIds = req.user.unityIds || [];
+      return filteredUnityListByClientId.filter((unity) =>
+        allowedUnityIds.includes(unity.id),
+      );
+    }
 
     return filteredUnityListByClientId;
   }

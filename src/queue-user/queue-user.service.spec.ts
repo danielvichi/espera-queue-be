@@ -26,6 +26,10 @@ describe('QueueUserService', () => {
     await TestModuleSingleton.cleanUpDatabase();
   });
 
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
+  });
+
   it('should be defined', () => {
     expect(queueUserService).toBeDefined();
   });

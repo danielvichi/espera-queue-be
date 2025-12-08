@@ -47,6 +47,10 @@ describe('ClientService', () => {
     await TestModuleSingleton.cleanUpDatabase();
   });
 
+  afterAll(async () => {
+    await TestModuleSingleton.endClient();
+  });
+
   it('should be defined', () => {
     expect(clientService).toBeDefined();
   });
