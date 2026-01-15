@@ -1,7 +1,9 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
+  HttpCode,
   MethodNotAllowedException,
   Patch,
   Post,
@@ -202,6 +204,29 @@ export class UnityController {
       unityId: payload.unityId,
       payload: payload.payload,
     });
+
+    return unity;
+  }
+
+  @Delete('delete')
+  @HttpCode(200)
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
+  @ApiCreatedResponse({
+    description:
+      'Delete a Unity by Id for the connected user with proper Admin Role',
+    type: UnityDto,
+  })
+  async deleteUnity(
+    @Body() data: { unityId: string },
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<UnityDto> {
+    checkAdminRoleHigherOrThrow({
+      userRole: req.user.role,
+      minRequiredRole: AdminRole.CLIENT_ADMIN,
+    });
+
+    const unity = await this.unityService.deleteUnity(data);
 
     return unity;
   }

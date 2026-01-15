@@ -81,6 +81,7 @@ describe('QueueInstanceController', () => {
       phone: undefined,
       address: undefined,
       ownerId: undefined,
+      cnpj: undefined,
     };
 
     const createUnityResponse = await prismaService.unity.create({

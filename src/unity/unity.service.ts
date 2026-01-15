@@ -266,4 +266,35 @@ export class UnityService {
       phone: unity.phone ?? undefined,
     };
   }
+
+  async deleteUnity(data: UnityIdArg): Promise<UnityDto> {
+    if (!data.unityId) {
+      throw new BadRequestException(
+        defaultUnityExceptionsMessages.UNITY_ID_REQUIRED,
+      );
+    }
+
+    const existingUnity = await this.prisma.unity.findFirst({
+      where: {
+        id: data.unityId,
+      },
+    });
+
+    if (!existingUnity) {
+      throw new UnityNotFoundException(data.unityId);
+    }
+
+    const deletedUnity = await this.prisma.unity.delete({
+      where: {
+        id: data.unityId,
+      },
+    });
+
+    return {
+      ...deletedUnity,
+      address: deletedUnity.address ?? undefined,
+      email: deletedUnity.email ?? undefined,
+      phone: deletedUnity.phone ?? undefined,
+    };
+  }
 }

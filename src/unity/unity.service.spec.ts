@@ -356,4 +356,39 @@ describe('UnityService', () => {
       expect(response[0].id).toBe(unity?.id);
     });
   });
+
+  describe('deleteUnity', () => {
+    it('should delete an existing Unity', async () => {
+      const createdUnity = await prismaService.unity.create({
+        data: {
+          ...CREATE_UNITY_MOCK_DATA[0],
+          clientId: client.id,
+        },
+      });
+
+      const deletedUnity = await unityService.deleteUnity({
+        unityId: createdUnity.id,
+      });
+
+      expect(deletedUnity.id).toBe(createdUnity.id);
+
+      const findDeletedUnity = await prismaService.unity.findUnique({
+        where: {
+          id: createdUnity.id,
+        },
+      });
+
+      expect(findDeletedUnity).toBeNull();
+    });
+
+    it('should NOT be able to delete a not founded Unity', async () => {
+      const invalidUnityId = 'not_existing_id';
+
+      await expect(
+        unityService.deleteUnity({
+          unityId: invalidUnityId,
+        }),
+      ).rejects.toThrow(new UnityNotFoundException(invalidUnityId));
+    });
+  });
 });
