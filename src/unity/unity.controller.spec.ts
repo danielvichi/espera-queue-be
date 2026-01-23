@@ -510,4 +510,73 @@ describe('UnityController', () => {
       expect(unityResponse.body.length).toBe(1);
     });
   });
+
+  describe('/unity/delete', () => {
+    it('should delete a Unity and return it', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const unityToDelete = await prismaService.unity.create({
+        data: {
+          name: 'Unity to be deleted',
+          clientId: client.id,
+        },
+      });
+
+      expect(unityToDelete).toBeDefined();
+
+      const deleteUnityResponse = await TestModuleSingleton.callEndpoint()
+        .delete('/unity/delete')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({ unityId: unity.id })
+        .expect(200);
+
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      expect(deleteUnityResponse.body.id).toBe(unity.id);
+
+      const fetchedDeletedUnity = await prismaService.unity.findUnique({
+        where: {
+          id: unity.id,
+        },
+      });
+
+      expect(fetchedDeletedUnity).toBeNull();
+    });
+
+    it('should throw a UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .delete('/unity/delete')
+        .set('Cookie', [`user_token=`])
+        .send({ unityId: unity.id })
+        .expect(401);
+    });
+
+    it('should throw a UnauthorizedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .delete('/unity/delete')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({ unityId: unity.id })
+        .expect(405);
+    });
+
+    it('should throw a BadRequestException if Unity Id is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .delete('/unity/delete')
+        .set('Cookie', [`user_token=${userToken}`])
+        .send({ unityId: '' })
+        .expect(400);
+    });
+  });
 });

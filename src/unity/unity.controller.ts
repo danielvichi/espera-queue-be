@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   MethodNotAllowedException,
   Patch,
@@ -20,6 +21,7 @@ import {
 import {
   CreateUnityDto,
   InputGetUnitiesByIdDto,
+  InputUnityIdDto,
   InputUpdateUnityDto,
   UnityDto,
 } from './unity.dto';
@@ -202,6 +204,27 @@ export class UnityController {
       unityId: payload.unityId,
       payload: payload.payload,
     });
+
+    return unity;
+  }
+
+  @Delete('delete')
+  @ApiBody({
+    type: InputUnityIdDto,
+    required: true,
+  })
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
+  async deleteUnity(
+    @Body() data: { unityId: string },
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<UnityDto> {
+    checkAdminRoleHigherOrThrow({
+      userRole: req.user.role,
+      minRequiredRole: AdminRole.CLIENT_ADMIN,
+    });
+
+    const unity = await this.unityService.deleteUnity(data);
 
     return unity;
   }
