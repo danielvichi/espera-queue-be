@@ -66,8 +66,8 @@ model Unity {
   id        String   @id @default(cuid())
   name      String
   address   String?
-  phone     String?  @unique
-  email     String?  @unique
+  phone     String?
+  email     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   Client    Client   @relation(fields: [clientId], references: [id])
