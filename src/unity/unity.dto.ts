@@ -127,3 +127,7 @@ export class InputUpdateUnityDto {
   payload: Partial<Omit<CreateUnityDto, 'clientId'>>;
   unityId: string;
 }
+
+export class InputUnityIdDto {
+  unityId: string;
+}

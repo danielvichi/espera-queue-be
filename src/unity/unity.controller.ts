@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  HttpCode,
   MethodNotAllowedException,
   Patch,
   Post,
@@ -22,6 +21,7 @@ import {
 import {
   CreateUnityDto,
   InputGetUnitiesByIdDto,
+  InputUnityIdDto,
   InputUpdateUnityDto,
   UnityDto,
 } from './unity.dto';
@@ -209,14 +209,12 @@ export class UnityController {
   }
 
   @Delete('delete')
-  @HttpCode(200)
+  @ApiBody({
+    type: InputUnityIdDto,
+    required: true,
+  })
   @UseGuards(AuthGuard)
   @ApiBearerAuth('AuthGuard')
-  @ApiCreatedResponse({
-    description:
-      'Delete a Unity by Id for the connected user with proper Admin Role',
-    type: UnityDto,
-  })
   async deleteUnity(
     @Body() data: { unityId: string },
     @Request() req: AuthenticatedRequestDto,
