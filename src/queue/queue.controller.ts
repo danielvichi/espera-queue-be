@@ -53,21 +53,29 @@ export class QueueController {
     isArray: true,
   })
   async getQueueByIds(
-    @Query() queueIds: string[],
+    @Query() data: { queuesIds: string },
     @Request() req: AuthenticatedRequestDto,
   ): Promise<QueueDto[]> {
-    if (!queueIds || queueIds.length === 0) {
+    if (!data.queuesIds || data.queuesIds.length === 0) {
       throw new BadRequestException(
         defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
       );
     }
+
+    const { queuesIds } = data;
+
+    const queuesIdsList = queuesIds.split(',').map((id) => id.trim());
 
     checkAdminRoleHigherOrThrow({
       userRole: req.user.role,
       minRequiredRole: AdminRole.UNITY_ADMIN,
     });
 
-    queueIds.forEach((queueId) => {
+    if (queuesIdsList.length === 0) {
+      return [];
+    }
+
+    queuesIdsList.forEach((queueId) => {
       checkAdminAllowedToAccessQueueMethodOrThrow({
         queueUnityId: queueId,
         authenticatedUser: req.user,
@@ -76,7 +84,7 @@ export class QueueController {
 
     // should also include CLIENT ID
     const queueList = await this.queueService.getQueuesByIds({
-      queueIds,
+      queueIds: queuesIdsList,
       clientId: req.user.clientId,
     });
 

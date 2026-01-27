@@ -183,11 +183,8 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .get('/queue')
+        .get('/queue?queuesIds=' + queueIds.join(','))
         .set('Cookie', [`user_token=${userToken}`])
-        .send({
-          queueIds: queueIds,
-        })
         .expect(405);
     });
 
@@ -200,7 +197,6 @@ describe('QueueController', () => {
       await TestModuleSingleton.callEndpoint()
         .get('/queue')
         .set('Cookie', [`user_token=${userToken}`])
-        .send([])
         .expect(400);
     });
 
@@ -213,9 +209,8 @@ describe('QueueController', () => {
       });
 
       const queueList = (await TestModuleSingleton.callEndpoint()
-        .get('/queue')
+        .get(`/queue?queuesIds=${queueIds.join(',')}`)
         .set('Cookie', [`user_token=${userToken}`])
-        .send(queueIds)
         .expect(200)) as { body: QueueDto[] };
 
       expect(queueList.body.length).toBe(2);

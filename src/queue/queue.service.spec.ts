@@ -222,13 +222,13 @@ describe('QueueService', () => {
       );
     });
 
-    it('Should return a list of 2 Queues by its Unity Id ', async () => {
+    it('Should return a list of 3 Queues by its Unity Id ', async () => {
       const queueResponse = await queueService.getQueuesByUnityId({
         unityId: unity.id,
         clientId: client.id,
       });
 
-      expect(queueResponse.length).toBe(2);
+      expect(queueResponse.length).toBe(3);
     });
   });
 
