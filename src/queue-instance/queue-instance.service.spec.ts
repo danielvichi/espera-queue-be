@@ -18,6 +18,7 @@ import {
 } from './queue-instance.execeptions';
 import { NotFoundException } from '@nestjs/common';
 import { QueueUserDto } from 'src/queue-user/queue-user.dto';
+import normalizeNullIntoUndefined from 'src/utils/normalize-null';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -95,7 +96,7 @@ describe('QueueInstanceService', () => {
       phone: undefined,
     };
 
-    queueGeneral = await prismaService.queue.create({
+    const queueGeneralResponse = await prismaService.queue.create({
       data: {
         ...CREATE_QUEUE_MOCK_DATA[0],
         clientId: client.id,
@@ -103,13 +104,17 @@ describe('QueueInstanceService', () => {
       },
     });
 
-    queuePriority = await prismaService.queue.create({
+    queueGeneral = normalizeNullIntoUndefined<QueueDto>(queueGeneralResponse);
+
+    const queuePriorityResponse = await prismaService.queue.create({
       data: {
         ...CREATE_QUEUE_MOCK_DATA[1],
         clientId: client.id,
         unityId: unity.id,
       },
     });
+
+    queuePriority = normalizeNullIntoUndefined<QueueDto>(queuePriorityResponse);
 
     queueUser = await prismaService.queueUser.create({
       data: CREATE_QUEUE_USER_MOCK_DATA,
@@ -459,6 +464,14 @@ describe('QueueInstanceService', () => {
     });
 
     it('should throw NotFoundException if all Queue Instances are from past days', async () => {
+      const allInstances = await prismaService.queueInstance.findMany({
+        where: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      expect(allInstances.length).toBe(0);
+
       const yesterdayQueueInstance = await prismaService.queueInstance.create({
         data: {
           queueId: queueGeneral.id,

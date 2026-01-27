@@ -14,6 +14,7 @@ import {
 } from './queue.exceptions';
 import { UnityNotFoundException } from 'src/unity/unity.exceptions';
 import { BadRequestException, NotFoundException } from '@nestjs/common';
+import normalizeNullIntoUndefined from 'src/utils/normalize-null';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -94,14 +95,7 @@ describe('QueueService', () => {
       });
 
       // Format response to QueueDto
-      queues.push({
-        ...createQueueResponse,
-        name: createQueueResponse.name ?? undefined,
-        minWaitingTimeInMinutes: undefined,
-        maxWaitingTimeInMinutes: undefined,
-        currentWaitingTimeInMinutes: undefined,
-        adminId: undefined,
-      });
+      queues.push(normalizeNullIntoUndefined<QueueDto>(createQueueResponse));
     }
   });
 
