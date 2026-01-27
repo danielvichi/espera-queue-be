@@ -10,6 +10,7 @@ import {
 } from './queue-instance.execeptions';
 import { DateTime } from 'luxon';
 import { isToday } from 'src/utils/date.utils';
+import normalizeNullIntoUndefined from 'src/utils/normalize-null';
 
 interface IsUserAlreadyInUnityQueueArgs {
   userId: string;
@@ -77,13 +78,15 @@ export class QueueInstanceService {
 
     const { id: queueInstanceId, ...createdQueueWithoutId } = createdQueue;
 
-    return {
-      ...createdQueueWithoutId,
-      queueInstanceId: queueInstanceId,
-      ...queueReferenceWithoutId,
-      queueId: queueReferenceId,
-      name: queueReference.name ?? undefined,
-    };
+    const formattedQueueInstance: QueueInstanceDto =
+      normalizeNullIntoUndefined<QueueInstanceDto>({
+        ...queueReferenceWithoutId,
+        ...createdQueueWithoutId,
+        queueId: queueReferenceId,
+        queueInstanceId: queueInstanceId,
+      });
+
+    return formattedQueueInstance;
   }
 
   /**
@@ -120,13 +123,15 @@ export class QueueInstanceService {
     const { id, ...queueInstanceWithoutId } = queueInstance;
     const { id: queueReferenceId, ...queueReferenceWithoutId } = queueReference;
 
-    return {
-      ...queueInstanceWithoutId,
-      queueId: queueReferenceId,
-      queueInstanceId: id,
-      ...queueReferenceWithoutId,
-      name: queueReference.name ?? undefined,
-    };
+    const formattedQueueInstance: QueueInstanceDto =
+      normalizeNullIntoUndefined<QueueInstanceDto>({
+        ...queueReferenceWithoutId,
+        ...queueInstanceWithoutId,
+        queueId: queueReferenceId,
+        queueInstanceId: id,
+      });
+
+    return formattedQueueInstance;
   }
 
   /**
@@ -305,13 +310,15 @@ export class QueueInstanceService {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id: _id, ...lastQueueInstanceWithoutId } = lastQueueInstance;
 
-    return {
-      ...queueReference,
-      ...lastQueueInstanceWithoutId,
-      queueInstanceId: lastQueueInstance.id,
-      queueId: lastQueueInstance.queueId,
-      name: queueReference.name ?? undefined,
-    };
+    const formattedLastQueueInstance: QueueInstanceDto =
+      normalizeNullIntoUndefined<QueueInstanceDto>({
+        ...queueReference,
+        ...lastQueueInstanceWithoutId,
+        queueId: queueReference.id,
+        queueInstanceId: lastQueueInstance.id,
+      });
+
+    return formattedLastQueueInstance;
   }
 
   /**

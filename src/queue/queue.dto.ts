@@ -29,21 +29,21 @@ export class QueueDto {
     example: '10',
     required: false,
   })
-  minWaitingTimeInMinutes?: number | null;
+  minWaitingTimeInMinutes?: number;
 
   @ApiProperty({
     description: 'Average maximum waiting time in minutes',
     example: '30',
     required: true,
   })
-  maxWaitingTimeInMinutes?: number | null;
+  maxWaitingTimeInMinutes?: number;
 
   @ApiProperty({
     description: 'Last user waiting time in minutes',
     example: '15',
     required: false,
   })
-  currentWaitingTimeInMinutes?: number | null;
+  currentWaitingTimeInMinutes?: number;
 
   @ApiProperty({
     description: 'Is queue already operating',
@@ -57,21 +57,21 @@ export class QueueDto {
     example: '19:00',
     required: false,
   })
-  startQueueAt?: string | null;
+  startQueueAt?: string;
 
   @ApiProperty({
     description: 'Timestamp when the queue starts operating',
     example: '23:00',
     required: false,
   })
-  endQueueAt?: string | null;
+  endQueueAt?: string;
 
   @ApiProperty({
     description: 'Max number of users allowed in the queue',
     example: '15',
     required: false,
   })
-  maxUsersInQueue?: number | null;
+  maxUsersInQueue?: number;
 
   @ApiProperty({
     description: 'Timestamp when the queue was created',
@@ -114,7 +114,7 @@ export class QueueDto {
     required: false,
     nullable: true,
   })
-  adminId?: string | null;
+  adminId?: string;
 }
 
 export class CreateQueueDto {

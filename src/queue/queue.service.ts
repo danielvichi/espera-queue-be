@@ -12,6 +12,7 @@ import {
 import { ClientNotFoundException } from 'src/client/client.exceptions';
 import { UnityNotFoundException } from 'src/unity/unity.exceptions';
 import { defaultQueueExceptionsMessage } from './queue.exceptions';
+import normalizeNullIntoUndefined from 'src/utils/normalize-null';
 
 interface GetQueuesByIdsArgs {
   queueIds: string[];
@@ -61,10 +62,7 @@ export class QueueService {
       data,
     });
 
-    return {
-      ...queueResponse,
-      name: queueResponse?.name ?? undefined,
-    };
+    return normalizeNullIntoUndefined<QueueDto>(queueResponse);
   }
 
   /**
@@ -96,10 +94,9 @@ export class QueueService {
       },
     });
 
-    const parsedQueueList: QueueDto[] = queueList.map((queue) => ({
-      ...queue,
-      name: queue?.name ?? undefined,
-    }));
+    const parsedQueueList: QueueDto[] = queueList.map((queue) =>
+      normalizeNullIntoUndefined<QueueDto>(queue),
+    );
 
     return parsedQueueList;
   }
@@ -137,20 +134,7 @@ export class QueueService {
         });
 
         if (queueResponse) {
-          return {
-            ...queueResponse,
-            name: queueResponse?.name ?? undefined,
-            adminId: queueResponse?.adminId ?? undefined,
-            minWaitingTimeInMinutes:
-              queueResponse.minWaitingTimeInMinutes ?? undefined,
-            maxWaitingTimeInMinutes:
-              queueResponse.maxWaitingTimeInMinutes ?? undefined,
-            currentWaitingTimeInMinutes:
-              queueResponse.currentWaitingTimeInMinutes ?? undefined,
-            startQueueAt: queueResponse.startQueueAt ?? undefined,
-            endQueueAt: queueResponse.endQueueAt ?? undefined,
-            maxUsersInQueue: queueResponse.maxUsersInQueue ?? undefined,
-          };
+          return normalizeNullIntoUndefined<QueueDto>(queueResponse);
         }
       }),
     );
@@ -186,17 +170,8 @@ export class QueueService {
         data: data.payload,
       });
 
-      return {
-        ...updatedQueue,
-        name: updatedQueue.name ?? undefined,
-        adminId: updatedQueue.adminId ?? undefined,
-        minWaitingTimeInMinutes:
-          updatedQueue.minWaitingTimeInMinutes ?? undefined,
-        maxWaitingTimeInMinutes:
-          updatedQueue.maxWaitingTimeInMinutes ?? undefined,
-        currentWaitingTimeInMinutes:
-          updatedQueue.currentWaitingTimeInMinutes ?? undefined,
-      };
+      return normalizeNullIntoUndefined<QueueDto>(updatedQueue);
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
     } catch (err) {
       throw new NotFoundException(
@@ -229,10 +204,8 @@ export class QueueService {
         },
       });
 
-      return {
-        ...disabledQueue,
-        name: disabledQueue.name ?? undefined,
-      };
+      return normalizeNullIntoUndefined<QueueDto>(disabledQueue);
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
     } catch (err) {
       throw new NotFoundException(
@@ -267,17 +240,8 @@ export class QueueService {
         },
       });
 
-      return {
-        ...enabledQueue,
-        name: enabledQueue.name ?? undefined,
-        adminId: enabledQueue.adminId ?? undefined,
-        minWaitingTimeInMinutes:
-          enabledQueue.minWaitingTimeInMinutes ?? undefined,
-        maxWaitingTimeInMinutes:
-          enabledQueue.maxWaitingTimeInMinutes ?? undefined,
-        currentWaitingTimeInMinutes:
-          enabledQueue.currentWaitingTimeInMinutes ?? undefined,
-      };
+      return normalizeNullIntoUndefined<QueueDto>(enabledQueue);
+
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
     } catch (err) {
       throw new NotFoundException(
