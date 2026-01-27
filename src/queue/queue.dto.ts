@@ -14,7 +14,7 @@ export class QueueDto {
     example: 'Unity A',
     required: false,
   })
-  name?: string | null;
+  name?: string;
 
   @ApiProperty({
     description: 'Queue type',

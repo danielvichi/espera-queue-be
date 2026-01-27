@@ -7,6 +7,7 @@ import {
   NotFoundException,
   Patch,
   Post,
+  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -52,7 +53,7 @@ export class QueueController {
     isArray: true,
   })
   async getQueueByIds(
-    @Body() queueIds: string[],
+    @Query() queueIds: string[],
     @Request() req: AuthenticatedRequestDto,
   ): Promise<QueueDto[]> {
     if (!queueIds || queueIds.length === 0) {
@@ -76,6 +77,49 @@ export class QueueController {
     // should also include CLIENT ID
     const queueList = await this.queueService.getQueuesByIds({
       queueIds,
+      clientId: req.user.clientId,
+    });
+
+    return queueList;
+  }
+
+  @Get('by-unity')
+  @ApiQuery({
+    name: 'unityId',
+    type: String,
+    description: 'Unity Id to fetch its Queues',
+    required: true,
+  })
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
+  @ApiOkResponse({
+    description: 'Retrieve a list of Queue by its Unity Id',
+    type: QueueDto,
+    isArray: true,
+  })
+  async getQueuesByUnityId(
+    @Query() data: { unityId: string },
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<QueueDto[]> {
+    if (!data.unityId) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.UNITY_ID_REQUIRED,
+      );
+    }
+
+    checkAdminRoleHigherOrThrow({
+      userRole: req.user.role,
+      minRequiredRole: AdminRole.UNITY_ADMIN,
+    });
+
+    checkAdminAllowedToAccessQueueMethodOrThrow({
+      queueUnityId: data.unityId,
+      authenticatedUser: req.user,
+    });
+
+    // should also include CLIENT ID
+    const queueList = await this.queueService.getQueuesByUnityId({
+      unityId: data.unityId,
       clientId: req.user.clientId,
     });
 

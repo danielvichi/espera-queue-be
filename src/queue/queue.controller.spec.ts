@@ -224,6 +224,57 @@ describe('QueueController', () => {
     });
   });
 
+  describe('/queue/get-by-unity', () => {
+    it('Should throw UnauthorizedException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .get(`/queue/by-unity?unityId=${unity.id}`)
+        .set('Cookie', [`user_token=`])
+        .expect(401);
+    });
+
+    it('should throw MethodNotAllowedException if the connected admin does NOT has proper Admin Role', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .get(`/queue/by-unity?unityId=${unity.id}`)
+        .set('Cookie', [`user_token=${userToken}`])
+        .expect(405);
+    });
+
+    it('should throw BadRequestException if Unity Id is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .get(`/queue/by-unity?unityId=`)
+        .set('Cookie', [`user_token=${userToken}`])
+        .expect(400);
+    });
+
+    it('should return a list of 2 Queue', async () => {
+      const queueIds = queues.map((queue) => queue.id);
+
+      const userToken = await authService.generateJwtForUser({
+        ...clientAdminUser,
+        client: client,
+      });
+
+      const queueList = (await TestModuleSingleton.callEndpoint()
+        .get(`/queue/by-unity?unityId=${unity.id}`)
+        .set('Cookie', [`user_token=${userToken}`])
+        .expect(200)) as { body: QueueDto[] };
+
+      expect(queueList.body.length).toBe(2);
+      expect(queueList.body[0].id).toBe(queueIds[0]);
+      expect(queueList.body[1].id).toBe(queueIds[1]);
+    });
+  });
+
   describe('/queue/create', () => {
     it('Should throw UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
