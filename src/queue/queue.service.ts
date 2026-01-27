@@ -61,14 +61,54 @@ export class QueueService {
       data,
     });
 
-    return queueResponse;
+    return {
+      ...queueResponse,
+      name: queueResponse?.name ?? undefined,
+    };
+  }
+
+  /**
+   * Return a list of Queue by its Unity Id from a Client
+   *
+   * @param {unityId: string; clientId: string } data
+   * @returns {Promise<QueueDto[]>} Return a list of Queue data
+   */
+  async getQueuesByUnityId(data: {
+    unityId: string;
+    clientId: string;
+  }): Promise<QueueDto[]> {
+    if (!data.unityId) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.UNITY_ID_REQUIRED,
+      );
+    }
+
+    if (!data.clientId) {
+      throw new BadRequestException(
+        defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+      );
+    }
+
+    const queueList = await this.prismaService.queue.findMany({
+      where: {
+        unityId: data.unityId,
+        clientId: data.clientId,
+      },
+    });
+
+    const parsedQueueList: QueueDto[] = queueList.map((queue) => ({
+      ...queue,
+      name: queue?.name ?? undefined,
+    }));
+
+    return parsedQueueList;
   }
 
   /**
    * Return a list of Queue by its Ids from a Client
    *
    * @param {GetQueuesByIdsArgs} data List of Queue Ids and the Client Id it all belongs
-   * @returns {Promise<QueueDto[]} Return a list of Queue data
+   * @returns {Promise<QueueDto[]>} Return a list of Queue data
    */
   async getQueuesByIds(data: GetQueuesByIdsArgs): Promise<QueueDto[]> {
     if (!data.clientId) {
@@ -189,7 +229,10 @@ export class QueueService {
         },
       });
 
-      return disabledQueue;
+      return {
+        ...disabledQueue,
+        name: disabledQueue.name ?? undefined,
+      };
       // eslint-disable-next-line @typescript-eslint/no-unused-vars -- TODO: Add Logger
     } catch (err) {
       throw new NotFoundException(

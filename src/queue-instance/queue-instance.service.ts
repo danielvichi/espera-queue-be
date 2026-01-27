@@ -82,6 +82,7 @@ export class QueueInstanceService {
       queueInstanceId: queueInstanceId,
       ...queueReferenceWithoutId,
       queueId: queueReferenceId,
+      name: queueReference.name ?? undefined,
     };
   }
 
@@ -124,6 +125,7 @@ export class QueueInstanceService {
       queueId: queueReferenceId,
       queueInstanceId: id,
       ...queueReferenceWithoutId,
+      name: queueReference.name ?? undefined,
     };
   }
 
@@ -308,6 +310,7 @@ export class QueueInstanceService {
       ...lastQueueInstanceWithoutId,
       queueInstanceId: lastQueueInstance.id,
       queueId: lastQueueInstance.queueId,
+      name: queueReference.name ?? undefined,
     };
   }
 

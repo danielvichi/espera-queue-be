@@ -194,6 +194,44 @@ describe('QueueService', () => {
       expect(queueResponse.unityId).toBe(unity.id);
     });
   });
+
+  describe('getQueuesByUnityId', () => {
+    it('Should NOT be able to retrieve Queue data with missing Unity Id ', async () => {
+      await expect(
+        queueService.getQueuesByUnityId({
+          unityId: '',
+          clientId: client.id,
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          defaultQueueExceptionsMessage.UNITY_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('Should NOT be able to retrieve Queue data with missing Client Id ', async () => {
+      await expect(
+        queueService.getQueuesByUnityId({
+          unityId: unity.id,
+          clientId: '',
+        }),
+      ).rejects.toThrow(
+        new BadRequestException(
+          defaultQueueExceptionsMessage.CLIENT_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('Should return a list of 3 Queues by its Unity Id ', async () => {
+      const queueResponse = await queueService.getQueuesByUnityId({
+        unityId: unity.id,
+        clientId: client.id,
+      });
+
+      expect(queueResponse.length).toBe(3);
+    });
+  });
+
   describe('getQueuesByIds', () => {
     it('Should NOT be able to retrieve Queue data with proper Queue Id ', async () => {
       await expect(
