@@ -7,7 +7,6 @@ import {
   NotFoundException,
   Patch,
   Post,
-  Query,
   Request,
   UseGuards,
 } from '@nestjs/common';
@@ -53,16 +52,15 @@ export class QueueController {
     isArray: true,
   })
   async getQueueByIds(
-    @Query() data: { queuesIds: string },
     @Request() req: AuthenticatedRequestDto,
   ): Promise<QueueDto[]> {
-    if (!data.queuesIds || data.queuesIds.length === 0) {
+    const queuesIds = req.query.queueIds as string;
+
+    if (!queuesIds || queuesIds.length === 0) {
       throw new BadRequestException(
         defaultQueueExceptionsMessage.QUEUE_ID_REQUIRED,
       );
     }
-
-    const { queuesIds } = data;
 
     const queuesIdsList = queuesIds.split(',').map((id) => id.trim());
 
@@ -106,10 +104,11 @@ export class QueueController {
     isArray: true,
   })
   async getQueuesByUnityId(
-    @Query() data: { unityId: string },
     @Request() req: AuthenticatedRequestDto,
   ): Promise<QueueDto[]> {
-    if (!data.unityId) {
+    const unityId = req.query.unityId as string;
+
+    if (!unityId) {
       throw new BadRequestException(
         defaultQueueExceptionsMessage.UNITY_ID_REQUIRED,
       );
@@ -121,13 +120,13 @@ export class QueueController {
     });
 
     checkAdminAllowedToAccessQueueMethodOrThrow({
-      queueUnityId: data.unityId,
+      queueUnityId: unityId,
       authenticatedUser: req.user,
     });
 
     // should also include CLIENT ID
     const queueList = await this.queueService.getQueuesByUnityId({
-      unityId: data.unityId,
+      unityId: unityId,
       clientId: req.user.clientId,
     });
 

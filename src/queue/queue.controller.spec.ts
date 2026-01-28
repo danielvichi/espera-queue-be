@@ -10,6 +10,7 @@ import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateQueueDto, QueueDto } from './queue.dto';
 import { AuthService } from 'src/auth/auth.service';
+import normalizeNullIntoUndefined from 'src/utils/normalize-null';
 
 const UNITY_MOCK_DATA: Array<Omit<CreateUnityDto, 'clientId'>> = [
   {
@@ -142,14 +143,10 @@ describe('QueueController', () => {
       });
 
       // Format response to QueueDto
-      queues.push({
-        ...createQueueResponse,
-        name: createQueueResponse.name ?? undefined,
-        minWaitingTimeInMinutes: undefined,
-        maxWaitingTimeInMinutes: undefined,
-        currentWaitingTimeInMinutes: undefined,
-        adminId: undefined,
-      });
+      const formattedQueueResponse =
+        normalizeNullIntoUndefined<QueueDto>(createQueueResponse);
+
+      queues.push(formattedQueueResponse);
     }
   });
 
@@ -183,8 +180,9 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .get('/queue?queuesIds=' + queueIds.join(','))
+        .get('/queue')
         .set('Cookie', [`user_token=${userToken}`])
+        .query({ queueIds: queueIds.join(',') })
         .expect(405);
     });
 
@@ -209,8 +207,9 @@ describe('QueueController', () => {
       });
 
       const queueList = (await TestModuleSingleton.callEndpoint()
-        .get(`/queue?queuesIds=${queueIds.join(',')}`)
+        .get('/queue')
         .set('Cookie', [`user_token=${userToken}`])
+        .query({ queueIds: queueIds.join(',') })
         .expect(200)) as { body: QueueDto[] };
 
       expect(queueList.body.length).toBe(2);
@@ -222,8 +221,9 @@ describe('QueueController', () => {
   describe('/queue/get-by-unity', () => {
     it('Should throw UnauthorizedException if user is not signed in', async () => {
       await TestModuleSingleton.callEndpoint()
-        .get(`/queue/by-unity?unityId=${unity.id}`)
+        .get('/queue/by-unity')
         .set('Cookie', [`user_token=`])
+        .query({ unityId: unity.id })
         .expect(401);
     });
 
@@ -234,8 +234,9 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .get(`/queue/by-unity?unityId=${unity.id}`)
+        .get('/queue/by-unity')
         .set('Cookie', [`user_token=${userToken}`])
+        .query({ unityId: unity.id })
         .expect(405);
     });
 
@@ -246,8 +247,9 @@ describe('QueueController', () => {
       });
 
       await TestModuleSingleton.callEndpoint()
-        .get(`/queue/by-unity?unityId=`)
+        .get('/queue/by-unity')
         .set('Cookie', [`user_token=${userToken}`])
+        .query({ unityId: '' })
         .expect(400);
     });
 
@@ -260,8 +262,9 @@ describe('QueueController', () => {
       });
 
       const queueList = (await TestModuleSingleton.callEndpoint()
-        .get(`/queue/by-unity?unityId=${unity.id}`)
+        .get('/queue/by-unity')
         .set('Cookie', [`user_token=${userToken}`])
+        .query({ unityId: unity.id })
         .expect(200)) as { body: QueueDto[] };
 
       expect(queueList.body.length).toBe(2);
