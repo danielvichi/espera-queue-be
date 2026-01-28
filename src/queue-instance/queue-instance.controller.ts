@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   MethodNotAllowedException,
   Patch,
   Request,
@@ -12,6 +13,7 @@ import {
   ApiBearerAuth,
   ApiBody,
   ApiOkResponse,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import {
@@ -22,12 +24,74 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
 import { checkAdminRoleHigherOrThrow } from 'src/utils/roles.utils';
 import { AdminRole } from '@prisma/client';
-import { AddUserToQueueInstanceDto } from './queue-instance.dto';
+import {
+  AddUserToQueueInstanceDto,
+  QueueInstanceDto,
+} from './queue-instance.dto';
 
 @ApiTags('Queue-Instance')
 @Controller('queue-instance')
 export class QueueInstanceController {
   constructor(private readonly queueInstanceService: QueueInstanceService) {}
+
+  @Get('latest-by-queue-id')
+  @ApiQuery({
+    name: 'queueId',
+    required: true,
+    type: String,
+  })
+  @ApiBearerAuth('AuthGuard')
+  @ApiOkResponse({
+    description: 'Get latest queue instance by queueId',
+    type: QueueInstanceDto,
+  })
+  async getLatestQueueInstanceByQueueId(
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<QueueInstanceDto | null> {
+    const queueId = req.query.queueId as string;
+
+    if (!queueId) {
+      throw new BadRequestException(
+        defaultQueueInstanceExceptionsMessage.QUEUE_ID,
+      );
+    }
+
+    const latestQueueInstance =
+      await this.queueInstanceService.getLastQueueInstanceByQueueId({
+        queueId: queueId,
+      });
+
+    return latestQueueInstance;
+  }
+
+  // @Get('today')
+  // @ApiQuery({
+  //   name: 'queueId',
+  //   required: true,
+  //   type: String,
+  // })
+  // @ApiOkResponse({
+  //   description: 'Get today queue instance by queueId',
+  //   type: QueueInstanceDto,
+  // })
+  // async getTodayQueueInstanceByQueueId(
+  //   @Request() req: AuthenticatedRequestDto,
+  // ): Promise<{ queueInstanceId: string; usersInQueue: string[] } | null> {
+  //   const queueId = req.query.queueId as string;
+
+  //   if (!queueId) {
+  //     throw new BadRequestException(
+  //       defaultQueueInstanceExceptionsMessage.QUEUE_ID,
+  //     );
+  //   }
+
+  //   const todayQueueInstance =
+  //     await this.queueInstanceService.getTodayQueueInstanceByQueueId({
+  //       queueId: queueId,
+  //     });
+
+  //   return todayQueueInstance;
+  // }
 
   @Patch('add-user')
   @ApiBody({

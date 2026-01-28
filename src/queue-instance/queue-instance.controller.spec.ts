@@ -11,6 +11,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { QueueInstanceController } from './queue-instance.controller';
 import { AuthService } from 'src/auth/auth.service';
 import { AdminDto } from 'src/admin/admin.dto';
+import normalizeNullIntoUndefined from 'src/utils/normalize-null';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -107,13 +108,15 @@ describe('QueueInstanceController', () => {
       },
     });
 
-    queueGeneral = await prismaService.queue.create({
+    const queueGeneralResponse = await prismaService.queue.create({
       data: {
         ...CREATE_QUEUE_MOCK_DATA[0],
         clientId: client.id,
         unityId: unity.id,
       },
     });
+
+    queueGeneral = normalizeNullIntoUndefined<QueueDto>(queueGeneralResponse);
 
     const queueInstanceResponse = await prismaService.queueInstance.create({
       data: {
@@ -134,6 +137,40 @@ describe('QueueInstanceController', () => {
 
   it('should be defined', () => {
     expect(queueInstanceController).toBeDefined();
+  });
+
+  describe('/queue-instance/latest-by-queue-id', () => {
+    it('should throw BadRequestException if Queue Id is missing', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueUser,
+      });
+
+      await TestModuleSingleton.callEndpoint()
+        .get('/queue-instance/latest-by-queue-id')
+        .set('Cookie', [`user_token=${userToken}`])
+        .query({ queueId: '' })
+        .expect(400);
+    });
+
+    it('should return the latest Queue Instance by Queue Id', async () => {
+      const userToken = await authService.generateJwtForUser({
+        ...queueUser,
+      });
+
+      const newQueueInstance = await prismaService.queueInstance.create({
+        data: {
+          queueId: queueGeneral.id,
+        },
+      });
+
+      const response = (await TestModuleSingleton.callEndpoint()
+        .get('/queue-instance/latest-by-queue-id')
+        .set('Cookie', [`user_token=${userToken}`])
+        .query({ queueId: queueGeneral.id })
+        .expect(200)) as { body: { queueInstanceId: string } };
+
+      expect(response.body.queueInstanceId).toBe(newQueueInstance.id);
+    });
   });
 
   describe('/queue-instance/add-user', () => {
@@ -317,6 +354,8 @@ describe('QueueInstanceController', () => {
         .expect(200);
     });
 
-    it('should remove a different userId from authenticated one if signed User is an Admin ', async () => {});
+    it('should remove a different userId from authenticated one if signed User is an Admin ', async () => {
+      // TODO
+    });
   });
 });
