@@ -40,6 +40,7 @@ export class QueueInstanceController {
     required: true,
     type: String,
   })
+  @UseGuards(AuthGuard)
   @ApiBearerAuth('AuthGuard')
   @ApiOkResponse({
     description: 'Get latest queue instance by queueId',

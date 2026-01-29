@@ -276,7 +276,7 @@ export class QueueInstanceService {
    */
   async getLastQueueInstanceByQueueId(data: {
     queueId: string;
-  }): Promise<QueueInstanceDto> {
+  }): Promise<QueueInstanceDto | null> {
     const queueReference = await this.prismaService.queue.findFirst({
       where: {
         id: data.queueId,
@@ -301,9 +301,10 @@ export class QueueInstanceService {
       });
 
     if (!queueInstanceResponse || queueInstanceResponse.length === 0) {
-      throw new NotFoundException(
-        defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
-      );
+      return null;
+      // throw new NotFoundException(
+      //   defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+      // );
     }
 
     const lastQueueInstance = queueInstanceResponse[0];
@@ -329,19 +330,24 @@ export class QueueInstanceService {
    */
   async getTodayQueueInstanceByQueueId(data: {
     queueId: string;
-  }): Promise<QueueInstanceDto> {
+  }): Promise<QueueInstanceDto | null> {
     const lastQueueInstance = await this.getLastQueueInstanceByQueueId({
       queueId: data.queueId,
     });
+
+    if (!lastQueueInstance) {
+      return null;
+    }
 
     const isTodayInstance = isToday({
       date: lastQueueInstance.createdAt,
     });
 
     if (!isTodayInstance) {
-      throw new NotFoundException(
-        defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
-      );
+      return null;
+      // throw new NotFoundException(
+      //   defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
+      // );
     }
 
     return lastQueueInstance;

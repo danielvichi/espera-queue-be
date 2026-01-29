@@ -140,6 +140,14 @@ describe('QueueInstanceController', () => {
   });
 
   describe('/queue-instance/latest-by-queue-id', () => {
+    it('should throw UserNotFoundException if user is not signed in', async () => {
+      await TestModuleSingleton.callEndpoint()
+        .get('/queue-instance/latest-by-queue-id')
+        .set('Cookie', [`user_token=`])
+        .query({ queueId: queueGeneral.id })
+        .expect(401);
+    });
+
     it('should throw BadRequestException if Queue Id is missing', async () => {
       const userToken = await authService.generateJwtForUser({
         ...queueUser,

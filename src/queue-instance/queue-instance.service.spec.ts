@@ -386,16 +386,13 @@ describe('QueueInstanceService', () => {
       );
     });
 
-    it('should throw NotFoundException if queueId is from a nom existing Queue with no Queue Instance', async () => {
-      await expect(
-        queueInstanceService.getLastQueueInstanceByQueueId({
+    it('should return null if queueId is from a nom existing Queue with no Queue Instance', async () => {
+      const queueInstance =
+        await queueInstanceService.getLastQueueInstanceByQueueId({
           queueId: queueGeneral.id,
-        }),
-      ).rejects.toThrow(
-        new NotFoundException(
-          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
-        ),
-      );
+        });
+
+      expect(queueInstance).toBeNull();
     });
 
     it('should should return the last Queue Instance created', async () => {
@@ -433,8 +430,8 @@ describe('QueueInstanceService', () => {
           queueId: queueGeneral.id,
         });
 
-      expect(lastQueueInstance.queueId).toBe(queueGeneral.id);
-      expect(lastQueueInstance.queueInstanceId).toBe(queueInstanceA.id);
+      expect(lastQueueInstance?.queueId).toBe(queueGeneral.id);
+      expect(lastQueueInstance?.queueInstanceId).toBe(queueInstanceA.id);
     });
   });
 
@@ -451,19 +448,16 @@ describe('QueueInstanceService', () => {
       );
     });
 
-    it('should throw NotFoundException if queueId is from a nom existing Queue with no Queue Instance', async () => {
-      await expect(
-        queueInstanceService.getTodayQueueInstanceByQueueId({
+    it('should return null if queueId is from a existing Queue with no Queue Instance', async () => {
+      const queueInstance =
+        await queueInstanceService.getTodayQueueInstanceByQueueId({
           queueId: queueGeneral.id,
-        }),
-      ).rejects.toThrow(
-        new NotFoundException(
-          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
-        ),
-      );
+        });
+
+      expect(queueInstance).toBeNull();
     });
 
-    it('should throw NotFoundException if all Queue Instances are from past days', async () => {
+    it('should return null if all Queue Instances are from past days', async () => {
       const allInstances = await prismaService.queueInstance.findMany({
         where: {
           queueId: queueGeneral.id,
@@ -493,15 +487,12 @@ describe('QueueInstanceService', () => {
         },
       });
 
-      await expect(
-        queueInstanceService.getTodayQueueInstanceByQueueId({
+      const queueInstance =
+        await queueInstanceService.getTodayQueueInstanceByQueueId({
           queueId: queueGeneral.id,
-        }),
-      ).rejects.toThrow(
-        new NotFoundException(
-          defaultQueueInstanceExceptionsMessage.QUEUE_INSTANCE_NOT_FOUND,
-        ),
-      );
+        });
+
+      expect(queueInstance).toBeNull();
     });
   });
 });
