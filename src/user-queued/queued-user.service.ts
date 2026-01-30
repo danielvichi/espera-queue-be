@@ -15,6 +15,13 @@ import normalizeNullIntoUndefined from 'src/utils/normalize-null';
 export class QueuedUserService {
   constructor(private readonly prismaService: PrismaService) {}
 
+  /*
+   * Create a new queued user entry
+   * @param queueId - The ID of the queue
+   * @param userId - The ID of the user
+   * @param numberOfSeats - The number of seats requested by the user
+   * @returns The created queued user entry as a QueuedUserDto
+   */
   async createQueuedUserEntry(
     queueId: string,
     userId: string,
@@ -113,10 +120,47 @@ export class QueuedUserService {
     return formattedResponse;
   }
 
-  // async getQueuedUserForQueue(queueId: string, userId: string): Promise<{}> {
-  //   // Implementation goes here
-  //   return {};
-  // }
+  /*
+   * Get queued user entry for a specific queue and user
+   *
+   * @param queueId - The ID of the queue
+   * @param userId - The ID of the user
+   * @returns The queued user entry as a QueuedUserDto
+   */
+  async getQueuedUserForQueue(
+    queueId: string,
+    userId: string,
+  ): Promise<QueuedUserDto | null> {
+    if (!queueId) {
+      throw new QueuedUserBadRequestException(
+        defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
+      );
+    }
+
+    if (!userId) {
+      throw new QueuedUserBadRequestException(
+        defaultQueueUserExceptionsMessage.USER_ID_REQUIRED,
+      );
+    }
+
+    const queuedUser = await this.prismaService.queuedUser.findMany({
+      where: {
+        queueId,
+        userId,
+      },
+    });
+
+    const lastQueuedUserEntry = queuedUser[queuedUser.length - 1];
+
+    if (!lastQueuedUserEntry) {
+      return null;
+    }
+
+    const formattedResponse: QueuedUserDto =
+      normalizeNullIntoUndefined(lastQueuedUserEntry);
+
+    return formattedResponse;
+  }
 
   // async serveQueuedUser(queueId: string, userId: string): Promise<{}> {
   //   // Implementation goes here
@@ -132,7 +176,7 @@ export class QueuedUserService {
   // //   // Implementation goes here
   // // }
 
-  // async getQueuedUsersInQueue(queueId: string): Promise<{}[]> {
+  // async getQueuedUsersForQueue(queueId: string): Promise<{}[]> {
   //   // Implementation goes here
   //   return [];
   // }

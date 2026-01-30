@@ -349,4 +349,132 @@ describe('QueuedUserService', () => {
       expect(queuedUserEntry2.id).not.toBe(queuedUserEntry1.id);
     });
   });
+
+  describe('getQueuedUserForQueue', () => {
+    it('should throw an error if queue Id is not provided', async () => {
+      const userId = users[0].id;
+
+      await expect(
+        queuedUSerServiceservice.getQueuedUserForQueue('', userId),
+      ).rejects.toThrow(
+        new QueuedUserBadRequestException(
+          defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should throw an error if user Id is not provided', async () => {
+      const queueId = queues[0].id;
+
+      await expect(
+        queuedUSerServiceservice.getQueuedUserForQueue(queueId, ''),
+      ).rejects.toThrow(
+        new QueuedUserBadRequestException(
+          defaultQueueUserExceptionsMessage.USER_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should return the queued user entry for the given queue and user', async () => {
+      const queueId = queues[0].id;
+      const userId = users[0].id;
+
+      // Mock current time to be outside working hours
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+      jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+      const queuedUserEntry =
+        await queuedUSerServiceservice.createQueuedUserEntry(
+          queueId,
+          userId,
+          1,
+        );
+
+      expect(queuedUserEntry).toBeDefined();
+
+      const fetchedQueuedUserEntry =
+        await queuedUSerServiceservice.getQueuedUserForQueue(queueId, userId);
+
+      expect(fetchedQueuedUserEntry).toBeDefined();
+      expect(fetchedQueuedUserEntry?.id).toBe(queuedUserEntry.id);
+    });
+
+    it('should return null if no queued user entry exists for the given queue and user', async () => {
+      const queueId = queues[0].id;
+      const userId = users[0].id;
+
+      const fetchedQueuedUserEntry =
+        await queuedUSerServiceservice.getQueuedUserForQueue(queueId, userId);
+
+      expect(fetchedQueuedUserEntry).toBeNull();
+    });
+
+    it('should return null if queued user entry exists for a different queue', async () => {
+      const queueId1 = queues[0].id;
+      const queueId2 = queues[1].id;
+      const userId = users[0].id;
+
+      // Mock current time to be outside working hours
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+      jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+      const queuedUserEntry =
+        await queuedUSerServiceservice.createQueuedUserEntry(
+          queueId1,
+          userId,
+          1,
+        );
+
+      expect(queuedUserEntry).toBeDefined();
+
+      const fetchedQueuedUserEntry =
+        await queuedUSerServiceservice.getQueuedUserForQueue(queueId2, userId);
+
+      expect(fetchedQueuedUserEntry).toBeNull();
+    });
+
+    it('should return latest entry if multiple queued user entries exist for the same queue and user', async () => {
+      const queueId = queues[0].id;
+      const userId = users[0].id;
+
+      // Mock current time to be outside working hours
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+      jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+      const firstQueuedUserEntry =
+        await queuedUSerServiceservice.createQueuedUserEntry(
+          queueId,
+          userId,
+          1,
+        );
+
+      expect(firstQueuedUserEntry).toBeDefined();
+
+      console.log('First Queued User Entry:', firstQueuedUserEntry.id);
+
+      // Manually update the createdAt date to be yesterday
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      await prismaService.queuedUser.update({
+        where: { id: firstQueuedUserEntry.id },
+        data: { createdAt: yesterday },
+      });
+
+      const secondQueuedUserEntry =
+        await queuedUSerServiceservice.createQueuedUserEntry(
+          queueId,
+          userId,
+          2,
+        );
+
+      expect(secondQueuedUserEntry).toBeDefined();
+
+      const fetchedQueuedUserEntry =
+        await queuedUSerServiceservice.getQueuedUserForQueue(queueId, userId);
+
+      expect(fetchedQueuedUserEntry).toBeDefined();
+      expect(fetchedQueuedUserEntry?.id).toBe(secondQueuedUserEntry.id);
+    });
+  });
 });
