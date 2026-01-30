@@ -8,7 +8,6 @@ datasource db {
 
 generator client {
   provider = "prisma-client-js"
-  // output   = "../generated/prisma"
 }
 
 // Future Implementation
@@ -77,14 +76,15 @@ model Unity {
   enabled   Boolean  @default(true)
 }
 
-model QueueUser {
-  id           String   @id @default(cuid())
+model User {
+  id           String       @id @default(cuid())
   name         String
-  email        String   @unique
+  email        String       @unique
   passwordHash String
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  enabled      Boolean  @default(true)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+  enabled      Boolean      @default(true)
+  QueuedUser   QueuedUser[]
 }
 
 enum QueueType {
@@ -120,20 +120,28 @@ model Queue {
   Admin   Admin?  @relation(fields: [adminId], references: [id])
   adminId String?
 
-  QueueInstance QueueInstance[]
+  QueuedUser QueuedUser[]
 }
 
-model QueueInstance {
-  id           String   @id @default(cuid())
-  startQueueAt String?
-  endQueueAt   String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+enum QueuedUserStatus {
+  WAITING
+  SERVICED
+  CANCELLED
+}
 
-  Queue         Queue    @relation(fields: [queueId], references: [id])
-  queueId       String
-  usersInQueue  String[]
-  attendedUsers String[]
+model QueuedUser {
+  id            String           @id @default(cuid())
+  numberOfSeats Int
+  status        QueuedUserStatus @default(WAITING)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  servedAt      DateTime?
+
+  Queue   Queue  @relation(fields: [queueId], references: [id])
+  queueId String
+
+  User   User   @relation(fields: [userId], references: [id])
+  userId String
 }
 
 // Future Implementation

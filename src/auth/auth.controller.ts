@@ -97,7 +97,7 @@ export class AuthController {
     return res.send(signedJwt);
   }
 
-  @Post('login/queue-user')
+  @Post('login/user')
   @ApiOkResponse({
     description:
       'Set an authenticated wrapped in a JWT cookie with the user_token, for Queue Users.',
@@ -108,11 +108,11 @@ export class AuthController {
     description: 'Basic auth header with email and password',
   })
   @ApiBody({
-    description: 'Queue User sign-in',
+    description: 'User sign-in',
     type: SignInDto,
     required: true,
   })
-  async checkQueueUserCredentials(
+  async checkUserCredentials(
     @Body() signInData: SignInDto,
     @Req() req: AuthenticatedRequestDto,
     @Res() res: Response,
@@ -135,7 +135,7 @@ export class AuthController {
       );
     }
 
-    const user = await this.authService.checkQueueUserCredentials({
+    const user = await this.authService.checkUserCredentials({
       email: signInData.email,
       passwordHash: signInData.passwordHash,
     });

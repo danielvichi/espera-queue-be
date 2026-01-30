@@ -45,8 +45,8 @@ export class TestModuleSingleton {
   }
 
   static async cleanUpDatabase() {
-    await this.prismaClient.queueUser.deleteMany();
-    await this.prismaClient.queueInstance.deleteMany();
+    await this.prismaClient.queuedUser.deleteMany();
+    await this.prismaClient.user.deleteMany();
     await this.prismaClient.queue.deleteMany();
     await this.prismaClient.unity.deleteMany();
     await this.prismaClient.admin.deleteMany();

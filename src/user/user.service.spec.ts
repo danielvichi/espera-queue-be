@@ -1,9 +1,9 @@
-import { CreateQueueUserDto } from './queue-user.dto';
-import { defaultQueueUserExceptionsMessage } from './queue-user.exceptions';
-import { QueueUserService } from './queue-user.service';
+import { CreateUserDto } from './user.dto';
+import { defaultQueueUserExceptionsMessage } from './user.exceptions';
+import { UserService } from './user.service';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 
-const CREATE_QUEUE_USER_MOCK_DATA: CreateQueueUserDto[] = [
+const CREATE_QUEUE_USER_MOCK_DATA: CreateUserDto[] = [
   {
     name: 'John Doe',
     email: 'john_doe@example.com',
@@ -16,12 +16,12 @@ const CREATE_QUEUE_USER_MOCK_DATA: CreateQueueUserDto[] = [
   },
 ];
 
-describe('QueueUserService', () => {
-  let queueUserService: QueueUserService;
+describe('UserService', () => {
+  let userService: UserService;
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
-    queueUserService = module.get<QueueUserService>(QueueUserService);
+    userService = module.get<UserService>(UserService);
 
     await TestModuleSingleton.cleanUpDatabase();
   });
@@ -31,15 +31,14 @@ describe('QueueUserService', () => {
   });
 
   it('should be defined', () => {
-    expect(queueUserService).toBeDefined();
+    expect(userService).toBeDefined();
   });
 
   describe('createQueueUser', () => {
     it('should create a Queue User ', async () => {
       const queueUserData = CREATE_QUEUE_USER_MOCK_DATA[0];
 
-      const createdUserQueue =
-        await queueUserService.createQueueUser(queueUserData);
+      const createdUserQueue = await userService.createQueueUser(queueUserData);
 
       expect(createdUserQueue.id).toBeDefined();
       expect(createdUserQueue).toMatchObject({
@@ -51,9 +50,7 @@ describe('QueueUserService', () => {
     it('should NOT create a Queue User if emails already exists', async () => {
       const queueUserData = CREATE_QUEUE_USER_MOCK_DATA[0];
 
-      await expect(
-        queueUserService.createQueueUser(queueUserData),
-      ).rejects.toThrow(
+      await expect(userService.createQueueUser(queueUserData)).rejects.toThrow(
         new Error(defaultQueueUserExceptionsMessage.EMAIL_ALREADY_EXISTS),
       );
     });
