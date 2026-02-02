@@ -8,7 +8,6 @@ import { AuthModule } from './auth/auth.module';
 import { UnityModule } from './unity/unity.module';
 import { QueueModule } from './queue/queue.module';
 import { UserModule } from './user/user.module';
-import { QueuedUserController } from './user-queued/queued-user.controller';
 import { QueuedUserModule } from './user-queued/queued-user.module';
 
 @Module({
@@ -22,7 +21,7 @@ import { QueuedUserModule } from './user-queued/queued-user.module';
     UserModule,
     QueuedUserModule,
   ],
-  controllers: [AppController, QueuedUserController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}

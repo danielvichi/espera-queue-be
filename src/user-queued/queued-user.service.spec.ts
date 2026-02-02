@@ -2,7 +2,7 @@ import { CreateUserDto, UserDto } from 'src/user/user.dto';
 import { QueuedUserService } from './queued-user.service';
 import { TestModuleSingleton } from 'test/util/testModuleSingleTon';
 import { CreateQueueDto, QueueDto } from 'src/queue/queue.dto';
-import { QueuedUserStatus, QueueType } from '@prisma/client';
+import { AdminRole, QueuedUserStatus, QueueType } from '@prisma/client';
 import {
   CreateClientDto,
   CreateClientResponseDto,
@@ -13,8 +13,16 @@ import {
   defaultQueueUserExceptionsMessage,
   QueuedUserBadRequestException,
   QueuedUserConflictException,
+  QueuedUserNotFoundException,
+  QueueNotFoundException,
 } from './queued-user-exceptions';
 import normalizeNullIntoUndefined from 'src/utils/normalize-null';
+import {
+  AdminDto,
+  AdminWithClientDto,
+  CreatedAdminDto,
+} from 'src/admin/admin.dto';
+import { MethodNotAllowedException } from '@nestjs/common';
 
 const CREATE_CLIENT_MOCK_DATA: CreateClientDto = {
   name: 'Client Test',
@@ -53,18 +61,26 @@ const CREATE_QUEUE_USER_MOCK_DATA: CreateUserDto[] = [
   },
 ];
 
+const CREATE_QUEUE_ADMIN_MOCK_DATA: Omit<CreatedAdminDto, 'clientId'> = {
+  name: 'Owner Admin A',
+  email: 'owner_admin_a@email.com',
+  passwordHash: 'hashed_password',
+  role: AdminRole.QUEUE_ADMIN,
+};
+
 describe('QueuedUserService', () => {
-  let queuedUSerServiceservice: QueuedUserService;
+  let queuedUserServiceservice: QueuedUserService;
   let prismaService: PrismaService;
 
   let client: CreateClientResponseDto;
   let unity: UnityDto;
   const queues: QueueDto[] = [];
+  let queueAdmin: AdminWithClientDto;
   const users: UserDto[] = [];
 
   beforeAll(async () => {
     const module = await TestModuleSingleton.createTestModule();
-    queuedUSerServiceservice = module.get<QueuedUserService>(QueuedUserService);
+    queuedUserServiceservice = module.get<QueuedUserService>(QueuedUserService);
     prismaService = module.get<PrismaService>(PrismaService);
 
     await TestModuleSingleton.cleanUpDatabase();
@@ -96,6 +112,22 @@ describe('QueuedUserService', () => {
       queues.push(normalizeNullIntoUndefined(createQueueResponse));
     }
 
+    const adminResponse = await prismaService.admin.create({
+      data: {
+        ...CREATE_QUEUE_ADMIN_MOCK_DATA,
+        clientId: client.id,
+        queueIds: [queues[0].id],
+      },
+    });
+
+    const parsedAdminResponse =
+      normalizeNullIntoUndefined<AdminDto>(adminResponse);
+
+    queueAdmin = {
+      ...parsedAdminResponse,
+      client: client,
+    };
+
     for (const userData of CREATE_QUEUE_USER_MOCK_DATA) {
       const createUserResponse = await prismaService.user.create({
         data: userData,
@@ -114,7 +146,7 @@ describe('QueuedUserService', () => {
   });
 
   it('should be defined', () => {
-    expect(queuedUSerServiceservice).toBeDefined();
+    expect(queuedUserServiceservice).toBeDefined();
   });
 
   describe('createQueuedUserEntry', () => {
@@ -122,7 +154,7 @@ describe('QueuedUserService', () => {
       const userId = users[0].id;
 
       await expect(
-        queuedUSerServiceservice.createQueuedUserEntry('', userId, 1),
+        queuedUserServiceservice.createQueuedUserEntry('', userId, 1),
       ).rejects.toThrow(
         new QueuedUserBadRequestException(
           defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
@@ -134,7 +166,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
 
       await expect(
-        queuedUSerServiceservice.createQueuedUserEntry(queueId, '', 1),
+        queuedUserServiceservice.createQueuedUserEntry(queueId, '', 1),
       ).rejects.toThrow(
         new QueuedUserBadRequestException(
           defaultQueueUserExceptionsMessage.USER_ID_REQUIRED,
@@ -147,7 +179,7 @@ describe('QueuedUserService', () => {
       const userId = users[0].id;
 
       await expect(
-        queuedUSerServiceservice.createQueuedUserEntry(queueId, userId, -1),
+        queuedUserServiceservice.createQueuedUserEntry(queueId, userId, -1),
       ).rejects.toThrow(
         new QueuedUserBadRequestException(
           defaultQueueUserExceptionsMessage.VALID_NUMBER_OF_SEATS_REQUIRED,
@@ -164,7 +196,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       await expect(
-        queuedUSerServiceservice.createQueuedUserEntry(queueId, userId, 1),
+        queuedUserServiceservice.createQueuedUserEntry(queueId, userId, 1),
       ).rejects.toThrow(
         new QueuedUserBadRequestException(
           defaultQueueUserExceptionsMessage.OUTSIDE_QUEUE_WORKING_HOURS,
@@ -181,7 +213,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -203,7 +235,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -212,7 +244,7 @@ describe('QueuedUserService', () => {
       expect(queuedUserEntry).toBeDefined();
 
       await expect(
-        queuedUSerServiceservice.createQueuedUserEntry(queueId, userId, 1),
+        queuedUserServiceservice.createQueuedUserEntry(queueId, userId, 1),
       ).rejects.toThrow(
         new QueuedUserConflictException(
           defaultQueueUserExceptionsMessage.USER_ALREADY_QUEUED,
@@ -230,7 +262,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId1,
           userId,
           1,
@@ -239,7 +271,7 @@ describe('QueuedUserService', () => {
       expect(queuedUserEntry).toBeDefined();
 
       await expect(
-        queuedUSerServiceservice.createQueuedUserEntry(queueId2, userId, 1),
+        queuedUserServiceservice.createQueuedUserEntry(queueId2, userId, 1),
       ).rejects.toThrow(
         new QueuedUserConflictException(
           defaultQueueUserExceptionsMessage.USER_ALREADY_QUEUED,
@@ -256,7 +288,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -275,7 +307,7 @@ describe('QueuedUserService', () => {
 
       // Attempt to create a new queued entry
       const newQueuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -294,7 +326,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -310,7 +342,7 @@ describe('QueuedUserService', () => {
 
       // Attempt to create a new queued entry
       const newQueuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -330,7 +362,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry1 =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId1,
           1,
@@ -339,7 +371,7 @@ describe('QueuedUserService', () => {
       expect(queuedUserEntry1).toBeDefined();
 
       const queuedUserEntry2 =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId2,
           1,
@@ -355,7 +387,7 @@ describe('QueuedUserService', () => {
       const userId = users[0].id;
 
       await expect(
-        queuedUSerServiceservice.getQueuedUserForQueue('', userId),
+        queuedUserServiceservice.getQueuedUserForQueue('', userId),
       ).rejects.toThrow(
         new QueuedUserBadRequestException(
           defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
@@ -367,7 +399,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
 
       await expect(
-        queuedUSerServiceservice.getQueuedUserForQueue(queueId, ''),
+        queuedUserServiceservice.getQueuedUserForQueue(queueId, ''),
       ).rejects.toThrow(
         new QueuedUserBadRequestException(
           defaultQueueUserExceptionsMessage.USER_ID_REQUIRED,
@@ -384,7 +416,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -393,7 +425,7 @@ describe('QueuedUserService', () => {
       expect(queuedUserEntry).toBeDefined();
 
       const fetchedQueuedUserEntry =
-        await queuedUSerServiceservice.getQueuedUserForQueue(queueId, userId);
+        await queuedUserServiceservice.getQueuedUserForQueue(queueId, userId);
 
       expect(fetchedQueuedUserEntry).toBeDefined();
       expect(fetchedQueuedUserEntry?.id).toBe(queuedUserEntry.id);
@@ -404,7 +436,7 @@ describe('QueuedUserService', () => {
       const userId = users[0].id;
 
       const fetchedQueuedUserEntry =
-        await queuedUSerServiceservice.getQueuedUserForQueue(queueId, userId);
+        await queuedUserServiceservice.getQueuedUserForQueue(queueId, userId);
 
       expect(fetchedQueuedUserEntry).toBeNull();
     });
@@ -419,7 +451,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const queuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId1,
           userId,
           1,
@@ -428,7 +460,7 @@ describe('QueuedUserService', () => {
       expect(queuedUserEntry).toBeDefined();
 
       const fetchedQueuedUserEntry =
-        await queuedUSerServiceservice.getQueuedUserForQueue(queueId2, userId);
+        await queuedUserServiceservice.getQueuedUserForQueue(queueId2, userId);
 
       expect(fetchedQueuedUserEntry).toBeNull();
     });
@@ -442,7 +474,7 @@ describe('QueuedUserService', () => {
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
       const firstQueuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           1,
@@ -462,7 +494,7 @@ describe('QueuedUserService', () => {
       });
 
       const secondQueuedUserEntry =
-        await queuedUSerServiceservice.createQueuedUserEntry(
+        await queuedUserServiceservice.createQueuedUserEntry(
           queueId,
           userId,
           2,
@@ -471,10 +503,203 @@ describe('QueuedUserService', () => {
       expect(secondQueuedUserEntry).toBeDefined();
 
       const fetchedQueuedUserEntry =
-        await queuedUSerServiceservice.getQueuedUserForQueue(queueId, userId);
+        await queuedUserServiceservice.getQueuedUserForQueue(queueId, userId);
 
       expect(fetchedQueuedUserEntry).toBeDefined();
       expect(fetchedQueuedUserEntry?.id).toBe(secondQueuedUserEntry.id);
+    });
+  });
+
+  describe('serveQueuedUser', () => {
+    it('should throw an error if queue Id is not provided', async () => {
+      const userId = users[0].id;
+
+      await expect(
+        queuedUserServiceservice.serveQueuedUser('', userId),
+      ).rejects.toThrow(
+        new QueuedUserBadRequestException(
+          defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should throw an error if Queued User Id is not provided', async () => {
+      const queueId = queues[0].id;
+
+      await expect(
+        queuedUserServiceservice.serveQueuedUser(queueId, ''),
+      ).rejects.toThrow(
+        new QueuedUserBadRequestException(
+          defaultQueueUserExceptionsMessage.QUEUED_USER_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should throw an error if no queued user entry exists for the given queue and user', async () => {
+      const queueId = queues[0].id;
+      const invalidQueuedUserId = 'invalid-queued-user-entry-id';
+
+      await expect(
+        queuedUserServiceservice.serveQueuedUser(queueId, invalidQueuedUserId),
+      ).rejects.toThrow(new QueuedUserNotFoundException(invalidQueuedUserId));
+    });
+
+    it('should throw an error if the user does not exist', async () => {
+      const queueId = queues[0].id;
+      const invalidUserId = 'non-existent-user-id';
+
+      await expect(
+        queuedUserServiceservice.serveQueuedUser(queueId, invalidUserId),
+      ).rejects.toThrow(new QueuedUserNotFoundException(invalidUserId));
+    });
+
+    it('should throw an error if the queue does not exist', async () => {
+      const invalidQueueId = 'non-existent-queue-id';
+      const userId = users[0].id;
+
+      await expect(
+        queuedUserServiceservice.serveQueuedUser(invalidQueueId, userId),
+      ).rejects.toThrow(new QueueNotFoundException(invalidQueueId));
+    });
+
+    it('should throw an error if the queued user entry status is not WAITING', async () => {
+      const queueId = queues[0].id;
+      const userId = users[0].id;
+
+      // Mock current time to be outside working hours
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+      jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+      const queuedUserEntry =
+        await queuedUserServiceservice.createQueuedUserEntry(
+          queueId,
+          userId,
+          1,
+        );
+
+      expect(queuedUserEntry).toBeDefined();
+
+      // Manually update the status to SERVED
+      await prismaService.queuedUser.update({
+        where: { id: queuedUserEntry.id },
+        data: { status: QueuedUserStatus.SERVICED },
+      });
+
+      await expect(
+        queuedUserServiceservice.serveQueuedUser(queueId, queuedUserEntry.id),
+      ).rejects.toThrow(
+        new QueuedUserConflictException(
+          defaultQueueUserExceptionsMessage.USER_CANNOT_BE_SERVED,
+        ),
+      );
+    });
+
+    it('should serve the queued user and update the status to SERVICED', async () => {
+      const queueId = queues[0].id;
+      const userId = users[0].id;
+
+      // Mock current time to be outside working hours
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+      jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+      const queuedUserEntry =
+        await queuedUserServiceservice.createQueuedUserEntry(
+          queueId,
+          userId,
+          1,
+        );
+
+      expect(queuedUserEntry).toBeDefined();
+      expect(queuedUserEntry.status).toBe(QueuedUserStatus.WAITING);
+
+      const servedQueuedUserEntry =
+        await queuedUserServiceservice.serveQueuedUser(
+          queueId,
+          queuedUserEntry.id,
+        );
+
+      expect(servedQueuedUserEntry).toBeDefined();
+      expect(servedQueuedUserEntry.id).toBe(queuedUserEntry.id);
+      expect(servedQueuedUserEntry.status).toBe(QueuedUserStatus.SERVICED);
+      expect(servedQueuedUserEntry.servedAt).toBeDefined();
+    });
+  });
+
+  describe('checkIsQueueAdminOrThrow', () => {
+    it('should throw BadRequestException if logged user does not have admin role', async () => {
+      const queueId = queues[0].id;
+      const invalidQueueAdmin = {} as AdminWithClientDto;
+
+      await expect(
+        queuedUserServiceservice.checkIsQueueAdminOrThrow(
+          invalidQueueAdmin,
+          queueId,
+        ),
+      ).rejects.toThrow(
+        new QueuedUserBadRequestException(
+          defaultQueueUserExceptionsMessage.USER_ROLE_REQUIRED,
+        ),
+      );
+    });
+
+    it('should throw BadRequestException if queue Id is not provided', async () => {
+      const invalidQueueId = '';
+
+      await expect(
+        queuedUserServiceservice.checkIsQueueAdminOrThrow(
+          queueAdmin,
+          invalidQueueId,
+        ),
+      ).rejects.toThrow(
+        new QueuedUserBadRequestException(
+          defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should throw MethodNotAllowedException if provided user does not have admin privileges', async () => {
+      const queueId = queues[0].id;
+      const wrongClientIdAdmin = {
+        ...queueAdmin,
+        clientId: 'wrong_client_id',
+      };
+
+      await expect(
+        queuedUserServiceservice.checkIsQueueAdminOrThrow(
+          wrongClientIdAdmin,
+          queueId,
+        ),
+      ).rejects.toThrow(
+        new MethodNotAllowedException(
+          defaultQueueUserExceptionsMessage.CLIENT_ADMIN_PRIVILEGE_REQUIRED,
+        ),
+      );
+    });
+
+    it('should throw MethodNotAllowedException if is Queue Admin for a different Queue', async () => {
+      const wrongQueueId = queues[1].id;
+
+      await expect(
+        queuedUserServiceservice.checkIsQueueAdminOrThrow(
+          queueAdmin,
+          wrongQueueId,
+        ),
+      ).rejects.toThrow(
+        new MethodNotAllowedException(
+          defaultQueueUserExceptionsMessage.QUEUE_ADMIN_PRIVILEGE_REQUIRED,
+        ),
+      );
+    });
+
+    it('should return null if all requirements is ok', async () => {
+      const queueId = queues[0].id;
+
+      const response = await queuedUserServiceservice.checkIsQueueAdminOrThrow(
+        queueAdmin,
+        queueId,
+      );
+
+      expect(response).toBeNull();
     });
   });
 });
