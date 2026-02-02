@@ -1,10 +1,10 @@
 import { isValidEmail } from 'src/utils/emailParser';
-import { CreateQueueUserDto } from './queue-user.dto';
+import { CreateUserDto } from './user.dto';
 import { BadRequestException } from '@nestjs/common';
-import { defaultQueueUserExceptionsMessage } from './queue-user.exceptions';
+import { defaultQueueUserExceptionsMessage } from './user.exceptions';
 
 export function checkCreateQueueUserRequirementsOrThrow(
-  data: CreateQueueUserDto,
+  data: CreateUserDto,
 ): void {
   if (!data.email) {
     throw new BadRequestException(

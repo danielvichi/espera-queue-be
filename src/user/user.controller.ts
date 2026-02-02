@@ -6,20 +6,20 @@ import {
   Req,
   Res,
 } from '@nestjs/common';
-import { QueueUserService } from './queue-user.service';
+import { UserService } from './user.service';
 import { ApiResponse, ApiTags } from '@nestjs/swagger';
-import { CreateQueueUserDto, QueueUserDto } from './queue-user.dto';
-import { checkCreateQueueUserRequirementsOrThrow } from './queue-user.utils';
+import { CreateUserDto, UserDto } from './user.dto';
+import { checkCreateQueueUserRequirementsOrThrow } from './user.utils';
 import { AuthService } from 'src/auth/auth.service';
 import { UserNotFoundException } from 'src/auth/auth.exceptions';
 import { type Response } from 'express';
-import { defaultQueueUserExceptionsMessage } from './queue-user.exceptions';
+import { defaultQueueUserExceptionsMessage } from './user.exceptions';
 
-@ApiTags('Queue-User')
-@Controller('queue-user')
-export class QueueUserController {
+@ApiTags('User')
+@Controller('user')
+export class UserController {
   constructor(
-    private readonly queueUserService: QueueUserService,
+    private readonly queueUserService: UserService,
     private readonly authService: AuthService,
   ) {}
 
@@ -27,20 +27,20 @@ export class QueueUserController {
   @ApiResponse({
     description: 'Create a new Queue User and create Auth Session',
     status: 201,
-    type: QueueUserDto,
+    type: UserDto,
   })
   async createQueueUser(
-    @Body() createUserData: CreateQueueUserDto,
+    @Body() createUserData: CreateUserDto,
     @Req() req,
     @Res() res: Response,
   ) {
     checkCreateQueueUserRequirementsOrThrow(createUserData);
 
     // 1 - Create Queue User
-    let queueUserResponse;
+    let userResponse;
 
     try {
-      queueUserResponse =
+      userResponse =
         await this.queueUserService.createQueueUser(createUserData);
     } catch (error: unknown) {
       if (error instanceof UserNotFoundException) {
@@ -57,8 +57,7 @@ export class QueueUserController {
       }
     }
 
-    const signedJwt =
-      await this.authService.generateJwtForUser(queueUserResponse);
+    const signedJwt = await this.authService.generateJwtForUser(userResponse);
 
     const cookie = this.authService.generateJwtCookie(req, signedJwt);
 

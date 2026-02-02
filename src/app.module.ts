@@ -7,8 +7,8 @@ import { AdminModule } from './admin/admin.module';
 import { AuthModule } from './auth/auth.module';
 import { UnityModule } from './unity/unity.module';
 import { QueueModule } from './queue/queue.module';
-import { QueueUserModule } from './queue-user/queue-user.module';
-import { QueueInstanceModule } from './queue-instance/queue-instance.module';
+import { UserModule } from './user/user.module';
+import { QueuedUserModule } from './user-queued/queued-user.module';
 
 @Module({
   imports: [
@@ -18,8 +18,8 @@ import { QueueInstanceModule } from './queue-instance/queue-instance.module';
     AuthModule,
     UnityModule,
     QueueModule,
-    QueueUserModule,
-    QueueInstanceModule,
+    UserModule,
+    QueuedUserModule,
   ],
   controllers: [AppController],
   providers: [AppService],

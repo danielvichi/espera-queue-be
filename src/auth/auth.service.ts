@@ -10,7 +10,7 @@ import {
   generateUserTokenCookie,
 } from './auth.utils';
 import { AuthenticatedRequestDto } from './auth.dto';
-import { QueueUserDto } from 'src/queue-user/queue-user.dto';
+import { UserDto } from 'src/user/user.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 interface SignInCredentials {
@@ -59,29 +59,27 @@ export class AuthService {
    * Returns Queue User data for a Sign In session
    *
    * @param {SignInCredentials}data
-   * @returns {Promise<QueueUserDto>}
+   * @returns {Promise<UserDto>}
    */
-  async checkQueueUserCredentials(
-    data: SignInCredentials,
-  ): Promise<QueueUserDto | null> {
-    const queueUser = await this.prismaService.queueUser.findFirst({
+  async checkUserCredentials(data: SignInCredentials): Promise<UserDto | null> {
+    const User = await this.prismaService.user.findFirst({
       where: {
         email: data.email,
       },
     });
 
-    if (!queueUser) {
+    if (!User) {
       return null;
     }
 
-    const { passwordHash, ...queueUserWithoutPassword } = queueUser;
+    const { passwordHash, ...UserWithoutPassword } = User;
     if (data.passwordHash !== passwordHash) {
       throw new InvalidCredentialsException(
         defaultAuthExceptionMessage.INVALID_CREDENTIALS,
       );
     }
 
-    return queueUserWithoutPassword;
+    return UserWithoutPassword;
   }
 
   // TODO - IMPROVE
@@ -119,7 +117,7 @@ export class AuthService {
    * @returns {Promise<string>}
    */
   async generateJwtForUser(
-    user: AdminWithClientDto | QueueUserDto,
+    user: AdminWithClientDto | UserDto,
   ): Promise<string> {
     return this.generateJwtToken(
       {
