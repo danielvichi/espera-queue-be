@@ -8,7 +8,7 @@ import { AuthModule } from './auth/auth.module';
 import { UnityModule } from './unity/unity.module';
 import { QueueModule } from './queue/queue.module';
 import { UserModule } from './user/user.module';
-import { QueuedUserModule } from './user-queued/queued-user.module';
+import { QueuedUserModule } from './queued-user/queued-user.module';
 
 @Module({
   imports: [
