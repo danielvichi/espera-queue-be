@@ -1,12 +1,13 @@
 import {
   Body,
   Controller,
+  Get,
   Patch,
   Post,
   Request,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { QueuedUserService } from './queued-user.service';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { type AuthenticatedRequestDto } from 'src/auth/auth.dto';
@@ -16,6 +17,7 @@ import {
   QueuedUserForbiddenException,
 } from './queued-user-exceptions';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { QueuedUserDto } from './queued-user-dto';
 
 @ApiTags('Queued User')
 @Controller('queued-user')
@@ -85,5 +87,35 @@ export class QueuedUserController {
     await this.queuedUserService.checkIsQueueAdminOrThrow(admin, queueId);
 
     return this.queuedUserService.serveQueuedUser(queueId, queuedUserId);
+  }
+
+  @Get('by-queue-last-session')
+  @ApiQuery({
+    name: 'queueId',
+    type: String,
+    description: 'Queue Id to fetch the queued users from its last session',
+    required: true,
+  })
+  @UseGuards(AuthGuard)
+  @ApiBearerAuth('AuthGuard')
+  @ApiResponse({
+    description: 'List of Queued Users for the Queue last session',
+    status: 200,
+  })
+  async getQueuedUsersForQueueActiveSession(
+    @Request() req: AuthenticatedRequestDto,
+  ): Promise<QueuedUserDto[]> {
+    const admin = req.user;
+    const queueId = req.query.queueId as string;
+
+    if (!queueId) {
+      throw new QueuedUserBadRequestException(
+        defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
+      );
+    }
+
+    await this.queuedUserService.checkIsQueueAdminOrThrow(admin, queueId);
+
+    return this.queuedUserService.getQueuedUsersForQueueActiveSession(queueId);
   }
 }

@@ -38,6 +38,8 @@ const CREATE_QUEUE_MOCK_DATA: Array<
   {
     name: 'Queue General 2',
     type: QueueType.GENERAL,
+    startQueueAt: '18:00',
+    endQueueAt: '23:00',
   },
 ];
 
@@ -358,6 +360,40 @@ describe('QueuedUserController', () => {
         .patch('/queued-user/serve')
         .set('Cookie', [`user_token=${adminUserToken}`])
         .send({ queueId, queuedUserId: queuedUserResponse?.id })
+        .expect(200);
+    });
+  });
+
+  describe('getUserForLastQueueSession', () => {
+    it('should throw UnauthorizedException if user is not signed in', async () => {
+      const queueId = 'some-queue-id';
+
+      await TestModuleSingleton.callEndpoint()
+        .get('/queued-user/by-queue-last-session')
+        .set('Cookie', [`user_token=`])
+        .query({ queueId })
+        .expect(401);
+    });
+
+    it('should throw BadRequest Error if queueId is missing', async () => {
+      const adminUserToken = await authService.generateJwtForUser(queueAdmin);
+
+      await TestModuleSingleton.callEndpoint()
+        .get('/queued-user/by-queue-last-session')
+        .set('Cookie', [`user_token=${adminUserToken}`])
+        .query({ queueId: '' })
+        .expect(400);
+    });
+
+    it('should return 200 and list of QueuedUserDto for last session', async () => {
+      const adminUserToken = await authService.generateJwtForUser(queueAdmin);
+
+      const queueId = queues[0].id;
+
+      await TestModuleSingleton.callEndpoint()
+        .get('/queued-user/by-queue-last-session')
+        .set('Cookie', [`user_token=${adminUserToken}`])
+        .query({ queueId })
         .expect(200);
     });
   });

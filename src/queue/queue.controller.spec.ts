@@ -55,14 +55,20 @@ const CREATE_QUEUE_MOCK_DATA: Array<
   {
     name: 'Queue General 1',
     type: QueueType.GENERAL,
+    startQueueAt: '18:00',
+    endQueueAt: '23:00',
   },
   {
     name: 'Queue General 2',
     type: QueueType.GENERAL,
+    startQueueAt: '18:00',
+    endQueueAt: '23:00',
   },
   {
     name: 'Queue Appointment 1',
     type: QueueType.APPOINTMENT,
+    startQueueAt: '18:00',
+    endQueueAt: '23:00',
   },
 ];
 
