@@ -104,8 +104,8 @@ model Queue {
   maxWaitingTimeInMinutes     Int?
   currentWaitingTimeInMinutes Int?
   isActive                    Boolean   @default(true)
-  startQueueAt                String?
-  endQueueAt                  String?
+  startQueueAt                String
+  endQueueAt                  String
   maxUsersInQueue             Int?
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt

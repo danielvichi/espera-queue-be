@@ -55,16 +55,16 @@ export class QueueDto {
   @ApiProperty({
     description: 'Timestamp when the queue starts operating',
     example: '19:00',
-    required: false,
+    required: true,
   })
-  startQueueAt?: string;
+  startQueueAt: string;
 
   @ApiProperty({
     description: 'Timestamp when the queue starts operating',
     example: '23:00',
-    required: false,
+    required: true,
   })
-  endQueueAt?: string;
+  endQueueAt: string;
 
   @ApiProperty({
     description: 'Max number of users allowed in the queue',
@@ -138,14 +138,14 @@ export class CreateQueueDto {
     example: '19:00',
     required: false,
   })
-  startQueueAt?: string;
+  startQueueAt: string;
 
   @ApiProperty({
     description: 'Timestamp when the queue starts operating',
     example: '23:00',
     required: false,
   })
-  endQueueAt?: string;
+  endQueueAt: string;
 
   @ApiProperty({
     description: 'Max number of users allowed in the queue',

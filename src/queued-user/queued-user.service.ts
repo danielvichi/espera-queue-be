@@ -166,6 +166,77 @@ export class QueuedUserService {
   }
 
   /*
+   * Get all queued users for queue active session
+   * it will return an empty list if last session entries are older than the current session,
+   * even if there is entries in the database, because they are from a old session
+   *
+   * @param queueId - The ID of the queue
+   * @returns List of QueuedUserDto for Queue or null
+   */
+  async getQueuedUsersForQueueActiveSession(
+    queueId: string,
+  ): Promise<QueuedUserDto[]> {
+    if (!queueId) {
+      throw new QueuedUserBadRequestException(
+        defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
+      );
+    }
+
+    const queueResponse = await this.prismaService.queue.findFirst({
+      where: {
+        id: queueId,
+      },
+    });
+
+    if (!queueResponse) {
+      throw new QueueNotFoundException(queueId);
+    }
+
+    const sessionStartHour = parseInt(queueResponse.startQueueAt.split(':')[0]);
+    const sessionEndHour = parseInt(queueResponse.endQueueAt.split(':')[0]);
+
+    const sessionEndTimeEndsInTheFollowingDay =
+      sessionStartHour > sessionEndHour;
+    const today = new Date();
+    let queuedUserListResponse: Record<string, any>[];
+
+    const todayOnlyDate = new Date(today.toISOString().split('T')[0]);
+
+    if (!sessionEndTimeEndsInTheFollowingDay) {
+      queuedUserListResponse = await this.prismaService.queuedUser.findMany({
+        where: {
+          queueId: queueId,
+          createdAt: {
+            gte: todayOnlyDate,
+          },
+        },
+      });
+    } else {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      queuedUserListResponse = await this.prismaService.queuedUser.findMany({
+        where: {
+          queueId: queueId,
+          createdAt: {
+            gte: today,
+            // lt: yesterday,
+          },
+        },
+      });
+    }
+
+    const formattedQueuedUserList: QueuedUserDto[] = [];
+
+    queuedUserListResponse.forEach((entry) => {
+      const formattedEntry = normalizeNullIntoUndefined<QueuedUserDto>(entry);
+      formattedQueuedUserList.push(formattedEntry);
+    });
+
+    return formattedQueuedUserList;
+  }
+
+  /*
    * Serve a queued user
    *
    * @param queueId - The ID of the queue

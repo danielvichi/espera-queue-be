@@ -45,6 +45,8 @@ const CREATE_QUEUE_MOCK_DATA: Array<
   {
     name: 'Queue General 2',
     type: QueueType.GENERAL,
+    startQueueAt: '18:00',
+    endQueueAt: '23:00',
   },
 ];
 
@@ -57,6 +59,16 @@ const CREATE_QUEUE_USER_MOCK_DATA: CreateUserDto[] = [
   {
     name: 'Sarah Smith',
     email: 'sarah_smith@example.com',
+    passwordHash: 'password_hash',
+  },
+  {
+    name: 'Mike Johnson',
+    email: 'mike_johnson@example.com',
+    passwordHash: 'password_hash',
+  },
+  {
+    name: 'Karen Davis',
+    email: 'kare_davis@example.com',
     passwordHash: 'password_hash',
   },
 ];
@@ -208,7 +220,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -230,7 +242,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -257,7 +269,7 @@ describe('QueuedUserService', () => {
       const queueId2 = queues[1].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -283,7 +295,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -321,7 +333,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -357,7 +369,7 @@ describe('QueuedUserService', () => {
       const userId1 = users[0].id;
       const userId2 = users[1].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -411,7 +423,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -446,7 +458,7 @@ describe('QueuedUserService', () => {
       const queueId2 = queues[1].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -469,7 +481,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -481,8 +493,6 @@ describe('QueuedUserService', () => {
         );
 
       expect(firstQueuedUserEntry).toBeDefined();
-
-      console.log('First Queued User Entry:', firstQueuedUserEntry.id);
 
       // Manually update the createdAt date to be yesterday
       const yesterday = new Date();
@@ -566,7 +576,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -598,7 +608,7 @@ describe('QueuedUserService', () => {
       const queueId = queues[0].id;
       const userId = users[0].id;
 
-      // Mock current time to be outside working hours
+      // Mock current time to be within working hours
       jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
       jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
 
@@ -701,5 +711,217 @@ describe('QueuedUserService', () => {
 
       expect(response).toBeNull();
     });
+  });
+
+  describe('getQueuedUsersForQueueActiveSession', () => {
+    it('should throw BadRequestException if queueId is not provided', async () => {
+      await expect(
+        queuedUserServiceservice.getQueuedUsersForQueueActiveSession(''),
+      ).rejects.toThrow(
+        new QueuedUserBadRequestException(
+          defaultQueueUserExceptionsMessage.QUEUE_ID_REQUIRED,
+        ),
+      );
+    });
+
+    it('should throw NotFoundException if queue does not exist', async () => {
+      const invalidQueueId = 'invalid_id';
+      await expect(
+        queuedUserServiceservice.getQueuedUsersForQueueActiveSession(
+          invalidQueueId,
+        ),
+      ).rejects.toThrow(new QueueNotFoundException(invalidQueueId));
+    });
+
+    it('should return empty array if there is no previous active session withing date range', async () => {
+      const queueId = queues[0].id;
+      const userId = users[0].id;
+
+      // Mock current time to be within working hours
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+      jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+      const queuedUserEntry =
+        await queuedUserServiceservice.createQueuedUserEntry(
+          queueId,
+          userId,
+          1,
+        );
+
+      expect(queuedUserEntry).toBeDefined();
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      await prismaService.queuedUser.update({
+        where: {
+          id: queuedUserEntry.id,
+        },
+        data: {
+          createdAt: yesterday,
+        },
+      });
+
+      const queuedUserResponse =
+        await queuedUserServiceservice.getQueuedUsersForQueueActiveSession(
+          queueId,
+        );
+
+      expect(queuedUserResponse.length).toBe(0);
+    });
+
+    it('should return list of two entries if there is two actives session withing 4 total entries', async () => {
+      const queueId = queues[0].id;
+      const userId1 = users[0].id;
+      const userId2 = users[1].id;
+      const userId3 = users[2].id;
+      const userId4 = users[3].id;
+
+      const oldQueuedUserEntry1 =
+        await queuedUserServiceservice.createQueuedUserEntry(
+          queueId,
+          userId1,
+          1,
+        );
+
+      const oldQueuedUserEntry2 =
+        await queuedUserServiceservice.createQueuedUserEntry(
+          queueId,
+          userId2,
+          1,
+        );
+
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+
+      await prismaService.queuedUser.update({
+        where: {
+          id: oldQueuedUserEntry1.id,
+        },
+        data: {
+          createdAt: yesterday,
+        },
+      });
+
+      await prismaService.queuedUser.update({
+        where: {
+          id: oldQueuedUserEntry2.id,
+        },
+        data: {
+          createdAt: yesterday,
+        },
+      });
+
+      expect(oldQueuedUserEntry1).toBeDefined();
+      expect(oldQueuedUserEntry2).toBeDefined();
+
+      // Mock current date to be the composedDate
+      // jest.spyOn(global, 'Date').mockImplementation(() => today);
+      jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+      jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+      const queuedUserEntry1 =
+        await queuedUserServiceservice.createQueuedUserEntry(
+          queueId,
+          userId3,
+          1,
+        );
+
+      const queuedUserEntry2 =
+        await queuedUserServiceservice.createQueuedUserEntry(
+          queueId,
+          userId4,
+          1,
+        );
+
+      const queuedUserResponse =
+        await queuedUserServiceservice.getQueuedUsersForQueueActiveSession(
+          queueId,
+        );
+
+      expect(queuedUserResponse.length).toBe(2);
+      expect(queuedUserResponse[0].id).toBe(queuedUserEntry1.id);
+      expect(queuedUserResponse[0].userId).toBe(userId3);
+      expect(queuedUserResponse[1].id).toBe(queuedUserEntry2.id);
+      expect(queuedUserResponse[1].userId).toBe(userId4);
+    });
+  });
+
+  // If last session is older and its already in time for a new session, the system should not return any entry, even if there is entries in the database, because they are from a old session
+  it('should return an empty list if all entries are more than a full cycle old', async () => {
+    const queueId = queues[0].id;
+    const userId1 = users[0].id;
+    const userId2 = users[1].id;
+    const userId3 = users[2].id;
+    const userId4 = users[3].id;
+
+    const oldQueuedUserEntry1 =
+      await queuedUserServiceservice.createQueuedUserEntry(queueId, userId1, 1);
+
+    const oldQueuedUserEntry2 =
+      await queuedUserServiceservice.createQueuedUserEntry(queueId, userId2, 1);
+
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+
+    await prismaService.queuedUser.update({
+      where: {
+        id: oldQueuedUserEntry1.id,
+      },
+      data: {
+        createdAt: twoDaysAgo,
+      },
+    });
+
+    await prismaService.queuedUser.update({
+      where: {
+        id: oldQueuedUserEntry2.id,
+      },
+      data: {
+        createdAt: twoDaysAgo,
+      },
+    });
+
+    expect(oldQueuedUserEntry1).toBeDefined();
+    expect(oldQueuedUserEntry2).toBeDefined();
+
+    // Mock current date to be the composedDate
+    // jest.spyOn(global, 'Date').mockImplementation(() => today);
+    jest.spyOn(Date.prototype, 'getHours').mockReturnValue(18);
+    jest.spyOn(Date.prototype, 'getMinutes').mockReturnValue(0);
+
+    const queuedUserEntry1 =
+      await queuedUserServiceservice.createQueuedUserEntry(queueId, userId3, 1);
+
+    const queuedUserEntry2 =
+      await queuedUserServiceservice.createQueuedUserEntry(queueId, userId4, 1);
+
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 2);
+
+    await prismaService.queuedUser.update({
+      where: {
+        id: queuedUserEntry1.id,
+      },
+      data: {
+        createdAt: yesterday,
+      },
+    });
+
+    await prismaService.queuedUser.update({
+      where: {
+        id: queuedUserEntry2.id,
+      },
+      data: {
+        createdAt: yesterday,
+      },
+    });
+
+    const queuedUserResponse =
+      await queuedUserServiceservice.getQueuedUsersForQueueActiveSession(
+        queueId,
+      );
+
+    expect(queuedUserResponse.length).toBe(0);
   });
 });
